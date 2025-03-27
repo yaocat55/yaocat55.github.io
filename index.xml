@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Yocat-blog</title>
+    <link>https://yaocat55.github.io/</link>
+    <description>Recent content on Yocat-blog</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://yaocat55.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>https://yaocat55.github.io/post/test/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/post/test/</guid>
+      <description>&lt;h2 id=&#34;1-markdowncomcn-简介&#34;&gt;1 Markdown.com.cn 简介&lt;/h2&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;支持自定义样式的 Markdown 编辑器&lt;/li&gt;&#xA;&lt;li&gt;支持微信公众号、知乎和稀土掘金&lt;/li&gt;&#xA;&lt;li&gt;点击右上方对应图标，一键复制到各平台&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>
