@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>分类 on CatBlog</title>
-    <link>https://yaocat55.github.io/categories/</link>
-    <description>Recent content in 分类 on CatBlog</description>
+    <title>技术类 on CatBlog</title>
+    <link>https://yaocat55.github.io/categories/%E6%8A%80%E6%9C%AF%E7%B1%BB/</link>
+    <description>Recent content in 技术类 on CatBlog</description>
     <image>
       <title>CatBlog</title>
       <url>https://yaocat55.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
@@ -12,13 +12,13 @@
     <generator>Hugo</generator>
     <language>zh</language>
     <lastBuildDate>Mon, 15 Aug 2022 11:30:03 +0000</lastBuildDate>
-    <atom:link href="https://yaocat55.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://yaocat55.github.io/categories/%E6%8A%80%E6%9C%AF%E7%B1%BB/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>技术类</title>
-      <link>https://yaocat55.github.io/categories/%E6%8A%80%E6%9C%AF%E7%B1%BB/</link>
+      <title>Java ThreadLocal 深度研报：从核心架构到现代并发演进</title>
+      <link>https://yaocat55.github.io/posts/threadlocal/</link>
       <pubDate>Mon, 15 Aug 2022 11:30:03 +0000</pubDate>
-      <guid>https://yaocat55.github.io/categories/%E6%8A%80%E6%9C%AF%E7%B1%BB/</guid>
-      <description></description>
+      <guid>https://yaocat55.github.io/posts/threadlocal/</guid>
+      <description>关于Java ThreadLocal的深度解析</description>
     </item>
   </channel>
 </rss>

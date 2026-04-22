@@ -2,14 +2,29 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://yaocat55.github.io/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://yaocat55.github.io/posts/threadlocal/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://yaocat55.github.io/tags/juc%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E4%BD%93%E7%B3%BB/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/archives/</loc>
+    <loc>https://yaocat55.github.io/tags/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/search/</loc>
+    <loc>https://yaocat55.github.io/categories/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
+  </url><url>
+    <loc>https://yaocat55.github.io/categories/%E6%8A%80%E6%9C%AF%E7%B1%BB/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
+  </url><url>
+    <loc>https://yaocat55.github.io/posts/</loc>
+    <lastmod>2022-08-15T11:30:03+00:00</lastmod>
+  </url><url>
+    <loc>https://yaocat55.github.io/archives/</loc>
+  </url><url>
+    <loc>https://yaocat55.github.io/search/</loc>
   </url>
 </urlset>
