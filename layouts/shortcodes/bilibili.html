@@ -1,12 +1,231 @@
+{{/*
+================================================================================
+B站视频嵌入 Shortcode - 使用说明
+================================================================================
+
+【文件位置】
+保存为：layouts/shortcodes/bilibili.html
+
+【基础用法】
+{{</* bilibili bvid="BV1GJ411x7h7" * />}}
+
+【完整参数示例】
+{{</* bilibili bvid="BV1GJ411x7h7" page="2" danmaku="0" theme="light" autoplay="1" * />}}
+
+【参数说明】
+┌──────────┬──────────────┬─────────────────────┬─────────────────────────┐
+│ 参数 │ 说明 │ 默认值 │ 可选值 │
+├──────────┼──────────────┼─────────────────────┼─────────────────────────┤
+│ bvid │ 视频BV号 │ 无（必填） │ 如：BV1GJ411x7h7 │
+│ page │ 分P序号 │ 1 │ 1,2,3... │
+│ danmaku │ 弹幕开关 │ 1 │ 1=开启, 0=关闭 │
+│ theme │ 播放器主题 │ dark │ dark, light │
+│ autoplay │ 自动播放 │ 0 │ 1=开启, 0=关闭 │
+└──────────┴──────────────┴─────────────────────┴─────────────────────────┘
+
+【功能特性】
+✓ 封面预览 - 点击后才加载播放器，节省流量
+✓ 智能分P - 自动检测分P并生成下拉菜单
+✓ 弹幕开关 - 实时控制弹幕显示
+✓ 视频标题 - 自动获取并显示视频标题
+✓ 复制BV号 - 一键复制视频BV号
+✓ 响应式设计 - 完美适配移动端/PC端
+
+【注意事项】
+• BV号必须与B站视频完全一致（区分大小写）
+• 自动播放受浏览器策略限制，通常需要用户先与页面交互
+• 部分网络环境可能无法访问B站API，此时标题会显示"无法获取视频信息"
+
+================================================================================
+*/}}
+
 {{- $bvid := .Get "bvid" -}}
 {{- $page := .Get "page" | default 1 -}}
+{{- $danmaku := .Get "danmaku" | default 1 -}}
+{{- $theme := .Get "theme" | default "dark" -}}
+{{- $autoplay := .Get "autoplay" | default 0 -}}
 
 {{- if not $bvid -}}
 {{- errorf "缺少 bvid 参数：请提供 B站视频的 BV 号" -}}
 {{- end -}}
 
-<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 1.5rem 0;">
-    <iframe src="https://player.bilibili.com/player.html?bvid={{ $bvid }}&page={{ $page }}&high_quality=1"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
-    </iframe>
+{{- $containerId := printf "bili-%s-p%s" $bvid $page -}}
+{{- $titleId := printf "bili-title-%s" $bvid -}}
+{{- $selectId := printf "bili-select-%s" $bvid -}}
+
+<div class="bilibili-shortcode" style="margin: 1.5rem 0; font-family: system-ui, -apple-system, sans-serif;">
+    <!-- 封面预览区域，点击后加载播放器 -->
+    <div id="{{ $containerId }}-preview" class="bili-preview" data-bvid="{{ $bvid }}" data-page="{{ $page }}"
+        data-danmaku="{{ $danmaku }}" data-theme="{{ $theme }}" data-autoplay="{{ $autoplay }}"
+        style="position: relative; cursor: pointer; background: #0a0a0a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="preview-cover"
+            style="background-image: url('https://api.bilibili.com/x/web-interface/view?bvid={{ $bvid }}'); background-size: cover; background-position: center; padding-bottom: 56.25%; background-color: #1a1a1a;">
+        </div>
+        <div class="play-button"
+            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 68px; height: 68px; background: rgba(0,0,0,0.75); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; border: 2px solid rgba(255,255,255,0.3);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" style="margin-left: 4px;">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+        </div>
+        <div
+            style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 6px; font-size: 12px; color: white;">
+            ▶ 点击播放
+        </div>
+    </div>
+
+    <!-- 播放器容器（初始隐藏） -->
+    <div id="{{ $containerId }}-player" style="display: none;"></div>
+
+    <!-- 视频信息栏 -->
+    <div
+        style="margin-top: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
+        <div id="{{ $titleId }}"
+            style="font-size: 14px; color: #555; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            加载中...
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <!-- 弹幕开关 -->
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; cursor: pointer;">
+                <input type="checkbox" id="danmaku-switch-{{ $bvid }}" {{ if eq $danmaku "1" }}checked{{ end }}
+                    style="cursor: pointer;">
+                <span>弹幕</span>
+            </label>
+
+            <!-- 分P下拉菜单（动态填充） -->
+            <select id="{{ $selectId }}"
+                style="padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 13px; cursor: pointer;">
+                <option value="{{ $page }}">第{{ $page }}P</option>
+            </select>
+
+            <!-- 复制BV号按钮 -->
+            <button onclick="navigator.clipboard.writeText('{{ $bvid }}').then(() => { alert('已复制：{{ $bvid }}'); })"
+                style="background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: all 0.2s; color: #555;">
+                📋 BV号
+            </button>
+        </div>
+    </div>
 </div>
+
+<script>
+    (function () {
+        var bvid = "{{ $bvid }}";
+        var defaultPage = parseInt("{{ $page }}");
+        var defaultDanmaku = parseInt("{{ $danmaku }}");
+        var defaultTheme = "{{ $theme }}";
+        var defaultAutoplay = parseInt("{{ $autoplay }}");
+        var containerId = "{{ $containerId }}";
+        var titleId = "{{ $titleId }}";
+        var selectId = "{{ $selectId }}";
+        var previewDiv = document.getElementById(containerId + "-preview");
+        var playerDiv = document.getElementById(containerId + "-player");
+        var titleSpan = document.getElementById(titleId);
+        var selectEl = document.getElementById(selectId);
+        var danmakuSwitch = document.getElementById("danmaku-switch-" + bvid);
+
+        var currentPage = defaultPage;
+        var currentDanmaku = defaultDanmaku;
+        var pagesList = [];
+
+        // 构建播放器URL
+        function buildPlayerUrl(page, danmaku) {
+            return "https://player.bilibili.com/player.html?bvid=" + bvid +
+                "&page=" + page +
+                "&high_quality=1" +
+                "&danmaku=" + danmaku +
+                "&theme=" + defaultTheme +
+                "&autoplay=" + defaultAutoplay;
+        }
+
+        // 加载播放器（替换预览区域）
+        function loadPlayer() {
+            var iframeHtml = '<iframe src="' + buildPlayerUrl(currentPage, currentDanmaku ? 1 : 0) + '" ' +
+                'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" ' +
+                'frameborder="0" allowfullscreen></iframe>';
+            var wrapperDiv = document.createElement('div');
+            wrapperDiv.style.position = 'relative';
+            wrapperDiv.style.paddingBottom = '56.25%';
+            wrapperDiv.style.height = '0';
+            wrapperDiv.style.overflow = 'hidden';
+            wrapperDiv.style.borderRadius = '12px';
+            wrapperDiv.style.backgroundColor = '#000';
+            wrapperDiv.innerHTML = iframeHtml;
+
+            previewDiv.parentNode.replaceChild(wrapperDiv, previewDiv);
+            window[containerId + "Wrapper"] = wrapperDiv;
+        }
+
+        // 更新播放器（切换分P或弹幕时）
+        function updatePlayer() {
+            var wrapper = window[containerId + "Wrapper"];
+            if (wrapper) {
+                var iframe = wrapper.querySelector('iframe');
+                if (iframe) {
+                    iframe.src = buildPlayerUrl(currentPage, currentDanmaku ? 1 : 0);
+                }
+            }
+        }
+
+        // 从B站API获取视频信息
+        fetch("https://api.bilibili.com/x/web-interface/view?bvid=" + bvid)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.code === 0 && data.data) {
+                    if (titleSpan) titleSpan.innerText = data.data.title;
+
+                    if (data.data.pages && data.data.pages.length > 1) {
+                        pagesList = data.data.pages;
+                        selectEl.innerHTML = '';
+                        for (var i = 0; i < pagesList.length; i++) {
+                            var p = pagesList[i];
+                            var option = document.createElement('option');
+                            option.value = i + 1;
+                            option.textContent = (i + 1) + '. ' + (p.part || '第' + (i + 1) + '话');
+                            if (i + 1 === currentPage) option.selected = true;
+                            selectEl.appendChild(option);
+                        }
+                        selectEl.style.display = 'inline-block';
+
+                        selectEl.onchange = function () {
+                            currentPage = parseInt(this.value);
+                            if (window[containerId + "Wrapper"]) {
+                                updatePlayer();
+                            }
+                        };
+                    } else {
+                        selectEl.style.display = 'none';
+                    }
+                } else {
+                    if (titleSpan) titleSpan.innerText = '视频加载失败，请检查BV号';
+                }
+            })
+            .catch(function (err) {
+                if (titleSpan) titleSpan.innerText = '无法获取视频信息，请检查网络';
+            });
+
+        if (danmakuSwitch) {
+            danmakuSwitch.onchange = function () {
+                currentDanmaku = this.checked ? 1 : 0;
+                if (window[containerId + "Wrapper"]) {
+                    updatePlayer();
+                }
+            };
+        }
+
+        if (previewDiv) {
+            previewDiv.onclick = loadPlayer;
+        }
+    })();
+</script>
+
+<style>
+    .bilibili-shortcode .play-button:hover {
+        transform: translate(-50%, -50%) scale(1.05);
+        background: rgba(0, 0, 0, 0.85);
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .bilibili-shortcode button:hover,
+    .bilibili-shortcode select:hover {
+        background-color: #f5f5f5;
+    }
+</style>

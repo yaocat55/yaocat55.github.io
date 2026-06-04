@@ -23,7 +23,7 @@ cover:
     image: "/images/cover/mesi.webp"
     caption: ""
     relative: false
-    hidden: true
+    hidden: false
 ---
 
 # MESI 缓存一致性协议

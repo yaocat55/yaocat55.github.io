@@ -20,7 +20,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: ""
+    image: "/images/cover/cicd.png"
     caption: ""
     relative: false
     hidden: true
@@ -49,7 +49,7 @@ cover:
   ⑬ 改配置——重新来——docker build + push + deploy
   ⑭ 又发现 product-service 没同步上线——接口报错了
   ⑮ 告警响了——用户已经在群里骂了
-  
+
   → 每次发布都像拆炸弹——不知道哪一步会出问题
 ```
 
@@ -217,21 +217,21 @@ docker exec -it gitlab-runner cat /etc/gitlab-runner/config.toml
 
 ```
 当你 git push 到 GitLab——触发 Pipeline：
-  
+
   ① GitLab 解析 .gitlab-ci.yml——把 job 放入队列
-  
+
   ② Runner 轮询 GitLab——发现有新 job
-  
+
   ③ Runner 起一个 Docker 容器——用你注册时指定的 image
      → docker run maven:3.9-eclipse-temurin-17
-  
+
   ④ Runner 在容器内执行操作：
      → git clone 你的项目代码到容器内
      → 执行 job 定义的 script
      → 收集 artifacts（如果有）
-  
+
   ⑤ Job 执行完——容器被销毁——干净的环境——下次 job 又是全新的容器
-  
+
   关键：每个 job 是独立容器——job A 安装的东西不会影响 job B
        → 如果需要共享——用 cache 和 artifacts
 ```

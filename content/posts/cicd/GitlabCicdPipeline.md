@@ -58,7 +58,7 @@ graph LR
     Package --> DockerBuild["⑤ 构建镜像<br/>docker build"]
     DockerBuild --> HarborPush["⑥ 推送仓库<br/>docker push<br/>→ Harbor"]
     HarborPush --> Notify["⑦ 通知<br/>企业微信/钉钉"]
-    
+
     style SonarQube fill:#FF9800,color:#fff
     style HarborPush fill:#2196F3,color:#fff
 ```
@@ -282,7 +282,7 @@ docker-build-push:
   script:
     # ① 构建镜像——用 commit SHA 作为 tag
     - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA .
-    
+
     # ② 打标签——如果 main 分支——打 latest；如果有 tag——打 release 版本
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
@@ -292,10 +292,10 @@ docker-build-push:
       if [ -n "$CI_COMMIT_TAG" ]; then
         docker tag $IMAGE_NAME:$CI_COMMIT_SHORT_SHA $IMAGE_NAME:$CI_COMMIT_TAG
       fi
-    
+
     # ③ 登录 Harbor——用户名密码配在 GitLab CI/CD Variables 中
     - echo "$HARBOR_PASSWORD" | docker login $HARBOR_URL -u "$HARBOR_USERNAME" --password-stdin
-    
+
     # ④ 推送所有标签
     - docker push $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
     - |
@@ -459,7 +459,7 @@ compile-changed:
     # 比较变更——找出哪些模块变了
     - |
       CHANGED=$(git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA)
-      
+
       MODULES=""
       if echo "$CHANGED" | grep -q "order-service/"; then
         MODULES="$MODULES,order-service"
@@ -470,7 +470,7 @@ compile-changed:
       if echo "$CHANGED" | grep -q "product-service/"; then
         MODULES="$MODULES,product-service"
       fi
-      
+
       if [ -z "$MODULES" ]; then
         echo "没有模块变更——跳过编译"
       else
@@ -560,7 +560,7 @@ notify-failure:
 ### 坑 2：Docker build 每次都重新下载所有 jar
 
 ```
-现象：docker build 慢——每次都看到 "Downloading from central..." 
+现象：docker build 慢——每次都看到 "Downloading from central..."
 
 原因：Dockerfile 中 COPY . . 在 RUN mvn package 之前——src 变了——Docker 缓存失效——重新下载依赖
 

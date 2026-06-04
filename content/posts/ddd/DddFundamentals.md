@@ -20,7 +20,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: ""
+    image: "/images/cover/ddd.webp"
     caption: ""
     relative: false
     hidden: true
