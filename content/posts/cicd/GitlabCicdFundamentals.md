@@ -20,7 +20,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/cover/cicd.png"
+    image: "/images/cover/cicd.webp"
     caption: ""
     relative: false
     hidden: true

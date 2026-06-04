@@ -20,7 +20,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/cover/分布式.png"
+    image: "/images/cover/分布式.webp"
     caption: ""
     relative: false
     hidden: true

@@ -20,7 +20,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/cover/mvcc.png"
+    image: "/images/cover/mvcc.webp"
     caption: ""
     relative: false
     hidden: true

@@ -1151,6 +1151,21 @@ html[data-theme="dark"] .copy-code-button {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* 新增 video 样式 */
+.profile video {
+    min-width: 30px !important;
+    min-height: 30px !important;
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: cover;
+    transition: transform var(--duration-normal), box-shadow var(--duration-normal);
+    border-radius: 50%;
+}
+
+.profile video:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
 /* --------------------------------------------
    16. 按钮和交互元素
 --------------------------------------------- */
