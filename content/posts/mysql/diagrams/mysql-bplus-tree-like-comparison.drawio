@@ -1,0 +1,33 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;模糊查询对比：LIKE 'Zhang%' vs LIKE '%Zhang'&lt;/b&gt;" style="text;html=1;fontSize=16;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+      <mxGeometry x="80" y="8" width="520" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="left_title" value="&lt;b&gt;✅ LIKE 'Zhang%' → 走索引&lt;/b&gt;" style="text;html=1;fontSize=13;fillColor=#C8E6C9;strokeColor=#388E3C;fontColor=#1B5E20;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="30" y="50" width="240" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="right_title" value="&lt;b&gt;❌ LIKE '%Zhang' → 全表扫描&lt;/b&gt;" style="text;html=1;fontSize=13;fillColor=#FFCDD2;strokeColor=#C62828;fontColor=#B71C1C;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="360" y="50" width="260" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="good_tree" value="&lt;b&gt;name B+树（前缀有序）&lt;/b&gt;&lt;br&gt;A→B→C→...→Z" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=10;fontColor=#1565C0;" vertex="1" parent="1">
+      <mxGeometry x="80" y="95" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="good_range" value="&lt;b&gt;Zhang 开头的数据&lt;/b&gt;&lt;br&gt;连续排在一起&lt;br&gt;定位到第一条 Zhang&lt;br&gt;沿链表扫描即可" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;" vertex="1" parent="1">
+      <mxGeometry x="60" y="155" width="170" height="65" as="geometry"/>
+    </mxCell>
+    <mxCell id="bad_tree" value="&lt;b&gt;name B+树（倒序？）&lt;/b&gt;&lt;br&gt;A→B→C→...→Z" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=10;fontColor=#B71C1C;" vertex="1" parent="1">
+      <mxGeometry x="410" y="95" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="bad_explain" value="&lt;b&gt;以 Zhang 结尾的数据&lt;/b&gt;&lt;br&gt;分散在整个树中&lt;br&gt;Aang, Bang, ..., Zang&lt;br&gt;每条都可能命中&lt;br&gt;必须扫全部叶子" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=10;fontColor=#B71C1C;" vertex="1" parent="1">
+      <mxGeometry x="390" y="155" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cross" value="✗&#xa;✗&#xa;✗" style="text;html=1;fontSize=18;fillColor=none;strokeColor=none;fontColor=#C62828;" vertex="1" parent="1">
+      <mxGeometry x="500" y="235" width="25" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="icp_note" value="&lt;b&gt;💡 索引条件下推 (ICP)&lt;/b&gt;&lt;br&gt;WHERE LIKE 'hello%' AND b&gt;10 → 引擎层先过滤 b&gt;10 再回表，减少无效 IO" style="text;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=11;fontColor=#E65100;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="260" width="500" height="38" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

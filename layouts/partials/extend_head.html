@@ -1,0 +1,454 @@
+<!-- ==================== Mermaid 图表 ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+<script>
+    // 初始化 Mermaid 的函数（供 Pjax 后重新调用）
+    function initMermaid() {
+        if (document.getElementsByClassName("mermaid").length > 0) {
+            // 避免重复初始化
+            if (window._mermaidInitialized) return;
+            window._mermaidInitialized = true;
+
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'base',
+                securityLevel: 'loose',
+                themeVariables: {
+                    'background': 'transparent',
+                    'primaryColor': getComputedStyle(document.body).getPropertyValue('--theme').trim() || '#5c6bc0',
+                    'primaryBorderColor': getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#90a4ae',
+                    'primaryTextColor': getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#212529',
+                    'lineColor': getComputedStyle(document.body).getPropertyValue('--tertiary').trim() || '#b0bec5',
+                    'secondaryColor': getComputedStyle(document.body).getPropertyValue('--code-bg').trim() || '#f5f5f5',
+                }
+            });
+            mermaid.run();
+        }
+    }
+
+    // 首次加载执行
+    document.addEventListener("DOMContentLoaded", initMermaid);
+</script>
+
+<!-- ==================== 图片/Mermaid 缩放功能样式 ==================== -->
+<style>
+    .mermaid,
+    .zoomable-img-container {
+        background: transparent !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: zoom-in;
+        position: relative;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        overflow: hidden;
+        width: 100%;
+        max-width: 100%;
+        transition:
+            width 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+            margin 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
+    }
+
+    .zoomable-img-container img {
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .mermaid svg {
+        transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .mermaid.is-expanded,
+    .zoomable-img-container.is-expanded {
+        width: 92vw !important;
+        max-width: 92vw !important;
+        margin-left: calc(50% - 46vw) !important;
+        margin-right: calc(50% - 46vw) !important;
+        margin-top: 2.5rem !important;
+        margin-bottom: 2.5rem !important;
+        cursor: zoom-out;
+        border-color: var(--theme) !important;
+        z-index: 999;
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 30px 40px !important;
+        box-sizing: border-box !important;
+        background: var(--code-bg, #1e1e1e) !important;
+        box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.65), 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .mermaid.is-expanded::-webkit-scrollbar,
+    .zoomable-img-container.is-expanded::-webkit-scrollbar {
+        height: 8px !important;
+        display: block !important;
+    }
+
+    .mermaid.is-expanded::-webkit-scrollbar-thumb,
+    .zoomable-img-container.is-expanded::-webkit-scrollbar-thumb {
+        background: var(--theme, #5c6bc0) !important;
+        border-radius: 4px !important;
+    }
+
+    .mermaid.is-expanded::-webkit-scrollbar-track,
+    .zoomable-img-container.is-expanded::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 4px !important;
+    }
+
+    .zoomable-img-container.is-expanded img {
+        width: auto !important;
+        min-width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        display: block;
+        margin: 0 !important;
+    }
+
+    @media screen and (max-width: 1400px) {
+        .zoomable-img-container.is-expanded img {
+            min-width: 1400px !important;
+        }
+    }
+
+    .mermaid.is-expanded svg {
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        display: block !important;
+        margin: 0 !important;
+    }
+
+    /* 悬停高亮动效 */
+    .mermaid:not(.is-expanded):hover,
+    .zoomable-img-container:not(.is-expanded):hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: var(--theme) !important;
+    }
+
+    .mermaid:not(.is-expanded)::before,
+    .zoomable-img-container:not(.is-expanded)::before {
+        content: "点击展开 🔍";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--theme, #5c6bc0);
+        color: #fff;
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    .mermaid:not(.is-expanded):hover::before,
+    .zoomable-img-container:not(.is-expanded):hover::before {
+        opacity: 0.9;
+    }
+
+    .mermaid.is-expanded::before,
+    .zoomable-img-container.is-expanded::before {
+        display: none !important;
+    }
+</style>
+
+<!-- ==================== 目录 (TOC) 样式 ==================== -->
+<style>
+    @media screen and (min-width: 1280px) {
+        .toc {
+            position: fixed;
+            right: calc(50% + 400px);
+            top: 120px;
+            width: 280px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        .toc .inner {
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc summary {
+            list-style: none;
+            cursor: default;
+            font-weight: 600;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+
+        .toc summary::-webkit-details-marker {
+            display: none;
+        }
+    }
+
+    @media screen and (max-width: 1279px) {
+        .toc {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+
+<!-- ==================== KaTeX 数学公式 ==================== -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+    // KaTeX 渲染函数（供 Pjax 后重新调用）
+    function initKaTeX() {
+        if (window._katexRunning) return;
+        window._katexRunning = true;
+
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js';
+        script.onload = function () {
+            function findMathElements() {
+                var walker = document.createTreeWalker(
+                    document.body,
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: function (node) {
+                            var parent = node.parentElement;
+                            while (parent && parent !== document.body) {
+                                if (parent.tagName === 'PRE' ||
+                                    parent.tagName === 'CODE' ||
+                                    parent.classList && (
+                                        parent.classList.contains('highlight') ||
+                                        parent.classList.contains('chroma') ||
+                                        parent.classList.contains('language-bash') ||
+                                        parent.classList.contains('language-sh') ||
+                                        parent.classList.contains('language-docker')
+                                    )) {
+                                    return NodeFilter.FILTER_REJECT;
+                                }
+                                parent = parent.parentElement;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    }
+                );
+
+                var textNodes = [];
+                while (walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
+                }
+
+                textNodes.forEach(function (node) {
+                    if (node.textContent && (node.textContent.includes('$') || node.textContent.includes('$$'))) {
+                        try {
+                            renderMathInElement(node.parentElement, {
+                                delimiters: [
+                                    { left: '$$', right: '$$', display: true },
+                                    { left: '$', right: '$', display: false }
+                                ]
+                            });
+                        } catch (e) { }
+                    }
+                });
+            }
+
+            if (typeof renderMathInElement !== 'undefined') {
+                findMathElements();
+            }
+        };
+        document.head.appendChild(script);
+    }
+
+    document.addEventListener("DOMContentLoaded", initKaTeX);
+</script>
+
+<!-- ==================== 字体 ==================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+    rel="stylesheet">
+
+<!-- ==================== 图片缩放核心 JS（已排除头像） ==================== -->
+<script>
+    // 图片缩放初始化函数（供 Pjax 后重新调用）
+    function initImageZoom() {
+        if (window._imageZoomInitialized) return;
+        window._imageZoomInitialized = true;
+
+        function isAvatarElement(img) {
+            var parent = img.parentElement;
+            while (parent && parent !== document.body) {
+                if (parent.classList && (parent.classList.contains('profile') || parent.classList.contains('profile-img'))) {
+                    return true;
+                }
+                if (parent.classList && parent.classList.contains('avatar')) {
+                    return true;
+                }
+                parent = parent.parentElement;
+            }
+            if (img.classList && (img.classList.contains('avatar') || img.classList.contains('profile-img'))) {
+                return true;
+            }
+            if (img.closest('.profile')) {
+                return true;
+            }
+            return false;
+        }
+
+        var contentSelectors = 'article img, .post-content img, .content img, main img';
+
+        document.querySelectorAll(contentSelectors).forEach(function (img) {
+            if (isAvatarElement(img)) return;
+            if (img.closest('.toc') || img.closest('nav') || img.closest('header') || img.closest('footer')) return;
+            if (img.complete && img.naturalWidth > 0 && img.naturalWidth < 80) return;
+
+            // 避免重复包装
+            if (img.parentElement && img.parentElement.classList && img.parentElement.classList.contains('zoomable-img-container')) return;
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'zoomable-img-container';
+            img.parentNode.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+        });
+    }
+
+    // 缩放事件绑定（全局只绑定一次）
+    function bindZoomEvents() {
+        if (window._zoomEventsBound) return;
+        window._zoomEventsBound = true;
+
+        document.body.addEventListener('click', function (e) {
+            var activeExpanded = document.querySelector('.is-expanded');
+
+            if (activeExpanded) {
+                if (activeExpanded.classList.contains('mermaid')) {
+                    var svg = activeExpanded.querySelector('svg');
+                    if (svg) {
+                        if (svg.dataset.origWidth) svg.setAttribute('width', svg.dataset.origWidth);
+                        else svg.removeAttribute('width');
+                        if (svg.dataset.origStyle) svg.setAttribute('style', svg.dataset.origStyle);
+                        else svg.removeAttribute('style');
+                    }
+                }
+                activeExpanded.classList.remove('is-expanded');
+                return;
+            }
+
+            var zoomableDiv = e.target.closest('.zoomable-img-container, .mermaid');
+            if (zoomableDiv) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (zoomableDiv.classList.contains('mermaid')) {
+                    var svg = zoomableDiv.querySelector('svg');
+                    if (svg) {
+                        if (!svg.dataset.origWidth) svg.dataset.origWidth = svg.getAttribute('width') || '';
+                        if (!svg.dataset.origStyle) svg.dataset.origStyle = svg.getAttribute('style') || '';
+
+                        var viewBox = svg.getAttribute('viewBox');
+                        if (viewBox) {
+                            var parts = viewBox.split(' ');
+                            if (parts.length === 4) {
+                                var nativeWidth = parseFloat(parts[2]);
+                                if (nativeWidth > 800) {
+                                    var targetWidth = nativeWidth * 1.15;
+                                    svg.style.setProperty('width', targetWidth + 'px', 'important');
+                                    svg.style.setProperty('min-width', targetWidth + 'px', 'important');
+                                } else {
+                                    svg.style.setProperty('width', '100%', 'important');
+                                }
+                            }
+                        } else {
+                            svg.style.setProperty('width', '1500px', 'important');
+                        }
+                    }
+                }
+
+                zoomableDiv.classList.add('is-expanded');
+
+                if (zoomableDiv.scrollWidth <= zoomableDiv.clientWidth) {
+                    zoomableDiv.style.setProperty('justify-content', 'center', 'important');
+                } else {
+                    zoomableDiv.style.setProperty('justify-content', 'flex-start', 'important');
+                    zoomableDiv.scrollLeft = 0;
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                var activeExpanded = document.querySelector('.is-expanded');
+                if (activeExpanded) {
+                    if (activeExpanded.classList.contains('mermaid')) {
+                        var svg = activeExpanded.querySelector('svg');
+                        if (svg) {
+                            if (svg.dataset.origWidth) svg.setAttribute('width', svg.dataset.origWidth);
+                            else svg.removeAttribute('width');
+                            if (svg.dataset.origStyle) svg.setAttribute('style', svg.dataset.origStyle);
+                            else svg.removeAttribute('style');
+                        }
+                    }
+                    activeExpanded.classList.remove('is-expanded');
+                }
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initImageZoom();
+        bindZoomEvents();
+    });
+</script>
+
+<!-- ==================== InstantClick Pjax - 无刷新页面切换 ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/instantclick@3.1.0/instantclick.min.js" data-no-instant></script>
+<script data-no-instant>
+    // Pjax 完成后重新初始化需要重新执行的组件
+    function onPjaxComplete() {
+        console.log('🔄 Pjax 完成，重新初始化动态组件');
+
+        // 重置初始化标志，让组件可以重新执行
+        window._mermaidInitialized = false;
+        window._katexRunning = false;
+        window._imageZoomInitialized = false;
+        // 注意：_zoomEventsBound 不重置，因为事件委托是全局的
+
+        // 重新初始化各个组件
+        initMermaid();
+        initKaTeX();
+        initImageZoom();
+
+        // 重新触发文章的代码高亮（如果存在）
+        if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        // 触发自定义事件，供其他脚本监听
+        document.dispatchEvent(new CustomEvent('pjax:complete'));
+    }
+
+    // 配置 InstantClick
+    InstantClick.on('change', function () {
+        // 延迟一点点确保 DOM 完全替换
+        setTimeout(onPjaxComplete, 50);
+    });
+
+    // 启动 InstantClick（使用 mousedown 让体验更跟手）
+    InstantClick.init('mousedown');
+
+    console.log('🚀 InstantClick 已启动，页面切换将无刷新');
+</script>

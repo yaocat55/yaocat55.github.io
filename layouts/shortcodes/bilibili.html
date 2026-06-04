@@ -1,0 +1,12 @@
+{{- $bvid := .Get "bvid" -}}
+{{- $page := .Get "page" | default 1 -}}
+
+{{- if not $bvid -}}
+{{- errorf "缺少 bvid 参数：请提供 B站视频的 BV 号" -}}
+{{- end -}}
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 1.5rem 0;">
+    <iframe src="https://player.bilibili.com/player.html?bvid={{ $bvid }}&page={{ $page }}&high_quality=1"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
+    </iframe>
+</div>

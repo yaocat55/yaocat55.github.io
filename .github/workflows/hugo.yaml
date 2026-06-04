@@ -1,0 +1,38 @@
+name: 部署博客到 GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # 当你推送代码到 main 分支时自动触发
+
+# 给 workflow 写权限，部署需要
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 拉取代码（包括 PaperMod 子模块）
+      - name: 拉取代码
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # 2. 安装 Hugo
+      - name: 安装 Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      # 3. 构建博客（生成 public/ 目录）
+      - name: 构建
+        run: hugo --minify
+
+      # 4. 部署到 GitHub Pages
+      - name: 部署
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public

@@ -1,0 +1,1387 @@
+/* ============================================
+   PaperMod 深度自定义 v3.2
+   技术文档向 | 中英文混排优化
+   智能代码配色 + 完整主题配色
+   ============================================ */
+
+/* --------------------------------------------
+   1. 全局变量与基础设置
+--------------------------------------------- */
+:root {
+    /* 字体系统 - 优化版 */
+    --font-base: "Inter", system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Noto Sans CJK SC", sans-serif;
+    --font-code: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+
+    /* 可选：调整字体渲染 */
+    font-synthesis: none;
+    /* 避免字体合成加粗/斜体 */
+    text-rendering: optimizeLegibility;
+}
+
+body {
+    font-family: var(--font-base);
+    font-feature-settings: "calt" 1, "ss01" 1;
+}
+
+code,
+pre,
+kbd,
+samp {
+    font-family: var(--font-code);
+    font-variant-ligatures: contextual;
+    font-feature-settings: "calt" 1;
+
+    /* 动画时长 */
+    --duration-fast: 0.15s ease;
+    --duration-normal: 0.25s ease;
+    --duration-slow: 0.4s ease;
+}
+
+/* ========== 浅色模式 - 晨雾竹林配色（高对比文字） ========== */
+html:not([data-theme="dark"]) {
+    /* 整体背景 - 柔和晨雾绿 */
+    --theme: #dadfce;
+    --background: #dadfce;
+    --code-bg: #e2e8d6;
+
+    /* 卡片/容器背景 - 米白带绿 */
+    --entry: #f2efdf;
+    --card-bg: #f2efdf;
+
+    /* 边框 - 柔和过渡 */
+    --border: #c5cdb5;
+    --tertiary: #d0d9c2;
+
+    /* 文字颜色 - 深色高对比 */
+    --primary: #2a4a20;
+    /* 标题/强调 - 深墨绿 */
+    --primary-dark: #1e3a15;
+    /* 深色强调 */
+    --secondary: #5a6e50;
+    /* 次要文字 - 中绿灰 */
+    --content: #2c3825;
+    /* 正文 - 深灰绿，保证阅读舒适 */
+
+    /* 链接 - 清新但醒目 */
+    --link: #3d6b35;
+    --link-hover: #2a5522;
+
+    /* 代码块 */
+    --hljs-bg: #e2e8d6;
+    --hljs-color: #2c3825;
+}
+
+
+html:not([data-theme="dark"]) body {
+    background-color: #e8f0e6;
+    color: var(--content);
+}
+
+html:not([data-theme="dark"]) .post-content {
+    color: #2c3e2f;
+}
+
+/* ========== 深色模式 - IDEA Darcula 完整配色 ========== */
+html[data-theme="dark"] {
+    /* IDEA Darcula 主题色 */
+    --theme: #2b2b2b;
+    --background: #2b2b2b;
+    --code-bg: #2b2b2b;
+
+    /* 卡片/容器背景 - 稍亮 */
+    --entry: #323232;
+    --card-bg: #323232;
+
+    /* 边框 */
+    --border: #4a4a4a;
+    --tertiary: #3c3f41;
+
+    /* 文字颜色 - IDEA Darcula 风格 */
+    --primary: #ffc66d;
+    --primary-dark: #e6b85c;
+    --secondary: #a9b7c6;
+    --content: #a9b7c6;
+
+    /* 链接 */
+    --link: #ffc66d;
+    --link-hover: #e6b85c;
+}
+
+html[data-theme="dark"] body {
+    background-color: #2b2b2b;
+    color: #a9b7c6;
+}
+
+html[data-theme="dark"] .post-content {
+    color: #a9b7c6;
+}
+
+body {
+    font-family: var(--font-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transition: background-color var(--duration-normal), color var(--duration-normal);
+}
+
+::selection {
+    background: rgba(255, 193, 7, 0.3);
+}
+
+html[data-theme="dark"] ::selection {
+    background: rgba(255, 193, 7, 0.4);
+}
+
+/* --------------------------------------------
+   2. 页面过渡动画
+--------------------------------------------- */
+main {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------
+   3. 文章容器卡片样式
+--------------------------------------------- */
+.main .post {
+    background: var(--entry);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color var(--duration-normal), box-shadow var(--duration-normal);
+}
+
+html:not([data-theme="dark"]) .main .post {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="dark"] .main .post {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 文章列表条目 */
+.post-entry {
+    background: var(--entry);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: transform var(--duration-normal), box-shadow var(--duration-normal), background-color var(--duration-normal);
+}
+
+html:not([data-theme="dark"]) .post-entry {
+    border-color: #d4e2cc;
+}
+
+html[data-theme="dark"] .post-entry {
+    border-color: #4a4a4a;
+}
+
+.post-entry:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* --------------------------------------------
+   4. 内容区核心样式
+--------------------------------------------- */
+.post-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    word-spacing: normal;
+    letter-spacing: normal;
+}
+
+/* 桌面端强制左对齐 */
+@media (min-width: 768px) {
+    .post-content p {
+        text-align: left;
+    }
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content pre,
+.post-content .highlight,
+.post-content table {
+    text-align: left;
+}
+
+/* --------------------------------------------
+   5. 标题系统
+--------------------------------------------- */
+.post-content h1 {
+    font-size: 2.25rem;
+    margin: 3rem 0 1.5rem;
+    font-weight: 700;
+}
+
+html:not([data-theme="dark"]) .post-content h1 {
+    color: #1e4a1d;
+}
+
+html[data-theme="dark"] .post-content h1 {
+    color: #ffc66d;
+}
+
+.post-content h2 {
+    font-size: 1.8rem;
+    margin: 3.5rem 0 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    transition: border-color var(--duration-fast);
+}
+
+html:not([data-theme="dark"]) .post-content h2 {
+    color: #2d5a2c;
+    border-bottom-color: #d4e2cc;
+}
+
+html[data-theme="dark"] .post-content h2 {
+    color: #ffc66d;
+    border-bottom-color: #4a4a4a;
+}
+
+.post-content h2:hover {
+    border-bottom-color: var(--primary);
+}
+
+.post-content h3 {
+    font-size: 1.5rem;
+    margin: 2.5rem 0 1.2rem;
+    font-weight: 600;
+    transition: transform var(--duration-fast);
+}
+
+html:not([data-theme="dark"]) .post-content h3 {
+    color: #3a6e38;
+}
+
+html[data-theme="dark"] .post-content h3 {
+    color: #e6b85c;
+}
+
+.post-content h3:hover {
+    transform: translateX(4px);
+}
+
+.post-content h4 {
+    font-size: 1.25rem;
+    margin: 2rem 0 1rem;
+    font-weight: 600;
+}
+
+html:not([data-theme="dark"]) .post-content h4 {
+    color: #4a7e48;
+}
+
+html[data-theme="dark"] .post-content h4 {
+    color: #ccb87c;
+}
+
+/* 移动端标题调整 */
+@media screen and (max-width: 767px) {
+    .post-content h3 {
+        font-size: 1.3rem;
+    }
+
+    .post-content h4 {
+        font-size: 1.15rem;
+    }
+
+    .post-content h1,
+    .post-content h2,
+    .post-content h3,
+    .post-content h4 {
+        scroll-margin-top: 80px;
+    }
+}
+
+/* --------------------------------------------
+   6. 链接样式
+--------------------------------------------- */
+a {
+    transition: color var(--duration-fast), text-decoration-color var(--duration-fast);
+}
+
+.post-content a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+html:not([data-theme="dark"]) .post-content a {
+    color: #2d7a2c;
+    text-decoration-color: #b8d4b0;
+}
+
+html[data-theme="dark"] .post-content a {
+    color: #ffc66d;
+    text-decoration-color: #6a6a6a;
+}
+
+html:not([data-theme="dark"]) .post-content a:hover {
+    color: #1e6a1d;
+    text-decoration-color: #2d7a2c;
+}
+
+html[data-theme="dark"] .post-content a:hover {
+    color: #f0c674;
+    text-decoration-color: #ffc66d;
+}
+
+/* --------------------------------------------
+   7. 智能代码配色
+--------------------------------------------- */
+code,
+kbd,
+pre,
+samp {
+    font-family: var(--font-code) !important;
+}
+
+/* 行内代码 */
+.post-content code:not(pre code) {
+    font-family: var(--font-code);
+    font-size: 0.92em;
+    padding: 0.15rem 0.35rem;
+    margin: 0 0.15rem;
+    border-radius: 4px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.4;
+    transition: background-color var(--duration-fast);
+}
+
+html:not([data-theme="dark"]) .post-content code:not(pre code) {
+    color: #1e6f5c;
+    background-color: rgba(30, 111, 92, 0.12);
+}
+
+html:not([data-theme="dark"]) .post-content code:not(pre code):hover {
+    background-color: rgba(30, 111, 92, 0.22);
+}
+
+html[data-theme="dark"] .post-content code:not(pre code) {
+    color: #ff9d00;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="dark"] .post-content code:not(pre code):hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 代码块容器 */
+.post-content .highlight,
+.post-content pre {
+    margin: 2.5rem 0 !important;
+    border-radius: 12px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    transition: box-shadow var(--duration-normal);
+}
+
+.post-content .highlight:hover,
+.post-content pre:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.post-content .chroma {
+    overflow-x: auto;
+    border-radius: 12px;
+}
+
+/* 代码块滚动条 */
+.post-content .highlight::-webkit-scrollbar,
+.post-content pre::-webkit-scrollbar {
+    height: 6px;
+}
+
+.post-content .highlight::-webkit-scrollbar-thumb,
+.post-content pre::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+/* ========== 语言：Java, Kotlin, Go, Maven - IDEA配色 ========== */
+/* 浅色模式 - IDEA Light */
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma {
+    background: #ffffff;
+    color: #2c3e50;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .c,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .c1,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cm,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cp,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cs {
+    color: #8f8f8f;
+    font-style: italic;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .k,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kd,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kn,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kp,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kr,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kt {
+    color: #0000c0;
+    font-weight: bold;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .s,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .s1,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .s2,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sb,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sd,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .se,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sh,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .si,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sx,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sr,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .ss {
+    color: #00627a;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .m,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mf,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mh,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mi,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mo,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .il {
+    color: #00627a;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nf,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .fm {
+    color: #00627a;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .no,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nx,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .na {
+    color: #00627a;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .o,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .ow {
+    color: #2c3e50;
+}
+
+/* 深色模式 - IDEA Darcula */
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma {
+    background: #2b2b2b;
+    color: #a9b7c6;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .err {
+    color: #bc3f3c;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .c,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .ch,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cm,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cp,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cpf,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .c1,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .cs {
+    color: #808080;
+    font-style: italic;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .k,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kc,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kd,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kn,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kp,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kr,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .kt {
+    color: #cc7832;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .s,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sa,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sb,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sc,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .dl,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sd,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .s2,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .se,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sh,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .si,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sx,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .sr,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .s1,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .ss {
+    color: #6a8759;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .m,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mb,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mf,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mh,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mi,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .mo,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .il {
+    color: #6897bb;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .f,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .fm,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nc,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .no,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nd,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nx,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .nt,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .na {
+    color: #ffc66d;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .o,
+html[data-theme="dark"] .post-content .highlight:is(.language-java, .language-kotlin, .language-go, .language-maven, .language-xml) .chroma .ow {
+    color: #cc7832;
+}
+
+/* ========== 语言：TS, JS - VS Code配色 ========== */
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma {
+    background: #ffffff;
+    color: #1e1e1e;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .c,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .c1,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .cm,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .cp,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .cs {
+    color: #6a9955;
+    font-style: italic;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .k,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kd,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kn,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kp,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kr,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kt {
+    color: #0000ff;
+    font-weight: bold;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .s,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .s1,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .s2,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sb,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sd,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .se,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sh,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .si,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sx,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sr,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .ss {
+    color: #a31515;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .m,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mf,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mh,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mi,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mo,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .il {
+    color: #098658;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .nf,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .fm {
+    color: #795e26;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .nc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .no,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .nx {
+    color: #267f99;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .na {
+    color: #af00db;
+}
+
+/* 深色模式 - VS Code Dark+ */
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma {
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .c,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .c1,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .cm,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .cp,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .cs {
+    color: #6a9955;
+    font-style: italic;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .k,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kc,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kd,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kn,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kp,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kr,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .kt {
+    color: #569cd6;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .s,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .s1,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .s2,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sb,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sc,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sd,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .se,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sh,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .si,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sx,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .sr,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .ss {
+    color: #ce9178;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .m,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mf,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mh,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mi,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .mo,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .il {
+    color: #b5cea8;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .nf,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .fm {
+    color: #dcdcaa;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .nc,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .no,
+html[data-theme="dark"] .post-content .highlight:is(.language-ts, .language-tsx, .language-js, .language-javascript, .language-jsx) .chroma .nx {
+    color: #4ec9b0;
+}
+
+/* ========== 语言：Bash, Zsh, Shell - macOS终端配色 ========== */
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma {
+    background: #1e1e2e;
+    color: #cdd6f4;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .c,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .c1,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .cm {
+    color: #6a9955;
+    font-style: italic;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .k,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kd,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kn,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kp,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kr,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kt {
+    color: #f38ba8;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .s,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .s1,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .s2,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sb,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sc,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sd,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .se,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sh,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .si,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sx,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sr,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .ss {
+    color: #a6e3a1;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .m,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mf,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mh,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mi,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mo,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .il {
+    color: #fab387;
+}
+
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .nf,
+html:not([data-theme="dark"]) .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .fm {
+    color: #89b4fa;
+}
+
+/* 深色模式 - macOS 终端深色 */
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma {
+    background: #1e1e2e;
+    color: #cdd6f4;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .c,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .c1,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .cm {
+    color: #6a9955;
+    font-style: italic;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .k,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kc,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kd,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kn,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kp,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kr,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .kt {
+    color: #f38ba8;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .s,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .s1,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .s2,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sb,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sc,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sd,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .se,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sh,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .si,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sx,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .sr,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .ss {
+    color: #a6e3a1;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .m,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mf,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mh,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mi,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .mo,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .il {
+    color: #fab387;
+}
+
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .nf,
+html[data-theme="dark"] .post-content .highlight:is(.language-bash, .language-sh, .language-zsh, .language-shell) .chroma .fm {
+    color: #89b4fa;
+}
+
+/* --------------------------------------------
+   7. 表格样式
+--------------------------------------------- */
+.post-content table {
+    width: 100%;
+    margin: 2rem 0;
+    border-collapse: collapse;
+}
+
+.post-content th {
+    font-weight: 600;
+    background-color: var(--tertiary);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    text-align: left;
+}
+
+.post-content td {
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    line-height: 1.6;
+    transition: background-color var(--duration-fast);
+}
+
+.post-content tr:nth-child(even) {
+    background-color: rgba(128, 128, 128, 0.05);
+}
+
+.post-content tr:hover td {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+/* 移动端表格 */
+@media screen and (max-width: 768px) {
+    .post-content table {
+        display: block;
+        font-size: 0.9rem;
+    }
+
+    .post-content th,
+    .post-content td {
+        padding: 8px 12px;
+        min-width: 80px;
+    }
+}
+
+/* --------------------------------------------
+   8. 引用块
+--------------------------------------------- */
+.post-content blockquote {
+    margin: 2rem 0;
+    padding: 1rem 1.5rem;
+    border-left: 5px solid var(--primary);
+    background: var(--tertiary);
+    border-radius: 0 12px 12px 0;
+    transition: transform var(--duration-fast), border-left-color var(--duration-fast);
+}
+
+html:not([data-theme="dark"]) .post-content blockquote {
+    background: #f0f5ed;
+}
+
+html[data-theme="dark"] .post-content blockquote {
+    background: #3c3f41;
+}
+
+.post-content blockquote:hover {
+    transform: translateX(5px);
+}
+
+.post-content blockquote blockquote {
+    border-left: 3px solid var(--primary);
+    margin-left: 0.5rem;
+    padding-left: 1rem;
+}
+
+/* --------------------------------------------
+   9. 列表样式
+--------------------------------------------- */
+.post-content ul,
+.post-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+}
+
+.post-content ul ul,
+.post-content ol ol {
+    padding-left: 1.5rem;
+}
+
+.post-content li {
+    margin-bottom: 0.6rem;
+    transition: transform var(--duration-fast);
+}
+
+.post-content li:hover {
+    transform: translateX(4px);
+}
+
+.post-content li::marker {
+    color: var(--primary);
+}
+
+/* --------------------------------------------
+   10. 图片
+--------------------------------------------- */
+.post-content img,
+.post-content figure img {
+    display: block;
+    max-width: 100%;
+    border-radius: 12px;
+    margin: 2.5rem auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background-color: var(--tertiary);
+    transition: transform var(--duration-normal), box-shadow var(--duration-normal);
+}
+
+.post-content img:hover,
+.post-content figure img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.post-content figcaption {
+    font-size: 0.9em;
+    color: var(--secondary);
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+/* --------------------------------------------
+   11. 脚注
+--------------------------------------------- */
+.footnotes {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border);
+    font-size: 0.9em;
+}
+
+.footnotes li {
+    margin-bottom: 0.8rem;
+}
+
+.footnote-ref {
+    font-family: var(--font-code);
+    font-size: 0.85em;
+}
+
+/* --------------------------------------------
+   12. 目录 (TOC)
+--------------------------------------------- */
+/* 大屏侧边栏 */
+@media screen and (min-width: 1280px) {
+    .toc {
+        font-size: 16px;
+        line-height: 1.6;
+        padding: 20px !important;
+        border-radius: 12px;
+        background: var(--entry);
+        border: 1px solid var(--border);
+    }
+
+    .toc:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .toc summary {
+        font-size: 18px;
+        margin-bottom: 15px;
+        color: var(--primary);
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .toc summary:hover {
+        opacity: 0.8;
+    }
+
+    .toc ul {
+        margin-inline-start: 15px;
+    }
+
+    .toc li {
+        margin-bottom: 8px;
+    }
+
+    .toc a {
+        color: var(--secondary);
+        transition: transform 0.2s ease, color 0.2s ease;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .toc a:hover {
+        color: var(--primary);
+        transform: translateX(4px);
+    }
+
+    .toc::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .toc::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+    }
+}
+
+/* 中屏 */
+@media screen and (min-width: 769px) and (max-width: 1279px) {
+    .toc {
+        font-size: 16px;
+        background: var(--entry);
+        border-radius: 12px;
+        padding: 16px !important;
+        border: 1px solid var(--border);
+    }
+
+    .toc summary {
+        cursor: pointer;
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .toc summary:hover {
+        opacity: 0.8;
+    }
+}
+
+/* 移动端折叠式目录 */
+@media screen and (max-width: 768px) {
+    .toc {
+        background: var(--entry);
+        border-radius: 12px;
+        margin: 1rem 0;
+        padding: 12px !important;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+    }
+
+    .toc details[open] summary {
+        margin-bottom: 12px;
+        position: sticky;
+        top: 0;
+        background: inherit;
+        z-index: 1;
+    }
+
+    .toc summary {
+        cursor: pointer;
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .toc summary:hover {
+        opacity: 0.8;
+    }
+}
+
+/* --------------------------------------------
+   13. 标签云
+--------------------------------------------- */
+.tags a,
+.post-tags a {
+    display: inline-flex;
+    padding: 4px 12px;
+    margin: 0 6px 6px 0;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all var(--duration-fast);
+}
+
+html:not([data-theme="dark"]) .tags a,
+html:not([data-theme="dark"]) .post-tags a {
+    background: #d4e2cc;
+    color: #2d5a2c;
+    border: 1px solid #c0d4b5;
+}
+
+html:not([data-theme="dark"]) .tags a:hover,
+html:not([data-theme="dark"]) .post-tags a:hover {
+    background: #c0d4b5;
+    color: #1e4a1d;
+    transform: translateY(-2px);
+}
+
+html[data-theme="dark"] .tags a,
+html[data-theme="dark"] .post-tags a {
+    background: #3c3f41;
+    color: #a9b7c6;
+    border: 1px solid #4a4a4a;
+}
+
+html[data-theme="dark"] .tags a:hover,
+html[data-theme="dark"] .post-tags a:hover {
+    background: #4a4a4a;
+    color: #ffc66d;
+    transform: translateY(-2px);
+}
+
+/* --------------------------------------------
+   14. 代码复制按钮
+--------------------------------------------- */
+.highlight {
+    position: relative;
+}
+
+.copy-code-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--tertiary);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--duration-normal), background var(--duration-fast), transform var(--duration-fast);
+    font-family: var(--font-base);
+}
+
+html:not([data-theme="dark"]) .copy-code-button {
+    background: #d4e2cc;
+    color: #2d5a2c;
+}
+
+html[data-theme="dark"] .copy-code-button {
+    background: #3c3f41;
+    color: #a9b7c6;
+}
+
+.copy-code-button:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+.highlight:hover .copy-code-button {
+    opacity: 1;
+}
+
+/* --------------------------------------------
+   15. 个人资料头像
+--------------------------------------------- */
+.profile img {
+    min-width: 30px !important;
+    min-height: 30px !important;
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: contain;
+    transition: transform var(--duration-normal), box-shadow var(--duration-normal);
+    border-radius: 50%;
+}
+
+.profile img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* --------------------------------------------
+   16. 按钮和交互元素
+--------------------------------------------- */
+button,
+.button {
+    transition: transform var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
+    cursor: pointer;
+}
+
+button:hover,
+.button:hover {
+    transform: translateY(-2px);
+}
+
+/* 键盘焦点 */
+a:focus-visible,
+button:focus-visible,
+.toc a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* 平滑滚动 */
+html {
+    scroll-behavior: smooth;
+}
+
+/* --------------------------------------------
+   17. 页脚调整
+--------------------------------------------- */
+.footer .copyright {
+    display: none !important;
+}
+
+/* --------------------------------------------
+   18. 搜索框样式
+--------------------------------------------- */
+.search-wrapper .search {
+    background: var(--entry);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+html:not([data-theme="dark"]) .search-wrapper .search {
+    background: #f5f9f2;
+}
+
+html[data-theme="dark"] .search-wrapper .search {
+    background: #323232;
+}
+
+/* --------------------------------------------
+   19. 打印样式
+--------------------------------------------- */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+
+    .post-content pre,
+    .post-content code:not(pre code) {
+        background: #f5f5f5 !important;
+        border: 1px solid #ddd;
+        box-shadow: none;
+    }
+
+    .post-content pre code {
+        color: black !important;
+    }
+
+    .toc,
+    .footer,
+    .post-content img,
+    .post-content figure img {
+        display: none;
+    }
+
+    .post-content a {
+        text-decoration: underline;
+        color: black;
+    }
+
+    .post-content blockquote {
+        border-left: 3px solid #ccc;
+        background: #f9f9f9;
+    }
+
+    * {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
+/* --------------------------------------------
+   20. 可访问性：减少动画偏好
+--------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* --------------------------------------------
+   深色模式 - 补充修复卡片、列表、主页元素背景
+--------------------------------------------- */
+
+/* 文章列表条目 - 深色模式 */
+html[data-theme="dark"] .post-entry {
+    background: #323232 !important;
+    border-color: #4a4a4a;
+}
+
+/* 主页文章列表容器 */
+html[data-theme="dark"] .list .post-entry {
+    background: #323232;
+}
+
+/* 第一篇文章（可能单独样式） */
+html[data-theme="dark"] .first-entry {
+    background: #323232;
+}
+
+/* 分页组件 */
+html[data-theme="dark"] .pagination a {
+    background: #323232;
+    border-color: #4a4a4a;
+    color: #a9b7c6;
+}
+
+html[data-theme="dark"] .pagination a:hover {
+    background: #3c3f41;
+    color: #ffc66d;
+}
+
+/* 归档页面 */
+html[data-theme="dark"] .archive-year {
+    color: #ffc66d;
+}
+
+html[data-theme="dark"] .archive-month {
+    color: #a9b7c6;
+}
+
+html[data-theme="dark"] .archive-entry {
+    background: #323232;
+    border-color: #4a4a4a;
+}
+
+/* 搜索框深色模式 */
+html[data-theme="dark"] .search-wrapper .search {
+    background: #323232 !important;
+    border-color: #4a4a4a;
+}
+
+html[data-theme="dark"] .search-wrapper .search input {
+    background: #323232;
+    color: #a9b7c6;
+}
+
+html[data-theme="dark"] .search-wrapper .search input::placeholder {
+    color: #808080;
+}
+
+/* TOC目录深色模式 - 强制背景 */
+@media screen and (min-width: 1280px) {
+    html[data-theme="dark"] .toc {
+        background: #323232 !important;
+        border-color: #4a4a4a;
+    }
+}
+
+@media screen and (max-width: 1279px) {
+    html[data-theme="dark"] .toc {
+        background: #323232 !important;
+        border-color: #4a4a4a;
+    }
+}
+
+/* 代码块深色模式统一背景 */
+html[data-theme="dark"] .highlight,
+html[data-theme="dark"] pre {
+    background: #2b2b2b;
+}
+
+/* 行内代码深色模式背景 */
+html[data-theme="dark"] .post-content code:not(pre code) {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 脚注深色模式 */
+html[data-theme="dark"] .footnotes {
+    border-top-color: #4a4a4a;
+}
+
+/* 文章头部信息深色模式 */
+html[data-theme="dark"] .post-meta {
+    color: #808080;
+}
+
+html[data-theme="dark"] .post-meta time {
+    color: #808080;
+}
+
+/* 分享按钮深色模式 */
+html[data-theme="dark"] .share-buttons {
+    background: #323232;
+    border-color: #4a4a4a;
+}
+
+
+/* ========== 强制浅色模式代码块背景 ========== */
+html:not([data-theme="dark"]) .highlight,
+html:not([data-theme="dark"]) .highlight .chroma,
+html:not([data-theme="dark"]) .chroma,
+html:not([data-theme="dark"]) pre.chroma {
+    background: #e2e8d6 !important;
+}
+
+html:not([data-theme="dark"]) .chroma {
+    background: #e2e8d6 !important;
+    color: #2c3825 !important;
+}
+
+

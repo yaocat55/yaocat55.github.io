@@ -1,0 +1,42 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;INNER JOIN vs LEFT JOIN vs RIGHT JOIN 数据流对比&lt;/b&gt;" style="text;html=1;fontSize=15;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+      <mxGeometry x="50" y="8" width="500" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="inner_title" value="&lt;b&gt;INNER JOIN&lt;/b&gt;" style="text;html=1;fontSize=13;fillColor=#C8E6C9;strokeColor=#388E3C;fontColor=#1B5E20;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="55" width="130" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="inner_a" value="A: {1,a} {2,b}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=9;fontColor=#1565C0;" vertex="1" parent="1">
+      <mxGeometry x="20" y="95" width="110" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="inner_b" value="B: {1,x} {3,y}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=9;fontColor=#1565C0;" vertex="1" parent="1">
+      <mxGeometry x="20" y="138" width="110" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="inner_result" value="→ {1,a,1,x}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=9;fontColor=#1B5E20;" vertex="1" parent="1">
+      <mxGeometry x="20" y="185" width="120" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="left_title" value="&lt;b&gt;LEFT JOIN&lt;/b&gt;" style="text;html=1;fontSize=13;fillColor=#FFF9C4;strokeColor=#F9A825;fontColor=#E65100;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="55" width="140" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="left_a" value="A 全部保留→" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=9;fontColor=#1565C0;" vertex="1" parent="1">
+      <mxGeometry x="180" y="95" width="110" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="left_unmatch" value="{2,b} 匹配不上" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=9;fontColor=#B71C1C;" vertex="1" parent="1">
+      <mxGeometry x="180" y="138" width="110" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="left_result" value="→ {1,a,1,x}&lt;br&gt;→ {2,b,NULL,NULL}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=9;fontColor=#E65100;" vertex="1" parent="1">
+      <mxGeometry x="180" y="180" width="130" height="35" as="geometry"/>
+    </mxCell>
+    <mxCell id="right_title" value="&lt;b&gt;RIGHT JOIN&lt;/b&gt; = 换位 LEFT" style="text;html=1;fontSize=12;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontColor=#4A148C;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="55" width="200" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="right_note" value="A RIGHT JOIN B&lt;br&gt;= B LEFT JOIN A&lt;br&gt;很少用，直接写成 LEFT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=9;fontColor=#4A148C;" vertex="1" parent="1">
+      <mxGeometry x="370" y="100" width="170" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="warning" value="&lt;b&gt;⚠ LEFT JOIN 锁死驱动表&lt;/b&gt; — 如果不需要保留左表不匹配行，改用 INNER JOIN 让优化器自由选驱动表" style="text;html=1;fillColor=#FFCCBC;strokeColor=#E64A19;fontSize=11;fontColor=#BF360C;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="540" height="32" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

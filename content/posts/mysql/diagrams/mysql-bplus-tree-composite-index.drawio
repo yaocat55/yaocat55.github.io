@@ -1,0 +1,35 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;联合索引 (last_name, first_name) 的 B+树结构&lt;/b&gt;" style="text;html=1;fontSize=16;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+      <mxGeometry x="130" y="8" width="500" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="rule" value="&lt;b&gt;排序规则：先按 last_name 排 → last_name 相同时按 first_name 排&lt;/b&gt;" style="text;html=1;fontSize=11;fillColor=#E8EAF6;strokeColor=none;fontColor=#1A237E;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="45" width="480" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="leaf1" value="&lt;b&gt;Adams, Alice&lt;/b&gt;&lt;br&gt;→ id=15&lt;br&gt;&lt;b&gt;Adams, Bob&lt;/b&gt;&lt;br&gt;→ id=3&lt;br&gt;&lt;b&gt;Adams, Charlie&lt;/b&gt;&lt;br&gt;→ id=22" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="leaf2" value="&lt;b&gt;Baker, David&lt;/b&gt;&lt;br&gt;→ id=8&lt;br&gt;&lt;b&gt;Baker, Eve&lt;/b&gt;&lt;br&gt;→ id=12&lt;br&gt;&lt;b&gt;Baker, Frank&lt;/b&gt;&lt;br&gt;→ id=30" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;align=left;" vertex="1" parent="1">
+      <mxGeometry x="220" y="100" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="leaf3" value="&lt;b&gt;Smith, George&lt;/b&gt;&lt;br&gt;→ id=5&lt;br&gt;&lt;b&gt;Smith, Helen&lt;/b&gt;&lt;br&gt;→ id=18&lt;br&gt;&lt;b&gt;Smith, Ian&lt;/b&gt;&lt;br&gt;→ id=25" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;align=left;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow12" value="" edge="1" parent="1" source="leaf1" target="leaf2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E65100;strokeWidth=2;dashed=1;endArrow=classic;startArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="arrow23" value="" edge="1" parent="1" source="leaf2" target="leaf3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E65100;strokeWidth=2;dashed=1;endArrow=classic;startArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="q1" value="&lt;b&gt;✅ WHERE last_name='Adams' AND first_name='Bob'&lt;/b&gt;&lt;br&gt;两列都确定 → 精确定位到 (Adams,Bob) → 不用回表查主键，直接拿 id" style="text;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;rounded=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="30" y="220" width="450" height="38" as="geometry"/>
+    </mxCell>
+    <mxCell id="q2" value="&lt;b&gt;✅ WHERE last_name='Baker'&lt;/b&gt;&lt;br&gt;匹配最左列 → 定位到 Baker 区间 → 扫描直到 last_name 不再是 Baker" style="text;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;rounded=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="30" y="265" width="450" height="35" as="geometry"/>
+    </mxCell>
+    <mxCell id="q3" value="&lt;b&gt;❌ WHERE first_name='David'&lt;/b&gt;&lt;br&gt;跳过最左列 → first_name 在整个树中不连续，索引无法使用" style="text;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=10;fontColor=#B71C1C;rounded=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="30" y="305" width="450" height="35" as="geometry"/>
+    </mxCell>
+    <mxCell id="q4" value="&lt;b&gt;⚠ WHERE last_name &gt; 'A' AND first_name = 'Bob'&lt;/b&gt;&lt;br&gt;last_name 用范围后，内部排序失效 → first_name 条件只能当过滤，不能走索引" style="text;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;fontColor=#E65100;rounded=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="30" y="345" width="460" height="35" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

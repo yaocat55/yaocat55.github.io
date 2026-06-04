@@ -1,0 +1,175 @@
+baseURL = "https://yaocat55.github.io/"
+title = "CatBlog"
+paginate = 5
+theme = "PaperMod"
+enableRobotsTXT = true
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+enableEmoji = true
+pygmentsUseClasses = true
+mainsections = ["posts", "papermod"]
+cleanDestinationDir = true
+
+
+[minify]
+disableXML = true
+minifyOutput = true
+
+[params]
+env = "production"
+description = "一只会写代码的猫的博客"
+keywords = ["Blog", "Cat", "技术", "编程", "PaperMod"]
+author = "yaocat55"
+images = ["/images/avatar.jpg"]
+DateFormat = "January 2, 2006"
+defaultTheme = "auto"
+disableThemeToggle = false
+ShowReadingTime = true
+ShowShareButtons = true
+ShowPostNavLinks = true
+ShowBreadCrumbs = true
+ShowCodeCopyButtons = true
+ShowWordCount = true
+ShowRssButtonInSectionTermList = true
+UseHugoToc = true
+disableSpecial1stPost = false
+disableScrollToTop = false
+comments = false
+hidemeta = false
+hideSummary = false
+showtoc = true
+tocopen = true
+math = true
+
+  # 个人档模式配置（Profile Mode）
+  [params.profileMode]
+    enabled = true
+    title = "CatBlog"
+    subtitle = "一只会写代码的猫 🐱"
+    imageUrl = "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTc0bGdxYXNpeHpxOXdrZW5ieWJpaWdoaW03cDgwMHg2dDRrc2RybiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pY8jLmZw0ElqvVeRH4/giphy.gif"
+    imageTitle = "猫猫头像"
+    imageWidth = 100
+    imageHeight = 100
+    buttons = [
+      { name = "📝 文章", url = "/posts" },
+      { name = "🏷️ 标签", url = "/tags" },
+      { name = "📂 分类", url = "/categories" },
+      { name = "🔍 搜索", url = "/search" },
+      { name = "🐱 GitHub", url = "https://github.com/yaocat55" }
+    ]
+
+  # 社交图标配置
+  [[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/yaocat55"
+
+
+  [[params.socialIcons]]
+  name = "email"
+  url = "mailto:yaomingye55@gmail.com"
+
+  [[params.socialIcons]]
+  name = "rss"
+  url = "/index.xml"
+
+  #可以继续添加更多社交图标
+  # [[params.socialIcons]]
+  # name = "gmail"
+  # url = "yaomingye55@gmail.com"
+
+  # 封面图配置（如果你暂时不想显示封面图，保持 hidden = true 即可）
+  [params.cover]
+    hidden = false
+    hiddenInList = false
+    hiddenInSingle = false
+
+  # 搜索功能配置
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 0
+    limit = 10
+    keys = ["title", "permalink", "summary", "content"]
+
+  # 网站图标配置（需要先把图片放到 static 目录下）
+  [params.assets]
+    favicon = "/favicon.ico"
+    favicon16x16 = "/favicon-16x16.png"
+    favicon32x32 = "/favicon-32x32.png"
+    apple_touch_icon = "/apple-touch-icon.png"
+    safari_pinned_tab = "/safari-pinned-tab.svg"
+
+  # 网站验证配置（SEO相关）
+  [params.analytics.google]
+    SiteVerificationTag = "XYZabc"
+
+  [params.analytics.bing]
+    SiteVerificationTag = "XYZabc"
+
+  [params.analytics.yandex]
+    SiteVerificationTag = "XYZabc"
+
+# 多语言配置（中文）
+[languages.zh]
+languageName = "中文"
+weight = 1
+title = "CatBlog"
+description = "一只会写代码的猫的博客"
+
+# 主菜单配置
+[[languages.zh.menu.main]]
+name = "📝 文章"
+url = "/posts/"
+weight = 1
+
+[[languages.zh.menu.main]]
+name = "📂 归档"
+url = "/archives/"
+weight = 2
+
+[[languages.zh.menu.main]]
+name = "🔍 搜索"
+url = "/search/"
+weight = 3
+
+[[languages.zh.menu.main]]
+name = "🏷️ 标签"
+url = "/tags/"
+weight = 4
+
+[[languages.zh.menu.main]]
+name = "📁 分类"
+url = "/categories/"
+weight = 5
+
+
+
+# 输出格式配置（搜索功能需要 JSON 格式）
+[outputs]
+home = ["HTML", "RSS", "JSON"]
+page = ["HTML"]
+section = ["HTML", "RSS"]
+taxonomy = ["HTML"]
+term = ["HTML"]
+
+# Markdown 渲染配置
+[markup]
+  [markup.highlight]
+    noClasses = false
+    # 代码高亮样式（可选：friendly, dracula, monokai, pygments 等）
+    style = "friendly"
+
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true  # 允许在 Markdown 中使用原始 HTML
+
+[markup.tableOfContents]
+  endLevel = 3
+  ordered = false
+  startLevel = 2
+
+

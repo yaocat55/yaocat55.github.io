@@ -1,0 +1,48 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;MVCC 完整流程：从 SELECT 到返回可见版本&lt;/b&gt;" style="text;html=1;fontSize=15;fillColor=none;strokeColor=none;fontColor=#1a237e;" vertex="1" parent="1">
+      <mxGeometry x="60" y="8" width="460" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="step1" value="&lt;b&gt;❶ 创建 ReadView&lt;/b&gt;&lt;br&gt;记录快照：&lt;br&gt;trx_ids / min_trx_id / max_trx_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=10;fontColor=#1565C0;" vertex="1" parent="1">
+      <mxGeometry x="30" y="55" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="step2" value="&lt;b&gt;❷ B+树查找目标行&lt;/b&gt;&lt;br&gt;主键索引或二级索引&lt;br&gt;→ 找到叶子页最新版本" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=10;fontColor=#1B5E20;" vertex="1" parent="1">
+      <mxGeometry x="260" y="55" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="step3" value="&lt;b&gt;❸ 读 DB_TRX_ID&lt;/b&gt;&lt;br&gt;对照 ReadView 判断可见性" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=10;fontColor=#E65100;" vertex="1" parent="1">
+      <mxGeometry x="480" y="55" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="cond" value="&lt;b&gt;可见?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#E1BEE7;strokeColor=#7B1FA2;fontSize=11;fontColor=#4A148C;" vertex="1" parent="1">
+      <mxGeometry x="510" y="145" width="110" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="yes_result" value="&lt;b&gt;✅ 返回该版本数据&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontSize=12;fontColor=#1B5E20;" vertex="1" parent="1">
+      <mxGeometry x="30" y="155" width="170" height="35" as="geometry"/>
+    </mxCell>
+    <mxCell id="no_follow" value="&lt;b&gt;❌ 不可见 → 沿 DB_ROLL_PTR&lt;/b&gt;&lt;br&gt;跳到 Undo Log 的上一个版本" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontSize=10;fontColor=#B71C1C;" vertex="1" parent="1">
+      <mxGeometry x="260" y="145" width="200" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="undo_chain" value="&lt;b&gt;Undo Log 版本链&lt;/b&gt;&lt;br&gt;[V3]→[V2]→[V1]→[INSERT]→NULL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#FFB300;fontSize=10;fontColor=#5D4037;" vertex="1" parent="1">
+      <mxGeometry x="260" y="220" width="200" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="tail" value="&lt;b&gt;到链尾？→ 该行不可见&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#9E9E9E;fontSize=10;fontColor=#616161;" vertex="1" parent="1">
+      <mxGeometry x="30" y="230" width="170" height="35" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="step1" target="step2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#1976D2;strokeWidth=1.5;endArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="step2" target="step3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#388E3C;strokeWidth=1.5;endArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="step3" target="cond" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F9A825;strokeWidth=1.5;endArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_yes" edge="1" parent="1" source="cond" target="yes_result" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#388E3C;strokeWidth=2;endArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e_no" edge="1" parent="1" source="cond" target="no_follow" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#C62828;strokeWidth=2;endArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="yes_label" value="YES" style="text;html=1;fontSize=10;fillColor=none;strokeColor=none;fontColor=#388E3C;" vertex="1" parent="1">
+      <mxGeometry x="565" y="125" width="30" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="no_label" value="NO" style="text;html=1;fontSize=10;fillColor=none;strokeColor=none;fontColor=#C62828;" vertex="1" parent="1">
+      <mxGeometry x="470" y="125" width="30" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_back" edge="1" parent="1" source="no_follow" target="step3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#FFB300;strokeWidth=1.5;dashed=1;endArrow=classic;"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="loop_label" value="🔄 循环判断" style="text;html=1;fontSize=10;fillColor=none;strokeColor=none;fontColor=#E65100;" vertex="1" parent="1">
+      <mxGeometry x="420" y="200" width="70" height="18" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
