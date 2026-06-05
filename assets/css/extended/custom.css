@@ -1319,10 +1319,6 @@ html[data-theme="dark"] .archive-month {
     color: #a9b7c6;
 }
 
-html[data-theme="dark"] .archive-entry {
-    background: #323232;
-    border-color: #4a4a4a;
-}
 
 /* 搜索框深色模式 */
 html[data-theme="dark"] .search-wrapper .search {

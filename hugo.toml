@@ -10,6 +10,7 @@ enableEmoji = true
 pygmentsUseClasses = true
 mainsections = ["posts", "papermod"]
 cleanDestinationDir = true
+copyright = "© 2022 CatBlog"
 
 
 [minify]
@@ -72,6 +73,7 @@ math = true
   [[params.socialIcons]]
   name = "rss"
   url = "/index.xml"
+
 
   #可以继续添加更多社交图标
   # [[params.socialIcons]]
