@@ -1,4 +1,4 @@
-name: 部署博客到 GitHub Pages
+name: 部署博客到 GitHub Pages 和 ECS
 
 on:
   push:
@@ -12,6 +12,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       # 1. 拉取代码（包括 PaperMod 子模块）
       - name: 拉取代码
@@ -31,8 +32,35 @@ jobs:
         run: hugo --minify
 
       # 4. 部署到 GitHub Pages
-      - name: 部署
+      - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
+        continue-on-error: true  # 失败也继续下一步
+
+      # 5. 部署到 ECS（通过 SCP 传输文件）
+      - name: 部署到 ECS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: root
+          key: ${{ secrets.ECS_SSH_KEY }}
+          port: 22
+          source: "public/*"
+          target: "/var/www/blog/"
+          strip_components: 1
+        continue-on-error: true  # 失败也继续下一步
+
+      # 6. 重启 ECS 上的 Nginx 容器
+      - name: 重启 Nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECS_HOST }}
+          username: root
+          key: ${{ secrets.ECS_SSH_KEY }}
+          port: 22
+          script: |
+            docker exec blog-nginx nginx -s reload
+            echo "Nginx reloaded successfully"
+        continue-on-error: true
