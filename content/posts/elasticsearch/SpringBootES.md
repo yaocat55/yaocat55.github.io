@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "一篇覆盖 SpringBoot Elasticsearch 全部常用操作，含 Entity 映射、ElasticsearchRestTemplate、Repository、搜索、聚合、高亮与批量写入，看完直接上手做项目。"
+description: "一篇覆盖 SpringBoot Elasticsearch 全部常用操作，含 Entity 映射、ElasticsearchRestTemplate、Repository、搜索、聚合、高亮、批量写入，以及真实电商项目的 RestHighLevelClient 封装、四种数据同步模式与搜索优化实践，看完直接上手做项目。"
 disableShare: true
 hideSummary: false
 searchHidden: false
@@ -133,48 +133,110 @@ Windows 环境如果不方便用 Docker，可以直接下载 ES 的 Windows 版 
 
 ### 4.1 配置 ES 连接
 
-在 `application.yml` 中写入：
+<strong>方式一：Spring Boot 3.x 自动配置（教学项目推荐）</strong>
+
+上面第三步创建的 Spring Boot 3.x 项目，只需要在 `application.yml` 里配好连接即可：
 
 ```yaml
 spring:
   elasticsearch:
-    uris: https://localhost:9200       # ES 8.x 默认 https
+    uris: https://localhost:9200
     username: elastic
     password: changeme
-
-    # 连接超时与 socket 超时
     connection-timeout: 3s
     socket-timeout: 60s
-
-# 如果 ES 是本地开发用的 HTTP（关闭了安全认证），只需要：
-# spring.elasticsearch.uris: http://localhost:9200
 ```
 
-连接问题排错：
+Spring Data ES 的 `ElasticsearchConfiguration` 会自动读取这些配置、创建好客户端 bean，不需要手动写 `@Bean`。
+
+<strong>方式二：手动创建 RestHighLevelClient（真实项目做法）</strong>
+
+但上面那种"自动配置"只在 Spring Boot 3.x + 新 ES Java Client 的项目里生效。下面是 mall 电商项目真实的配置方式——因为项目跑在 <strong>Spring Boot 2.7.x</strong> 上，ES 客户端还是 `RestHighLevelClient`，<strong>必须手动创建 Bean</strong>：
+
+`application-dev.yml`（开发环境）：
+
+```yaml
+spring:
+  elasticsearch:
+    host: 117.72.88.11
+    port: 9200
+    username: elastic
+    password: susan123
+```
+
+`application-prod.yml`（生产环境——敏感信息走环境变量）：
+
+```yaml
+spring:
+  elasticsearch:
+    host: ${ES_HOST}
+    port: ${ES_PORT:9200}
+    username: ${ES_USER}
+    password: ${ES_PASSWORD}
+```
+
+> ⚠️ 新手提示：dev 直接写 IP 和密码很方便，但生产环境必须用环境变量 `${ES_HOST}` 注入——配置文件是提交到 Git 的，密码写死在文件里等于公开。
+
+对应的配置类 `EsConfig`：
+
+```java
+@Configuration
+public class EsConfig {
+
+    @Value("${spring.elasticsearch.host:}")
+    private String host;
+
+    @Value("${spring.elasticsearch.port:9200}")
+    private int port;
+
+    @Value("${spring.elasticsearch.username:}")
+    private String username;
+
+    @Value("${spring.elasticsearch.password:}")
+    private String password;
+
+    @Bean
+    public RestHighLevelClient restHighLevelClient() {
+        RestClientBuilder clientBuilder = RestClient
+            .builder(Arrays.stream(host.split(","))
+                .map(s -> new HttpHost(s, port))
+                .toArray(HttpHost[]::new));          // ① 支持多节点集群：逗号分隔 host
+        if (StringUtils.hasText(username)) {
+            final CredentialsProvider credentialsProvider =
+                new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(
+                AuthScope.ANY,
+                new UsernamePasswordCredentials(username, password));
+            clientBuilder.setHttpClientConfigCallback(
+                httpClientBuilder -> httpClientBuilder
+                    .setDefaultCredentialsProvider(credentialsProvider));
+                                                     // ② Basic Auth：ES 7.x 的 X-Pack 安全
+        }
+        return new RestHighLevelClient(clientBuilder);
+    }
+}
+```
+
+<strong>两个与教科书不同的设计决策</strong>：
+
+**① 为什么不是 `spring.elasticsearch.uris`？**
+
+Spring Boot 3.x 的 `spring.elasticsearch.uris` 走的是新的 `ElasticsearchClient`，Spring Boot 2.7.x 不支持。mall 项目跑在 2.7.x 上，只能用自定义属性 `spring.elasticsearch.host/port` 手动组装 `HttpHost`。`host` 字段支持逗号分隔多个地址——`host: 10.0.0.1,10.0.0.2,10.0.0.3`，启动时自动分发到三个节点。
+
+**② 为什么不直接用 Spring Data ES 的 `ElasticsearchRestTemplate`？**
+
+Spring Data ES 在 2.7.x 确实提供了 `ElasticsearchRestTemplate`，自动完成 POJO 与 JSON 的序列化映射。但项目选择绕过它，直接用 `RestHighLevelClient` + `FastJSON` 手动序列化——原因在 [4.3 自定义 EsTemplate](#43-真实项目中的-estemplate-封装) 详细展开。简单说：<strong>更细粒度的序列化控制、避免 Spring Data 自动映射的 `_class` 字段污染、统一整个项目的 JSON 方案</strong>。
+
+<strong>连接问题排错</strong>：
 
 | 错误信息 | 原因 | 解决 |
 |----------|------|------|
 | `Connection refused` | ES 没启动或端口不对 | `curl localhost:9200` 确认 ES 是否在跑 |
-| `unable to find valid certification path` | 自签名证书验证失败 | 开发环境可临时关闭 SSL 校验（见下文配置类） |
-| `authentication required` | 用户名密码不对 | 确认 `ELASTIC_PASSWORD` 环境变量值 |
+| `unable to find valid certification path` | 自签名证书验证失败 | 开发环境可临时关闭 SSL 校验 |
+| `authentication required` | 用户名密码不对 | 确认环境变量值，检查 `BasicCredentialsProvider` 配置 |
 | `node closed` | 连接池耗尽或 ES 节点异常 | 检查 ES 日志 `docker logs es8` |
-
-ES 8.x 用自签名证书时，Java 默认的 SSL 验证会失败。如果只是本地开发，可以临时绕过：
-
-```java
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
-
-@Configuration
-public class ESConfig extends ElasticsearchConfiguration {
-
-    // 这一行是关键：让 Spring Data ES 使用 application.yml 中的配置
-    // ElasticsearchConfiguration 会自动读取 spring.elasticsearch.* 配置
-}
-```
-
-如果不需要绕过 SSL（生产环境请不要这样配），上面的 `ESConfig` 空类就够了。Spring Data ES 的自动配置会处理好一切。
+| `NoNodeAvailableException` | 所有节点都连不上（集群全挂 / 网络不通） | 逐个 `curl` 各节点 9200 端口 |
+| 连接成功但写入报错 | 索引不存在且未开启自动创建 | 检查 `action.auto_create_index` 设置，或先手动创建索引 |
 
 ### 4.2 Entity 映射 —— 用注解定义 ES 文档结构
 
@@ -256,6 +318,84 @@ public class Product {
 
 关于 `text` vs `keyword` 的选型再强调一次：<strong>需要按部分匹配搜索的字段用 Text，只需要精确匹配或排序聚合的字段用 Keyword</strong>。商品名必须是 Text（用户搜"手机"要能命中"华为手机"），品牌用 Keyword（用户筛选"华为"品牌是精确匹配，不需要分词）。
 
+> 📌 **真实项目中的 Entity 设计**
+
+上面是教学用的 `Product` 实体，下面是 mall 电商项目里真实的 ES 文档实体：
+
+```java
+// ① 所有 ES 文档共用的基类
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class EsBaseEntity implements Serializable {
+    private String id;
+    private Map<String, Object> data;   // 通用字段容器
+}
+
+// ② 商品搜索文档
+@Document(indexName = "#{businessConfig.productEsIndexName}")  // SpEL 动态解析索引名
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProductVO extends EsBaseEntity {
+
+    private Long categoryId;
+    private String name;
+    private String model;
+    private Integer quantity;
+    private Integer remainQuantity;
+
+    @Field(type = FieldType.Keyword)
+    private String price;               // ⚠️ BigDecimal → String，Keyword 类型
+
+    private String cover;
+    private Integer productType;
+
+    @Field(type = FieldType.Keyword)
+    private String saleQuantity;        // ⚠️ 数值存在 String 里，Keyword 类型
+
+    @Field(type = FieldType.Keyword)
+    private String positiveRating;      // ⚠️ 好评率，Keyword 类型
+
+    private String commentCount;
+    private String totalAmount;
+}
+```
+
+<strong>三个与教学用 Entity 不同的设计决策</strong>：
+
+**① 为什么 `price`、`saleQuantity`、`positiveRating` 用 `Keyword` 而不是 `Integer` / `Double`？**
+
+这是 mall 项目里最重要的 ES 优化之一——<strong>这三个字段不是用来做范围过滤的，而是用来排序的</strong>。来看真实搜索代码里的排序：
+
+```java
+searchSourceBuilder.sort(SortBuilders.fieldSort("saleQuantity.keyword").order(SortOrder.DESC));
+searchSourceBuilder.sort(SortBuilders.fieldSort("positiveRating.keyword").order(SortOrder.DESC));
+searchSourceBuilder.sort(SortBuilders.fieldSort("price.keyword").order(SortOrder.DESC));
+```
+
+ES 里 `Keyword` 类型的排序比 `Integer` / `Double` 更快——不需要解析数值，直接按字典序比较字节。而且项目里这些字段是从 `BigDecimal` / `Integer` 转成 `String` 存的（见 `ProductConvertMapper`），前端不需要在 ES 层做范围过滤（范围过滤在业务层用 MySQL 做了），所以 `<strong>转成 Keyword、省掉数值解析开销</strong>`。
+
+**② 为什么索引名用 SpEL `#{businessConfig.productEsIndexName}`？**
+
+`@Document(indexName = "product")` 是硬编码。mall 项目有两个 ES 索引——`product-es-index-v1`（普通商品）和 `seckill-product-es-index-v1`（秒杀商品），名称定义在 `BusinessConfig` 里：
+
+```java
+@Data
+@Component
+@ConfigurationProperties(prefix = "mall.mgt")
+public class BusinessConfig {
+    private String productEsIndexName = "product-es-index-v1";
+    private String seckillProductEsIndexName = "seckill-product-es-index-v1";
+}
+```
+
+SpEL `#{businessConfig.productEsIndexName}` 让索引名从配置中心动态读取——切换索引版本（如 `product-es-index-v2`）时只需改配置，不用改代码。
+
+**③ 为什么有个 `EsBaseEntity` 父类，里面还有个 `Map<String, Object> data`？**
+
+`EsBaseEntity` 是项目中所有 ES 文档的公共父类。`data` 字段是一个通用兜底容器——当 JSON 里有 `@Field` 注解没覆盖到的字段时，FastJSON 会把它们塞进 `data` Map 里，不会丢数据。这是一种<strong>防御性设计</strong>：MySQL 表加字段后，即使忘记更新 ES Entity，同步也不会报错。
+
 ### 4.3 ElasticsearchRestTemplate —— 核心操作类
 
 `ElasticsearchRestTemplate` 是 Spring Data ES 提供的最核心操作类（对标 Redis 的 `RedisTemplate`）。所有 CRUD、搜索、聚合操作都通过它执行。
@@ -326,6 +466,80 @@ String result = restTemplate.delete("1", Product.class);
 ```
 
 > ⚠️ 新手提示：`save()` 是<strong>全量覆盖</strong>，不是部分更新。如果从 JSON 反序列化过来的对象缺少某些字段，save 后这些字段就没了。正确的部分更新方式：先 `get` 查到完整对象，修改字段后再 `save`。
+
+> 📌 **真实项目中的 CRUD：自定义 EsTemplate 封装**
+
+上面演示的是 Spring Data ES 的标准写法。mall 项目封装了自己的 `EsTemplate`，直接用 `RestHighLevelClient` 的原生 API + `FastJSON` 序列化：
+
+```java
+@Component
+@Slf4j
+public class EsTemplate {
+
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
+
+    // ============ ① 写入 / 更新（upsert） ============
+    public boolean insertOrUpdate(String indexName, EsBaseEntity esBaseEntity) {
+        BulkRequest bulkRequest = new BulkRequest();
+        IndexRequest request = new IndexRequest(indexName);
+        request.id(esBaseEntity.getId());
+        request.source(JSON.toJSONString(esBaseEntity), XContentType.JSON);
+        bulkRequest.add(request);
+        try {
+            BulkResponse response = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+            return response.status().equals(RestStatus.OK);
+        } catch (IOException e) {
+            log.error("写入ES失败，原因：", e);
+            throw new BusinessException("写入ES失败");
+        }
+    }
+
+    // ============ ② 批量删除 ============
+    public <T> boolean deleteBatch(String indexName, Collection<T> idList) throws IOException {
+        BulkRequest request = new BulkRequest();
+        idList.forEach(item -> request.add(new DeleteRequest(indexName, item.toString())));
+        BulkResponse bulkResponse = restHighLevelClient.bulk(request, RequestOptions.DEFAULT);
+        boolean flag = true;
+        for (BulkItemResponse response : bulkResponse) {
+            if (response.isFailed()) {
+                flag = false;
+                BulkItemResponse.Failure failure = response.getFailure();
+                log.error(failure.getMessage(), failure.getCause());
+            }
+        }
+        return flag;
+    }
+
+    // ============ ③ 搜索（带总数） ============
+    public <T> List<T> search(String idxName, SearchSourceBuilder builder,
+                               Class<T> aClass, ResponsePageEntity responsePageEntity)
+            throws IOException {
+        SearchRequest request = new SearchRequest(idxName);
+        request.source(builder);
+        SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        SearchHit[] hits = response.getHits().getHits();
+        responsePageEntity.setTotalCount((int) response.getHits().getTotalHits().value);
+        return Arrays.stream(hits)
+            .map(hit -> JSON.parseObject(hit.getSourceAsString(), aClass))
+            .collect(Collectors.toList());
+    }
+}
+```
+
+<strong>三个与 `ElasticsearchRestTemplate` 不同的设计决策</strong>：
+
+**① 为什么用 `BulkRequest` 包装单个 `IndexRequest`？**
+
+单条写入也用 `BulkRequest`——不是过度设计。Bulk API 的响应粒度更细：每条 `BulkItemResponse` 都有独立的成功/失败标记和错误信息。`IndexRequest` 单独调用时，一次网络失败整个请求就挂了，排查困难。`BulkRequest` 的 `BulkItemResponse.isFailed()` 能精确定位<strong>哪一条数据写入失败、失败原因是什么</strong>。
+
+**② 为什么用 `FastJSON` 手动序列化而不是 Spring Data 自动映射？**
+
+Spring Data ES 的 `MappingElasticsearchConverter` 会自动给每个文档加上 `_class` 字段（存 Java 全限定类名），方便反序列化时知道该转成哪个类。但这有两个问题：一是 `_class` 字段污染索引、占存储空间；二是当 Entity 类重命名或移动包时，旧数据的 `_class` 值对不上，反序列化直接报错。项目选择 `FastJSON` 手动序列化——<strong>完全控制 JSON 结构，不产生任何元数据字段</strong>。
+
+**③ 为什么没用到 `ElasticsearchRestTemplate` 的 Repository 模式？**
+
+`ElasticsearchRepository` 只支持精确匹配 + 简单范围的查询。mall 项目的搜索需求是 `multiMatchQuery` 多字段关键词匹配 + 多维度排序——Repository 的方法命名规则根本覆盖不了。所以项目全程走 `EsTemplate.search()` + `SearchSourceBuilder` 手写查询。
 
 <strong>4.3.3 搜索查询 —— NativeQuery + QueryBuilders</strong>
 
@@ -440,6 +654,76 @@ NativeQuery query = NativeQuery.builder()
         new String[]{}))                // excludes
     .build();
 ```
+
+> 📌 **真实项目中的搜索：multiMatchQuery + 多维度排序**
+
+上面用 `NativeQuery` 演示了标准写法，下面是 mall 项目 `ProductSearchService.searchFromES()` 的真实搜索代码——用原生 `SearchSourceBuilder` 构建：
+
+```java
+public ResponsePageEntity<ProductVO> searchFromES(ProductConditionVO productQuery) {
+    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+    searchSourceBuilder.from(productQuery.getPageBegin());
+    searchSourceBuilder.size(productQuery.getPageSize());
+
+    // ① 分类筛选：matchQuery 精确匹配 categoryId
+    if (Objects.nonNull(productQuery.getCategoryId())) {
+        searchSourceBuilder.query(
+            QueryBuilders.matchQuery("categoryId", productQuery.getCategoryId()));
+    }
+
+    // ② 关键词搜索：multiMatchQuery 同时在 name 和 model 两个字段搜
+    if (StringUtils.hasLength(productQuery.getKeyword())) {
+        searchSourceBuilder.query(
+            QueryBuilders.multiMatchQuery(productQuery.getKeyword(), "name", "model"));
+    }
+
+    // ③ 多维度排序策略
+    setTypeCondition(productQuery, searchSourceBuilder);
+
+    List<ProductVO> productEntities = esTemplate.search(
+        businessConfig.getProductEsIndexName(), searchSourceBuilder,
+        ProductVO.class, responsePageEntity);
+    // ...
+}
+
+private void setTypeCondition(ProductConditionVO productQuery,
+                               SearchSourceBuilder searchSourceBuilder) {
+    switch (productQuery.getType()) {
+        case 1:  // 综合排序：销量↓ + 好评率↓ + 价格↓
+            sortByComprehensive(searchSourceBuilder);
+            break;
+        case 2:  // 按销量排序
+            sortBySaleQuantity(searchSourceBuilder);
+            break;
+        case 3:  // 按价格排序
+            sortByPrice(searchSourceBuilder);
+            break;
+    }
+}
+
+private void sortByComprehensive(SearchSourceBuilder searchSourceBuilder) {
+    searchSourceBuilder.sort(
+        SortBuilders.fieldSort("saleQuantity.keyword").order(SortOrder.DESC));
+    searchSourceBuilder.sort(
+        SortBuilders.fieldSort("positiveRating.keyword").order(SortOrder.DESC));
+    searchSourceBuilder.sort(
+        SortBuilders.fieldSort("price.keyword").order(SortOrder.DESC));
+}
+```
+
+<strong>三个业务上的优化决策</strong>：
+
+**① 为什么用 `multiMatchQuery` 而不是对 `name` 和 `model` 分别写 match？**
+
+商品搜索的输入是一个字符串——用户可能在搜商品名（"华为Mate60"）也可能在搜型号（"Mate60 Pro"），甚至只打"60"想命中两者。`multiMatchQuery` 一次搜索同时命中 `name` 和 `model` 两个字段，ES 内部自动算加权分——匹配度高的排前面。
+
+**② 为什么排序字段后面都加 `.keyword`？**
+
+前面 4.2 的 Entity 设计讲了——`price`、`saleQuantity`、`positiveRating` 全是 `Keyword` 类型。`SortBuilders.fieldSort("saleQuantity")` 对 text 字段排序会报错，必须指定 `.keyword` 子字段。这也是为什么这些"看起来像数值"的字段被存成 Keyword——<strong>排序比数值计算更快</strong>。
+
+**③ 为什么用 `SearchSourceBuilder`（原生 ES API）而不是 `NativeQuery`（Spring Data 封装）？**
+
+因为 `EsTemplate.search()` 接收的就是原生 `SearchSourceBuilder`——它直接透传给 `RestHighLevelClient`，不经过 Spring Data 的任何转换。<strong>少一层封装就少一层序列化开销</strong>。在搜索 QPS 高的场景下，这个差异累积起来很可观。
 
 <strong>4.3.4 高亮（Highlight）</strong>
 
@@ -680,163 +964,273 @@ restTemplate.delete(query, Product.class);
 | `restTemplate.indexOps(clazz).create()` | 创建索引 | 初始化 |
 | `restTemplate.indexOps(clazz).delete()` | 删除索引 | 重建索引 |
 
-## 第五步：真实业务场景串联
+## 第五步：真实业务场景串联——四种 ES 使用模式
 
-现在用一个完整的"商品搜索"功能把所有学到的操作串起来。
+前面 4.3.3 展示了真实项目的搜索代码。但 ES 在 mall 项目里不只是"搜索框背后那个引擎"——它承载了<strong>四种不同的数据同步和查询模式</strong>。下面按数据流向逐一展开。
 
-场景：用户在电商首页搜索"华为手机"，系统返回匹配商品列表，按销量排序，左侧展示品牌和分类筛选聚合。
+<strong>数据流全景</strong>：
+
+```mermaid
+flowchart TD
+    A[管理后台 CRUD] --> B{操作类型}
+    B -->|秒杀商品| C[SeckillProductService]
+    B -->|普通商品| D[ProductCommandService]
+
+    C --> E[MySQL INSERT/UPDATE]
+    C --> F[ES insertOrUpdate]
+    C --> G[Redis SET stock + detail]
+    E --> H[秒杀商品实时三写完成]
+
+    D --> I[MySQL INSERT/UPDATE]
+    I --> J[不直接写 ES]
+
+    K[Quartz 定时任务] --> L[SyncProductToEsJob]
+    L --> M[SyncProductService.syncProductToES]
+    M --> N[MySQL 分页读 isDel=0]
+    M --> O[ES insertOrUpdate 逐条写入]
+    M --> P[MySQL 分页读 isDel=1]
+    M --> Q[ES deleteBatch 批量删除]
+
+    R[Mahout 推荐任务] --> S[RecommendProductService.recommendProductToRedis]
+    S --> T[MySQL 读浏览记录]
+    T --> U[Mahout UserCF 计算]
+    U --> V[Redis SET 推荐商品ID列表]
+
+    W[用户端请求] --> X[ProductSearchService.searchFromES]
+    X --> Y[ES multiMatchQuery 搜索]
+    W --> Z[RecommendProductService.recommendProduct]
+    Z --> AA[Redis GET 推荐ID]
+    AA --> BB[ES IdsQuery 批量取商品]
+```
+
+---
+
+### 模式一：普通商品搜索（实时查询）
+
+就是 4.3.3 展示的 `ProductSearchService.searchFromES()`——用户端发起搜索请求，ES 执行 `multiMatchQuery` + 排序，返回分页结果。不再重复贴代码。
+
+<strong>关键点</strong>：普通商品的 ES 索引<strong>不是实时更新的</strong>——商品新增/修改/删除后，MySQL 立即生效，但 ES 要等到下一个定时任务跑完才同步（见模式二）。所以这个搜索有<strong>分钟级的延迟窗口</strong>。
+
+---
+
+### 模式二：普通商品批量同步（定时任务）
+
+这是 mall 项目里<strong>最"重"的 ES 操作</strong>——定时把 MySQL 中所有商品数据全量同步到 ES。`SyncProductService.syncProductToES()` 做两件事：插入/更新活跃商品 + 删除已下架商品。
 
 ```java
+@Slf4j
 @Service
-public class ProductSearchService {
+public class SyncProductService {
 
     @Autowired
-    private ElasticsearchRestTemplate restTemplate;
+    private ProductService productService;
+    @Autowired
+    private EsTemplate esTemplate;
+    @Autowired
+    private BusinessConfig businessConfig;
+    @Autowired
+    private ProductConvertMapper productConvertMapper;
+    @Autowired
+    private TradeItemService tradeItemService;
+    @Autowired
+    private ProductCommentMapper productCommentMapper;
 
-    /**
-     * 初始化索引（应用启动时执行一次）
-     */
-    @PostConstruct
-    public void initIndex() {
-        if (!restTemplate.indexOps(Product.class).exists()) {
-            restTemplate.indexOps(Product.class).create();
-            System.out.println("product 索引创建成功");
+    public void syncProductToES() {
+        handleInsertOrUpdate();    // ① 同步活跃商品
+        handleDelete();            // ② 清理已删除商品
+    }
+
+    // ============ ① 同步活跃商品 ============
+    private void handleInsertOrUpdate() {
+        ProductQuery productQuery = new ProductQuery();
+        productQuery.setPageSize(NUMBER_500);     // 每批 500 条，避免 OOM
+        productQuery.setIsDel(0);
+        ResponsePageEntity<ProductEntity> page =
+            productService.searchByPage(productQuery);
+
+        while (CollectionUtils.isNotEmpty(page.getData())) {
+            saveData(page.getData());             // 逐条写入 ES
+            productQuery.setPageNo(productQuery.getPageNo() + 1);
+            page = productService.searchByPage(productQuery);
         }
     }
 
-    /**
-     * 批量导入测试数据
-     */
-    public void batchImport(List<Product> products) {
-        List<IndexQuery> queries = products.stream()
-            .map(p -> new IndexQueryBuilder()
-                .withId(p.getId())
-                .withObject(p)
-                .build())
-            .toList();
-        restTemplate.bulkIndex(queries, Product.class);
+    private void saveData(List<ProductEntity> productEntities) {
+        List<ProductVO> dataList = productEntities.stream()
+            .map(x -> productConvertMapper.toProductVO(x))
+            .collect(Collectors.toList());
+
+        for (ProductVO productVO : dataList) {
+            statSaleCount(productVO);             // 从订单表统计实时销量
+            statPositiveRating(productVO);        // 从评价表统计好评率
+            esTemplate.insertOrUpdate(            // 逐条 upsert 到 ES
+                businessConfig.getProductEsIndexName(), productVO);
+        }
     }
 
-    /**
-     * 商品搜索 —— 核心方法
-     */
-    public SearchResult search(String keyword, String brand, String category,
-                                Double minPrice, Double maxPrice,
-                                int page, int size) {
+    // ============ ② 清理已删除商品 ============
+    private void handleDelete() {
+        ProductQuery productQuery = new ProductQuery();
+        productQuery.setPageSize(NUMBER_500);
+        productQuery.setIsDel(1);                 // 查软删除的商品
+        ResponsePageEntity<ProductEntity> page =
+            productService.searchByPage(productQuery);
 
-        // 1. 构建 bool 查询
-        BoolQuery.Builder boolBuilder = QueryBuilders.bool();
-
-        // 关键词搜索（must：参与算分）
-        if (keyword != null && !keyword.isEmpty()) {
-            boolBuilder.must(QueryBuilders.match()
-                .field("name")
-                .query(keyword)
-                .build());
+        while (CollectionUtils.isNotEmpty(page.getData())) {
+            List<Long> idList = page.getData().stream()
+                .map(ProductEntity::getId).collect(Collectors.toList());
+            esTemplate.deleteBatch(               // 从 ES 中清除
+                businessConfig.getProductEsIndexName(), idList);
+            productQuery.setPageNo(productQuery.getPageNo() + 1);
+            page = productService.searchByPage(productQuery);
         }
-
-        // 品牌筛选（filter：不参与算分，走缓存）
-        if (brand != null && !brand.isEmpty()) {
-            boolBuilder.filter(QueryBuilders.term()
-                .field("brand")
-                .value(brand)
-                .build());
-        }
-
-        // 分类筛选
-        if (category != null && !category.isEmpty()) {
-            boolBuilder.filter(QueryBuilders.term()
-                .field("category")
-                .value(category)
-                .build());
-        }
-
-        // 价格区间
-        if (minPrice != null || maxPrice != null) {
-            boolBuilder.filter(QueryBuilders.range()
-                .field("price")
-                .gte(minPrice != null ? minPrice : 0.0)
-                .lte(maxPrice != null ? maxPrice : Double.MAX_VALUE)
-                .build());
-        }
-
-        // 2. 构建完整查询：搜索 + 聚合 + 高亮 + 排序 + 分页
-        NativeQuery query = NativeQuery.builder()
-            .withQuery(boolBuilder.build())
-            // 聚合：品牌分组
-            .withAggregation("brand_agg",
-                AggregationBuilders.terms().field("brand").build())
-            // 聚合：分类分组
-            .withAggregation("category_agg",
-                AggregationBuilders.terms().field("category").build())
-            // 高亮
-            .withHighlightQuery(new HighlightQuery(
-                new Highlight(new HighlightParameters.Builder()
-                    .withPreTags("<strong>")
-                    .withPostTags("</strong>")
-                    .build()),
-                List.of(new HighlightField("name"))))
-            // 排序：销量降序
-            .withSort(Sort.by(
-                new Sort.Order(Sort.Direction.DESC, "soldCount")))
-            // 分页
-            .withPage(Pageable.ofSize(size).withPage(page))
-            .build();
-
-        // 3. 执行搜索
-        SearchHits<Product> hits = restTemplate.search(query, Product.class);
-
-        // 4. 组装返回结果
-        SearchResult result = new SearchResult();
-        result.setTotalHits(hits.getTotalHits());
-
-        // 提取文档列表（含高亮）
-        List<ProductVO> products = new ArrayList<>();
-        for (SearchHit<Product> hit : hits.getSearchHits()) {
-            ProductVO vo = new ProductVO();
-            vo.setProduct(hit.getContent());
-            List<String> highlightName = hit.getHighlightField("name");
-            if (highlightName != null && !highlightName.isEmpty()) {
-                vo.setHighlightName(highlightName.get(0));
-            }
-            products.add(vo);
-        }
-        result.setProducts(products);
-
-        // 5. 解析聚合结果（品牌、分类的统计）
-        // 这里省略聚合解析的详细代码，实际 API 略有版本差异
-        // 核心思路：hits.getAggregations() → 拿 terms bucket → 遍历 key + docCount
-
-        return result;
     }
 }
 ```
 
-上面这段代码就是<strong>一个完整搜索功能的核心代码</strong>。剩下的 Controller 层就是标准 SpringMVC 接收请求参数 → 调 Service → 返回 JSON。
+<strong>三个值得注意的设计</strong>：
+
+**① 为什么逐条写入而不是 `batchInsert` 批量？**
+
+注意代码里 `batchInsert` 被注释掉了（`//esTemplate.batchInsert(...)`），实际用的是 `for` 循环逐条 `insertOrUpdate`。原因：`statSaleCount()` 和 `statPositiveRating()` 需要<strong>逐条计算</strong>销量和好评率——每条商品都要分别查订单表和评价表。批量写入意味着要先批量查出所有商品的统计数据，内存开销太大。逐条处理虽然多了网络往返，但<strong>内存可控、失败可重试单条</strong>。
+
+另外前面 4.2 讲了，`insertOrUpdate` 内部也是 `BulkRequest`——即使单条也是 bulk 调用。500 条逐条调用就是 500 次 bulk，虽然不是最优但数据一致性更好。
+
+**② 为什么同步要分 `isDel=0` 和 `isDel=1` 两趟？**
+
+MySQL 里删除是软删除（`isDel=1`），数据还在。但 ES 索引不需要保留已删除的商品——用户在搜索框里搜不到下架商品。所以：`isDel=0` → ES upsert，`isDel=1` → ES delete。这样 ES 索引只包含<strong>当前在售</strong>的商品。
+
+**③ 为什么销量和好评率不在 MySQL 写入时就计算好？**
+
+销量来自订单表（`TradeItemEntity`），好评率来自评价表（`ProductCommentEntity`）——这两个是实时变化的数据。如果在商品写入 MySQL 时就算好、写到 ES，那么每次有新订单或新评价都得重新同步商品。所以选择<strong>在 ES 同步任务里实时计算</strong>——每次定时任务跑的时候去查最新的订单和评价数据。代价是同步任务变重了，好处是 ES 数据始终是准的。
+
+同步任务通过 Quartz 动态定时任务触发：
 
 ```java
-@RestController
-@RequestMapping("/api/products")
-public class ProductSearchController {
-
+@Component
+public class SyncProductToEsJob extends BaseJob {
     @Autowired
-    private ProductSearchService searchService;
+    private SyncProductService syncProductService;
 
-    @GetMapping("/search")
-    public SearchResult search(
-        @RequestParam(required = false) String keyword,
-        @RequestParam(required = false) String brand,
-        @RequestParam(required = false) String category,
-        @RequestParam(required = false) Double minPrice,
-        @RequestParam(required = false) Double maxPrice,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-
-        return searchService.search(keyword, brand, category,
-            minPrice, maxPrice, page, size);
+    public void run() {
+        syncProductService.syncProductToES();
     }
 }
 ```
+
+Quartz 的 cron 表达式存在 `common_job` 表中，运营可以在后台随时调整同步频率（比如高峰时段每 5 分钟跑一次，低峰时段每 30 分钟）。
+
+---
+
+### 模式三：秒杀商品实时三写（DB + ES + Redis）
+
+秒杀商品和普通商品不一样——<strong>秒杀是高并发场景，数据必须实时准确</strong>。所以秒杀商品的新增/修改不走定时任务，而是写 MySQL 的同时<strong>立即同步 ES 和 Redis</strong>：
+
+```java
+// SeckillProductService.insert() —— 新增秒杀商品
+public void insert(SeckillProductEntity seckillProductEntity) {
+    checkParam(seckillProductEntity);
+    seckillProductMapper.insert(seckillProductEntity);    // ① MySQL
+    syncToESAndRedis(seckillProductEntity);                // ② ES + Redis
+}
+
+private void syncToESAndRedis(SeckillProductEntity entity) {
+    // 查商品封面图（MySQL）
+    List<ProductPhotoEntity> photos = productPhotoMapper.searchByCondition(query);
+    ESSeckillProductEntity esEntity = seckillConvertMapper.toESEntity(entity);
+
+    if (CollectionUtils.isNotEmpty(photos)) {
+        // 取封面图 URL
+        photos.stream().filter(x -> PhotoTypeEnum.COVER.getValue().equals(x.getType()))
+            .findAny().ifPresent(p -> esEntity.setCover(p.getUrl()));
+    }
+
+    esTemplate.insertOrUpdate(                                  // 写入 ES
+        businessConfig.getSeckillProductEsIndexName(), esEntity);
+    redisUtil.increment(getSeckillProductStockKey(esEntity.getId()),   // 写入 Redis 库存
+        esEntity.getWithHoldQuantity());
+    redisUtil.set(getSeckillProductDetailKey(esEntity.getId()),        // 写入 Redis 详情
+        JSON.toJSONString(seckillDetailEntity));
+}
+```
+
+秒杀商品删除同样走<strong>三写一致</strong>——在 `TransactionTemplate` 中同时删 MySQL、ES、Redis：
+
+```java
+// SeckillProductService.deleteByIds()
+return transactionTemplate.execute((status -> {
+    int count = seckillProductMapper.deleteByIds(ids, entity);       // ① MySQL
+    esTemplate.deleteBatch(                                          // ② ES
+        businessConfig.getSeckillProductEsIndexName(), ids);
+    for (Long id : ids) {
+        redisUtil.del(getSeckillProductDetailKey(id.toString()));    // ③ Redis
+    }
+    return count;
+}));
+```
+
+> ⚠️ 写过的都懂——代码里有个 `// TODO: 后续优化 —— 将 ES 删除和 Redis 清除迁移到 MQ 消费者中`。理想情况下 ES 和 Redis 的清除不应该阻塞数据库事务——接到删除请求 → 删 MySQL → 发 MQ 消息 → 异步清 ES 和 Redis。但在事务里同步清也有好处：<strong>三者强一致，不会出现"MySQL 已删但 ES 还能搜到"的窗口</strong>。
+
+---
+
+### 模式四：推荐引擎（Mahout → Redis → ES IdsQuery）
+
+mall 项目基于 Mahout 的 User-Based CF（协同过滤）实现了简单的商品推荐。流程分两步：
+
+<strong>Step 1：离线计算（`recommendProductToRedis`）</strong>——定时任务从 MySQL 读取用户浏览记录 → Mahout 计算用户相似度 → 给每个用户推荐 N 个商品 ID → 存入 Redis：
+
+```java
+public void recommendProductToRedis() {
+    List<ProductViewRecordEntity> records = productViewRecordMapper.searchByCondition(query);
+    List<RecommendEntity> list = convertRecommendEntity(records);
+
+    DataModel dataModel = RecommendFactory.buildJdbcDataModel(list);
+    UserSimilarity similarity = new UncenteredCosineSimilarity(dataModel);
+    UserNeighborhood neighborhood = new NearestNUserNeighborhood(2, similarity, dataModel);
+    Recommender recommender = new GenericUserBasedRecommender(dataModel, neighborhood, similarity);
+
+    for (Long userId : userIdList) {
+        List<Long> recommendedIds = recommender.recommend(userId, recommendProductCount)
+            .stream().map(RecommendedItem::getItemID).collect(Collectors.toList());
+        redisUtil.set("userRecommendProduct:" + userId, JSONUtil.toJsonStr(recommendedIds));
+    }
+}
+```
+
+<strong>Step 2：在线查询（`recommendProduct`）</strong>——用户访问首页时，从 Redis 取出推荐的商品 ID 列表 → 用 ES `IdsQuery` 批量取完整商品文档：
+
+```java
+public List<ProductVO> recommendProduct() {
+    JwtUserEntity user = FillUserUtil.getCurrentUserInfoOrNull();
+    if (user == null) return Collections.emptyList();
+
+    String json = redisUtil.get("userRecommendProduct:" + user.getId());
+    List<Long> productIdList = JSONUtil.toList(json, Long.class);
+
+    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+    IdsQueryBuilder idsQueryBuilder = QueryBuilders.idsQuery();
+    idsQueryBuilder.addIds(productIdList.stream().map(String::valueOf).toArray(String[]::new));
+    searchSourceBuilder.query(idsQueryBuilder);
+
+    return esTemplate.search(businessConfig.getProductEsIndexName(),
+        searchSourceBuilder, ProductVO.class);
+}
+```
+
+<strong>为什么推荐用 `IdsQuery` 而不是 `multiMatchQuery`？</strong>
+
+Mahout 已经算好了推荐给用户的具体是哪些商品，输出的是<strong>精确的商品 ID 列表</strong>，不需要再做全文搜索。`IdsQuery` 直接按 `_id` 批量取文档——ES 内部走 `GET /_doc/id` 级别的索引查找，比全文搜索快一个数量级。
+
+---
+
+<strong>四种模式对照</strong>：
+
+| 模式 | 数据流向 | 同步时机 | 一致性 | 适用场景 |
+|------|------|:---:|:---:|------|
+| 普通商品搜索 | MySQL → 定时任务 → ES → 用户 | 定时（分钟级） | 最终一致 | 搜索框、商品列表 |
+| 批量同步 | MySQL ⇄ ES 双向对比 | 定时（可配置） | 最终一致 | 商品上下架、全量刷新 |
+| 秒杀三写 | MySQL + ES + Redis 同一事务 | 实时 | 强一致（尽力） | 秒杀商品上架 |
+| 推荐引擎 | MySQL → Mahout → Redis → ES | 离线计算 | Redis 缓存为准 | 首页推荐、猜你喜欢 |
 
 ## 第六步：常见问题排查表
 
@@ -850,16 +1244,23 @@ public class ProductSearchController {
 | `SSLHandshakeException` | ES 8.x 自签名证书 | 开发环境临时关闭 SSL 校验 |
 | 批量写入很慢 | 单批太大 / ES 负载过高 | 减小批次到 2000 条，检查 ES 的 `_cat/thread_pool` |
 | Repository 方法不生效 | 方法名不符合命名规则 | 检查方法名中字段名是否与 Entity 一致，拼写是否正确 |
+| 搜索词"60"能搜到"华为Mate60"但只打了"60 Pro"搜不到 | `multiMatchQuery` 默认是 OR 操作符，分词后"60 OR Pro"命中率太高但部分匹配不到 | 改为 `operator(Operator.AND)` 或加 `minimumShouldMatch` |
+| 定时任务跑了但 ES 数据还是旧的 | `insertOrUpdate` 逐条写入失败但异常被吞了 | 检查 `EsTemplate.insertOrUpdate()` 日志，确认每条返回 `RestStatus.OK` |
+| FastJSON 反序列化字段为 null | ES 中存的字段名（snake_case）和 Java 类的属性名（camelCase）不一致 | 统一用 `@Field` 注解显式指定，或用 `@JSONField(name = "xxx")` |
+| 秒杀搜索能查到已删除的商品 | `deleteByIds` 中的 ES 删除被 try-catch 吞了，事务回滚了但 ES 没删 | 检查 `SeckillProductService.deleteByIds()` 的异常处理——TODO 已标注移到 MQ |
+| `RestHighLevelClient` 编译警告：deprecated | ES 7.15+ 标记 `RestHighLevelClient` 为废弃，ES 8.x 已移除 | 迁移到新的 `ElasticsearchClient`（`co.elastic.clients` 包），Spring Boot 3.x + `spring-boot-starter-data-elasticsearch` 已自动切换 |
 
 ## 第七步：总结与下一步
 
 <strong>这篇覆盖的全部内容</strong>：
 
-- <strong>@Document / @Field 注解</strong>：用 Java 注解定义 ES Mapping，自动生成索引
+- <strong>ES 连接配置</strong>：Spring Boot 3.x 自动配置 + 真实项目的手动 `RestHighLevelClient` Bean 创建（多节点 + Basic Auth）
+- <strong>@Document / @Field 注解</strong>：用 Java 注解定义 ES Mapping，含真实项目中的 `ProductVO` + `EsBaseEntity` + SpEL 动态索引名
 - <strong>ElasticsearchRestTemplate</strong>：索引 CRUD、文档 CRUD、match/term/range/bool 搜索、高亮、聚合
+- <strong>真实项目 EsTemplate 封装</strong>：`RestHighLevelClient` + `FastJSON` 手动序列化，`BulkRequest` 单条 upsert，`deleteBatch` 批量删除
+- <strong>真实搜索优化</strong>：`multiMatchQuery` 多字段匹配 + `SortBuilders.fieldSort` 多维度排序 + `Keyword` 类型排序优化
 - <strong>Spring Data ES Repository</strong>：方法名即查询的声明式方式 + `@Query` 手写 DSL
-- <strong>批量写入</strong>：bulkIndex 一次网络请求写入批量数据
-- <strong>完整商品搜索串联</strong>：搜索 + 过滤 + 聚合 + 高亮 + 排序 + 分页，可运行的完整代码
+- <strong>四种 ES 数据流转模式</strong>：普通商品搜索 | 批量定时同步（MySQL→ES） | 秒杀实时三写（MySQL+ES+Redis） | 推荐引擎（Mahout→Redis→ES IdsQuery）
 
 <strong>下一步建议</strong>：
 

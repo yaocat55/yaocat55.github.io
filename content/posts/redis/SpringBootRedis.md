@@ -254,6 +254,61 @@ stringRedisTemplate.opsForValue().increment("user:1:score", 50);
 
 > ⚠️ 新手提示：`increment` 是<strong>原子操作</strong>。多线程并发场景下，用 `increment` 替代"先 get 再 set"的模式，后者在高并发下有竞态条件（Read-Modify-Write 问题）。
 
+<strong>真实项目案例：登录错误计数 + 账号锁定</strong>
+
+下面这段代码来自一个真实商城项目的登录安全模块。场景：同一个用户名连续输错密码 5 次，锁定 24 小时。
+
+```java
+private static final String LOGIN_ERROR_USER_PREFIX = "loginErrorUser:";
+private static final String LOCKED_USER_PREFIX     = "lockedUser:";
+
+private void recordLoginErrorUser(String username) {
+    String errorKey = LOGIN_ERROR_USER_PREFIX + username;
+    // ① INCR 原子自增，并发下不会漏计
+    Long count = redisUtil.increment(errorKey);
+    // ② 第一次出错时设过期时间（24h），避免计数器永久占用内存
+    if (count == 1) {
+        redisUtil.expire(errorKey, 86400);  // 24 小时
+    }
+    // ③ 超过阈值则锁定
+    if (count > 5) {
+        redisUtil.set(LOCKED_USER_PREFIX + username, "true", 86400);
+        throw new BusinessException("该用户已被锁定");
+    }
+}
+```
+
+修复前的旧代码是 `GET → parseInt → ++ → SET` 四步非原子操作——并发场景下两个请求同时 GET 到 count=4，各自 +1 后 SET count=5，谁也不会触发锁定。改成 `INCR` 后一条命令搞定，不存在竞态。
+
+关键设计点：
+- `count == 1` 时才设 `EXPIRE`——只在第一次出错设过期，后续自增不重置 TTL（否则连续输错会让计数器永远不过期）
+- 计数器 key `loginErrorUser:admin` 和锁定标记 key `lockedUser:admin` **分开**——计数器用于逐步累加判断阈值，锁定标记用于登录前快速检查。锁定后计数器 TTL 到期自动清理
+
+<strong>真实项目案例：短信验证码的存储与校验</strong>
+
+短信验证码是 String 类型最常见的业务场景——设值、过期、读取、校验、删除。
+
+```java
+// 发送验证码——存 Redis，key 中包含手机号和业务类型
+String key = String.format("%s%s", "smsRegisterCode:", phone);
+// ① 先检查 60 秒内是否发过（防刷）
+if (StringUtils.hasLength(redisUtil.get(key))) {
+    throw new BusinessException("验证码已发送，请60秒后再试");
+}
+// ② 生成 6 位随机码，60 秒过期
+String code = RandomUtil.getSixBitRandom();
+redisUtil.set(key, code, 60);
+
+// 登录时校验——读出来比对，匹配后删除（一次性消费）
+String cachedCode = redisUtil.get("smsLoginCode:" + phone);
+if (cachedCode == null || !cachedCode.equals(inputCode)) {
+    throw new BusinessException("验证码错误或已过期");
+}
+redisUtil.del("smsLoginCode:" + phone);  // 验证后立即删除
+```
+
+注意两个细节：`smsRegisterCode:` 和 `smsLoginCode:` 是两个**独立的前缀**——注册验证码和登录验证码不共用同一个 key，否则注册流程发的码可能被登录接口误消费。另外，发送前先检查 key 是否存在，天然实现了 60 秒内不允许重复发送的频控。
+
 <strong>分布式 ID 生成器</strong>：
 
 ```java
@@ -711,6 +766,35 @@ public User getUserAndRefreshList(Long id) {
 
 实际项目中通常是<strong>混用</strong>：普通查询用 `@Cacheable`，排行榜/计数器/分布式锁用 `RedisTemplate`。
 
+<strong>真实项目案例：Caffeine L1 + Redis Hash L2 字典缓存</strong>
+
+商城项目的数据字典（国家、省市、商品分类等）变更极少但查询极频繁。直接用 `@Cacheable` 加 Spring Cache，配置 Caffeine 作为一级缓存、Redis 作为二级缓存：
+
+```java
+// ① CacheManager 配置：Caffeine + Redis 双级
+spring.cache.cache-names: dict_data
+spring.cache.type: caffeine
+spring.cache.caffeine.spec: initialCapacity=50,maximumSize=500,expireAfterWrite=60s
+
+// ② Service 层：@Cacheable 兜底 + Redis Hash 精确查
+@Cacheable(value = "dict_data", keyGenerator = "dictCacheKeyGenerator")
+public List<DictDetailEntity> queryDictDetailEntity(String dictName) {
+    // 只有 Caffeine 未命中时才走到这里
+    Object cached = redisUtil.getHashValue("dictData", dictName);
+    if (cached != null) {
+        return JSON.parseArray(cached.toString(), DictDetailEntity.class);
+    }
+    // Redis 也未命中，查 DB 并回写 Redis Hash
+    List<DictDetailEntity> entities = dictMapper.selectByDictName(dictName);
+    redisUtil.putHashValue("dictData", dictName, JSON.toJSONString(entities));
+    return entities;
+}
+```
+
+为什么用 Hash 而不是 String 存整个对象？字典有几十种类型——用 Hash 一个 `dictData` key 下存所有类型，`HGET dictData country` 只返回国家字典，不用整 JSON 反序列化。加上 Caffeine 60 秒本地缓存，查询字典几乎没有网络开销。
+
+
+
 ### 🔒 4.9 Redisson 分布式锁
 
 单机项目用 `synchronized` 或 `ReentrantLock` 就能搞定线程安全。但是多实例部署后，JVM 级别的锁管不到其他实例。此时需要一个跨 JVM 的锁——<strong>分布式锁</strong>。
@@ -748,41 +832,66 @@ public void doSomethingSecurely() {
 }
 ```
 
-<strong>注解版（推荐）</strong>——用 AOP 或直接使用 Redisson 提供的 `@RLock`：
+<strong>真实项目案例：库存扣减 RedissonMultiLock（联锁）</strong>
 
-如果不想每次写 `try-finally`，就封装一个工具类：
+下面是一个商城项目下单扣库存的真实逻辑。一个订单包含多个商品，需要对每个商品分别加锁——但多锁场景有一个致命陷阱：如果先锁商品A成功、再锁商品B失败，商品A的库存已经扣了，商品B没扣成，数据不一致。
+
+正确的做法是 <strong>RedissonMultiLock（联锁）</strong>——所有锁**全部获取成功**才算成功，任一失败则全部释放：
 
 ```java
-public interface LockTask<T> {
-    T execute();
+private static final String REDUCE_STOCK_LOCK_PREFIX = "reduceStockLock:";
+
+// 为订单中的每个商品构造锁 key
+private List<String> getLockKey(TradeEntity tradeEntity) {
+    return tradeEntity.getTradeItemEntityList().stream()
+            .map(item -> REDUCE_STOCK_LOCK_PREFIX + item.getProductId())
+            .collect(Collectors.toList());
 }
 
-public class LockUtil {
-    public static <T> T withLock(RedissonClient client, String key,
-                                  long waitSec, long leaseSec, LockTask<T> task) {
-        RLock lock = client.getLock(key);
-        try {
-            if (lock.tryLock(waitSec, leaseSec, TimeUnit.SECONDS)) {
-                return task.execute();
+public TradeEntity reduceStock(TradeEntity tradeEntity) {
+    List<String> keys = getLockKey(tradeEntity);
+    // RedissonMultiLock：所有锁同时获取，任一失败全部放弃
+    redissonUtil.tryMultiLock(keys, 20, 20, () -> {
+        // 锁内：二次校验库存 → 事务内批量更新
+        checkProductAndStock(tradeEntity);
+        transactionTemplate.execute(status -> {
+            for (TradeItemEntity item : tradeEntity.getTradeItemEntityList()) {
+                productMapper.reduceStock(item.getProductId(), item.getQuantity());
             }
-            throw new RuntimeException("获取锁超时");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("被中断", e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            return Boolean.TRUE;
+        });
+        return tradeEntity;
+    });
+    return tradeEntity;
+}
+```
+
+RedissonUtil 封装：
+
+```java
+public <T> T tryMultiLock(List<String> keys, long waitSeconds,
+                           long leaseSeconds, Supplier<T> supplier) {
+    RLock[] locks = keys.stream()
+            .map(redissonClient::getLock).toArray(RLock[]::new);
+    RedissonMultiLock multiLock = new RedissonMultiLock(locks);
+    try {
+        if (multiLock.tryLock(waitSeconds, leaseSeconds, TimeUnit.SECONDS)) {
+            return supplier.get();
         }
+        throw new BusinessException("服务器内部错误");
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new BusinessException("服务器内部错误");
+    } finally {
+        multiLock.unlock();
     }
 }
-
-// 使用
-LockUtil.withLock(redissonClient, "lock:order:1001", 10, 30, () -> {
-    processOrder(1001);
-    return null;
-});
 ```
+
+三个关键设计点：
+- 锁粒度是**商品级别**（`reduceStockLock:{productId}`）而不是订单级别——只有买同一个商品的两个订单才互斥，买不同商品可以并行扣
+- 锁等待时间和持有时间都设了 20 秒——ShardingSphere 分库分表下 `@Transactional` 不生效，所以用 `TransactionTemplate` 在锁内手动开启 DB 事务
+- 用 `Supplier<T>` 接口封装业务逻辑，`tryMultiLock` 统一处理获取失败、中断、释放——业务代码只关心锁内做什么
 
 <strong>看门狗（Watchdog）机制</strong>：
 
@@ -887,6 +996,93 @@ stringRedisTemplate.convertAndSend("cache:clear", "user:1001");
 ```
 
 > ⚠️ 新手提示：Redis Pub/Sub 是<strong>即发即忘（fire-and-forget）</strong>——发布时订阅者不在线，消息就直接丢了。没有消息持久化、没有重试、没有消费确认。如果需要可靠的消息投递，请用专业的消息队列（RabbitMQ / RocketMQ / Kafka）。
+
+### 🏷️ 4.12 Redis Key 命名规范 — 冒号的秘密
+
+前面所有的示例 key 都用了这样的格式：`reduceStockLock:{productId}`、`loginErrorUser:{username}`、`smsRegisterCode:{phone}`。这不是随手写的，背后有明确的规范。
+
+#### 为什么用冒号而不是下划线或驼峰？
+
+Redis 的 `KEYS` 和 `SCAN` 命令支持**通配符**——冒号天然作为层级分隔符：
+
+```bash
+# 开发环境排错：查所有短信相关的 key
+redis-cli KEYS "sms*"
+# → smsRegisterCode:13800138000
+# → smsLoginCode:13900139000
+
+# 查某用户的全部 token 相关数据
+redis-cli KEYS "token:*"
+
+# 清理某类型缓存（生产慎用 KEYS，用 SCAN）
+redis-cli --scan --pattern "captcha:*"
+```
+
+如果 key 是 `smsRegisterCode_13800138000`，虽然也能 `KEYS sms*`，但冒号分隔的 `smsRegisterCode:13800138000` 在 Redis 客户端 UI 中会自动展示为树形层级结构，一眼就能看出命名空间。
+
+#### 一个商城项目的真实 Redis Key 清单
+
+以下是某个生产级商城项目实际使用的全部 Redis key 前缀，每个都是冒号分隔：
+
+| 命名空间 | Key 格式 | 数据类型 | TTL | 用途 |
+|----------|----------|:---:|-----|------|
+| `token:` | `token:{username}` | String | 1h | JWT token 缓存 |
+| `user:` | `user:{username}` | String | 1h | 用户信息 JSON |
+| `captcha:` | `captcha:{uuid}` | String | 60s | 算术验证码答案 |
+| `smsRegisterCode:` | `smsRegisterCode:{phone}` | String | 60s | 注册短信码 |
+| `smsLoginCode:` | `smsLoginCode:{phone}` | String | 60s | 登录短信码 |
+| `loginErrorUser:` | `loginErrorUser:{username}` | String（INCR） | 24h | 登录失败计数 |
+| `lockedUser:` | `lockedUser:{username}` | String | 24h | 账号锁定标记 |
+| `limitRate:ip:` | `limitRate:ip:{method}_{ip}` | String（Lua INCR） | 60s | 接口限流计数 |
+| `reduceStockLock:` | `reduceStockLock:{productId}` | Redisson RLock | 20s | 库存扣减锁 |
+| `seckillProductDetail:` | `seckillProductDetail:{id}` | String（JSON） | 永久 | 秒杀商品缓存 |
+| `seckillProductStock:` | `seckillProductStock:{id}` | String（DECR） | 永久 | 秒杀库存计数 |
+| `userRecommendProduct:` | `userRecommendProduct:{userId}` | String（JSON） | 永久 | 推荐结果缓存 |
+| `indexProduct:` | `indexProduct:{type}` | String（JSON） | 永久 | 首页商品列表 |
+| `dictData` | `dictData` | Hash | 永久 | 数据字典（手动刷新） |
+| `snowFlakeWorkerId:` | `snowFlakeWorkerId:{app}-{host}-{w}` | String | 1h（心跳续期） | 雪花 Worker ID 租约 |
+
+#### 规则总结
+
+| 规则 | 正确示例 | 错误示例 | 说明 |
+|------|----------|----------|------|
+| 前缀用业务语义 | `token:admin` | `t:admin` | 谁都能看懂 |
+| 冒号分隔层级 | `limitRate:ip:login_1.2.3.4` | `limitRate_ip_login_1.2.3.4` | Redis 桌面客户端自动树形展示 |
+| 避免裸 key | `token:admin` | `admin` | 同名 key 冲突，且无法批量管理 |
+| key 中不存单词 | `reduceStockLock:123` | `reduce_stock_lock:123` | 和 Java 驼峰对齐 |
+| 常量定义集中管理 | `KeyConstant.java` | 字符串硬编码散落各处 | 重构改名时只需改一处 |
+| 注册码和登录码分前缀 | `smsRegisterCode:` / `smsLoginCode:` | 共用 `smsCode:` | 注册和登录两种流程不应互串 |
+
+其中最关键的一条是**前缀 + 冒号**。同一类数据的 key 有了统一前缀，就具备了三个能力：
+
+1. **运维可管理**：`KEYS loginErrorUser:*` 列出所有被锁定用户的计数器，`KEYS lockedUser:*` 列出所有锁定标记，一键查看当前多少账号被锁
+2. **代码可追踪**：全局搜索 `loginErrorUser:` 找到所有引用位置，谁在对这个 key 做操作一目了然
+3. **监控可告警**：监控系统可以对 `DEL seckillProductStock:*` 之类危险操作单独配置告警
+
+下面这个图总结了真实项目中 Redis key 的命名空间全景：
+
+```mermaid
+flowchart LR
+    ROOT["🗄 Redis DB"]
+    AUTH["🔐 认证域<br/>token:<br/>user:<br/>captcha:<br/>smsRegisterCode:<br/>smsLoginCode:<br/>loginErrorUser:<br/>lockedUser:"]
+    BIZ["🛒 业务域<br/>reduceStockLock:<br/>seckillProductDetail:<br/>seckillProductStock:<br/>{userId}(订单确认)"]
+    CACHE["📦 缓存域<br/>indexProduct:<br/>indexNotice<br/>indexCarouselImage<br/>dictData"]
+    RATE["🛡 防护域<br/>limitRate:ip:<br/>limitRate:userId:<br/>repeatSubmit:"]
+    INFRA["⚙️ 基础设施<br/>snowFlakeWorkerId:<br/>userRecommendProduct:"]
+
+    ROOT --> AUTH
+    ROOT --> BIZ
+    ROOT --> CACHE
+    ROOT --> RATE
+    ROOT --> INFRA
+
+    class ROOT root
+    class AUTH,BIZ,CACHE,RATE,INFRA branch
+```
+
+> ⚠️ **新手提示**：上面图中的 `{userId}`（订单确认缓存）是真实项目中的一个反面案例——它直接用用户 ID 数字作为 key，没有前缀。运维排查时看到 `KEYS *` 结果里一个裸数字 `1001`，完全不知道它是什么。后来重构时改成了 `orderConfirm:{userId}`。
+
+---
 
 ## ✅ 第五步：部署验证
 

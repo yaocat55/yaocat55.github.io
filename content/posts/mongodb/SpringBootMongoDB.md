@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "一篇覆盖 SpringBoot MongoDB 全部常用操作，含 Entity 映射、MongoTemplate、MongoRepository、Criteria 查询构建、聚合初探与批量写入，看完直接上手做项目。"
+description: "一篇覆盖 SpringBoot MongoDB 全部常用操作，含 Entity 映射、MongoTemplate、MongoRepository、Criteria 查询构建、聚合初探、批量写入，以及真实电商项目的双写架构分析与两种 MongoDB 使用模式对照，看完直接上手做项目。"
 disableShare: true
 hideSummary: false
 searchHidden: false
@@ -168,6 +168,53 @@ public class Address {                      // 嵌套文档不需要 @Document
 | `@Transient` | 不持久化（忽略此字段） | — |
 | `@DBRef` | 引用另一个 Collection 的文档（不推荐） | — |
 
+> 📌 **真实项目中的 Entity 设计**
+
+上面那个 `User` 是教学用的标准写法。下面是 mall 电商项目里真实的商品详情 Entity：
+
+```java
+@Document(collection = "ProductDetailEntity")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProductDetailEntity extends BaseEntity {
+
+    @Indexed
+    @ApiModelProperty("商品ID")
+    private Long productId;
+
+    @ApiModelProperty("商品详情")
+    private String detail;
+}
+
+// BaseEntity：项目中所有数据表的公共字段
+@Data
+public class BaseEntity implements Serializable {
+    private Long id;              // 雪花算法主键
+    private Long createUserId;
+    private String createUserName;
+    private Date createTime;
+    private Long updateUserId;
+    private String updateUserName;
+    private Date updateTime;
+    private Integer isDel;        // 软删除标记
+}
+```
+
+三个与 `User` 不同的设计决策：
+
+**① 为什么给 `productId` 加 `@Indexed`？**
+
+商品详情的查询永远按 `productId` 来——"某个商品的详情是什么"。不加索引的话，Collection 数据量上来后每次都是全表扫描。`@Indexed` 让 Spring Data MongoDB 自动建索引（dev 环境 `auto-index-creation: true`），prod 环境关掉，由 DBA 手动管理。
+
+**② 为什么继承 `BaseEntity`？**
+
+审计字段（创建人、创建时间、修改人……）每个表都需要。继承 `BaseEntity` 不用重复写，配合 `FillUserUtil.fillCreateUserInfo()` 自动填充，写代码时完全不用关心这些字段。
+
+**③ 为什么同一个 Entity 同时当 `@Document` 和 MyBatis resultType 用？**
+
+项目里商品详情是<strong>双写</strong>的——MySQL 和 MongoDB 各存一份，同一个 Java 类映射两个数据源省去一层 DTO 转换。省事，但风险也很明显：哪天两个数据源字段不一致，排查起来会很头疼。具体双写逻辑在 [4.6 双写架构](#46-真实项目中的双写架构) 详细展开。
+
 ### 4.2 MongoTemplate —— 核心操作类
 
 `MongoTemplate` 是 Spring Data MongoDB 最核心的操作类（对标 `RedisTemplate` / `ElasticsearchRestTemplate`）。所有 CRUD、复杂查询、聚合都通过它执行。
@@ -234,6 +281,61 @@ User updated = mongoTemplate.findAndModify(
 ```
 
 > ⚠️ 新手提示：`save()` vs `insert()`——`save()` 做 upsert（ID 存在就覆盖，不存在就新增），`insert()` 做纯新增（ID 重复会抛 `DuplicateKeyException`）。不确定是新增还是更新时用 `save()`。
+
+> 📌 **真实项目中的写入：商品详情批量插入**
+
+上面演示了通用写法，下面看 mall 项目里真实的商品详情写入——来自 `ProductCommandService.saveProductDetail()`：
+
+```java
+private void saveProductDetail(List<ProductEntity> addList) {
+    // 只有填了"商品详情"的商品才写 MongoDB（空详情没必要存）
+    List<ProductEntity> detailList = addList.stream()
+        .filter(x -> StringUtils.hasLength(x.getDetail()))
+        .collect(Collectors.toList());
+    if (CollectionUtils.isEmpty(detailList)) {
+        return;
+    }
+
+    List<ProductDetailEntity> addDetailList = detailList.stream().map(x -> {
+        ProductDetailEntity productDetailEntity = new ProductDetailEntity();
+        productDetailEntity.setProductId(x.getId());
+        productDetailEntity.setDetail(x.getDetail());
+        productDetailEntity.setId(idGenerateHelper.nextId());  // 雪花算法手动生成主键
+        FillUserUtil.fillCreateUserInfo(productDetailEntity);  // 自动填充审计字段
+        return productDetailEntity;
+    }).collect(Collectors.toList());
+    mongoTemplate.insert(addDetailList, ProductDetailEntity.class);
+}
+```
+
+<strong>三个与教科书写法的区别</strong>：
+
+**① 为什么手动生成 `_id` 而不让 MongoDB 自动生成？** 雪花算法生成的 `Long` 型 ID 全局有序、比 `ObjectId` 短、可以直接当 MySQL 主键复用。`mongoTemplate.insert()` 在 `_id` 已赋值时不再自动生成。
+
+**② 为什么要包在 `TransactionTemplate` 里执行？** 这个项目用了 ShardingSphere 分库分表，`@Transactional` 注解不生效，只能用编程式事务 `transactionTemplate.execute()`。商品详情写入被包在 MySQL 商品 INSERT 的同一个事务里——MySQL INSERT 失败，MongoDB 写入也回滚。
+
+**③ 为什么 batch insert 而不是逐条 insert？** `mongoTemplate.insert(List)` 一次网络往返写入全部文档，100 条商品详情 ≈ 1 次网络 IO vs 100 次。
+
+> 📌 **真实项目中的查询：按 productId 查商品详情**
+
+写入之后轮到查询——来自 `ProductSearchService.fillDetail()`：
+
+```java
+public void fillDetail(ProductEntity productEntity) {
+    Query query = new Query(Criteria.where("productId").is(productEntity.getId()));
+    List<ProductDetailEntity> productDetailEntities =
+        mongoTemplate.find(query, ProductDetailEntity.class);
+    if (CollectionUtils.isEmpty(productDetailEntities)) {
+        return;  // 不是所有商品都有详情
+    }
+    ProductDetailEntity productDetailEntity = productDetailEntities.get(0);
+    productEntity.setDetail(productDetailEntity.getDetail());
+}
+```
+
+这里 `productId` 上有 `@Indexed` 索引，查询走 `IXSCAN` 而不是全表扫描。注意这里用 `find()` 返回 List 而不是 `findOne()`——因为 `productId` 并不是唯一索引（虽然业务上应该唯一），直接取第一条。
+
+对比上面教学用的 `findById()`（按 `_id` 查），真实业务中<strong>按业务键查询远比按 MongoDB 自带 `_id` 查询更常见</strong>。所以要养成给业务键加索引的习惯。
 
 <strong>4.2.2 Criteria 查询构建</strong>
 
@@ -459,9 +561,100 @@ db.users.aggregate([
 | `mongoTemplate.remove(query, clazz)` | 条件删除 | 清理数据 |
 | `mongoTemplate.aggregate(agg, collection, clazz)` | 聚合管道 | 统计、分析 |
 
+### 4.6 真实项目中的双写架构
+
+看完上面所有操作，可能会想：商品详情同时写 MySQL 和 MongoDB——是不是脱裤子放屁？为什么不只用 MongoDB？下面把整个架构掰开讲。
+
+<strong>数据流全景</strong>：
+
+```mermaid
+flowchart TD
+    A[管理后台录入商品详情] --> B{填写了富文本详情?}
+    B -->|是| C[TransactionTemplate 开启事务]
+    B -->|否| D[只写 MySQL 基本字段]
+    C --> E[MySQL: INSERT mall_product_detail]
+    C --> F[MongoDB: mongoTemplate.insert ProductDetailEntity]
+    E --> G{MySQL 写入失败?}
+    G -->|是| H[事务回滚, MongoDB 写入跟着回滚]
+    G -->|否| I[事务提交, 两边数据一致]
+    F --> I
+
+    J[用户端查看商品] --> K[ES 搜索 + MySQL 查基本字段]
+    K --> L[ProductSearchService.fillDetail]
+    L --> M[MongoDB: mongoTemplate.find by productId]
+    M --> N[填充 detail 字段返回前端]
+```
+
+<strong>为什么非要双写？</strong>
+
+商品详情是一大段富文本 HTML（`<img>`、`<table>`、样式标签……），单条轻松几 KB 到几十 KB。这玩意有两个矛盾的需求：
+
+| 需求 | 数据库偏好 | 原因 |
+|------|:---:|------|
+| 商品基本字段（名称、价格、库存）要分库分表 + JOIN + 事务 | <strong>MySQL</strong> | ShardingSphere 中间件、关联查询、ACID 保证 |
+| 商品详情（大段 HTML）结构不规则、不参与 JOIN、偶尔改 | <strong>MongoDB</strong> | 文档模型天然适合长文本，不占 MySQL 表空间 |
+
+所以双写不是过度设计——是<strong>关系型干关系型的活，文档型干文档型的活</strong>。MySQL 存 `id, product_id, detail` 的瘦记录（基本不读写 `detail` 字段），MongoDB 存完整 HTML。
+
+<strong>事务边界是怎么保证的？</strong>
+
+```java
+// ProductCommandService.doGenerate() - 简化版
+transactionTemplate.execute((status -> {
+    productHelper.batchInsert(productEntityList);         // ① MySQL：商品基本表
+    if (CollectionUtils.isNotEmpty(realAddList)) {
+        saveProductDetail(realAddList);                   // ② MongoDB：商品详情
+        saveProductAttribute(realAddList);                // ③ MySQL：商品属性
+        productPhotoService.savePhoto(realAddList);       // ④ MySQL：商品照片
+    }
+    return Boolean.TRUE;
+}));
+```
+
+项目用了 ShardingSphere 分库分表——`@Transactional` 注解不生效，所以用编程式事务 `transactionTemplate.execute()`。MongoDB insert 包在同一个事务回调里意味着：如果 MySQL 写失败抛异常，MongoDB 的写入也会被容器回滚。但说实话，<strong>MongoDB 没有 XA 事务</strong>——这里依赖的是异常传播 + 业务补偿，不是严格的两阶段提交。
+
+> ⚠️ 新手提示：Spring 的 `TransactionTemplate` 对 MongoDB 的回滚是"最佳努力"级别的——如果 MongoDB insert 成功了但后续 MySQL 操作抛异常，MongoDB 的数据不会被自动回滚。这时候会出现<strong>MySQL 没数据但 MongoDB 有数据</strong>的脏状态。真正需要强一致性的场景，应该引入<strong>事务消息</strong>或者把 MongoDB 写入放在事务的最后一步。
+
+<strong>删除路径的不一致隐患</strong>：
+
+写入双写、读取双读——但删除呢？看 `ProductCommandService.deleteProductDetail()`：
+
+```java
+private void deleteProductDetail(ProductEntity productEntity) {
+    ProductDetailQuery query = new ProductDetailQuery();
+    query.setProductId(productEntity.getId());
+    // 从 MySQL 查 ID
+    List<ProductDetailEntity> entities = productDetailMapper.searchByCondition(query);
+    if (CollectionUtils.isNotEmpty(entities)) {
+        List<Long> idList = entities.stream()
+            .map(ProductDetailEntity::getId).collect(Collectors.toList());
+        productDetailMapper.deleteByIds(idList, deleteEntity);
+        // ⚠️ 只从 MySQL 删了，MongoDB 里的文档还在！
+    }
+}
+```
+
+MySQL 逻辑删除后，MongoDB 里的对应文档成了<strong>孤儿数据</strong>。不过这个项目里 MongoDB 的 `detail` 字段只在查询时通过 `fillDetail()` 填充——MySQL 里标记删除后，查询链路不会走到 `fillDetail()`，所以孤儿数据在业务上不可见。换句话说：<strong>业务正确性依赖的是 MySQL 状态而非 MongoDB</strong>，MongoDB 只是"影子存储"。
+
+> ⚠️ 写过的都懂——这种"业务正确性靠 MySQL 把关、MongoDB 只做辅助"的模式在中小项目里很常见。优点是 MongoDB 写入可以更随意（丢了也不影响核心业务），缺点是数据清理时要记得两边一起清，不然磁盘慢慢被孤儿数据撑满。
+
+<strong>什么时候该双写，什么时候不该？</strong>
+
+| 场景 | 建议 | 理由 |
+|------|:---:|------|
+| 富文本、长 JSON、日志类大字段 | 双写或纯 MongoDB | 不参与 JOIN、不需要事务 |
+| 用户订单、支付流水 | 纯 MySQL | 需要事务 + 关联查询 |
+| 自定义表单、问卷答案 | 纯 MongoDB | 字段不固定、不需要事务 |
+| 搜索结果缓存 | ES + MySQL 双写 | ES 做全文搜索、MySQL 做主存储 |
+| 实时计数器（库存、积分） | 纯 Redis | 原子操作 + TTL |
+
+<strong>一句话总结</strong>：在 mall 项目里，MongoDB 的角色是<strong>MySQL 的"大字段卸载器"</strong>——把富文本这种又大又不参与 JOIN 的数据挪走，MySQL 专心干事务和关联的活。MongoDB 文档丢了？重新编辑一次商品就写回来了。MySQL 的 `mall_product_detail` 表才是"真相来源"。
+
 ## 第五步：真实业务场景串联
 
-用一个完整的"用户自定义表单"功能把学到的操作串起来。这是第一篇开头提出的那个让 MySQL 头疼的场景：
+前面 4.6 展示了第一种 MongoDB 实战模式——<strong>双写辅助</strong>：MySQL 做"真相来源"、MongoDB 存大字段、业务正确性靠 MySQL 把关。下面看第二种模式——<strong>纯 MongoDB</strong>：当数据天生不适合关系型时，让 MongoDB 独挑大梁。
+
+用一个完整的"用户自定义表单"功能把这个模式串起来。这是第一篇开头提出的那个让 MySQL 头疼的场景：
 
 ```java
 // === 1. Entity 定义 ===
@@ -582,6 +775,18 @@ public class DynamicFormController {
 
 这个场景下 MongoDB 的优势非常明显——<strong>无论客户定义多少字段，数据库完全不用改</strong>。新增字段？直接多传一个 key。去掉字段？不传就是了。不需要 ALTER TABLE，不需要 EAV 表，不需要处理几十个 NULL 列。
 
+<strong>两种模式对照</strong>：
+
+| 维度 | 商品详情（4.6） | 自定义表单（本章） |
+|------|------|------|
+| 模式 | MySQL + MongoDB 双写辅助 | 纯 MongoDB |
+| MongoDB 角色 | MySQL 的大字段卸载器 | 唯一存储 |
+| 为什么这样选 | 基本字段要 JOIN + 事务，detail 只是展示 | 字段完全由用户定义，MySQL 扛不住 |
+| 数据一致性 | MySQL 是真相来源，MongoDB 丢了可恢复 | MongoDB 就是真相来源，丢了就是真丢了 |
+| 事务保证 | TransactionTemplate 尽力保证，不强一致 | 不跨数据源，不需要分布式事务 |
+
+两个模式的分界线在于：<strong>如果数据需要与关系型表做 JOIN 或需要事务保证，MongoDB 就做辅助；如果数据天生灵活、自包含、不参与关联查询，让 MongoDB 做主存储</strong>。
+
 ## 第六步：常见问题排查表
 
 | 现象 | 可能原因 | 排查方法 |
@@ -593,16 +798,20 @@ public class DynamicFormController {
 | 数组字段查不到 | 查法不对——`is("Java")` 查的是数组包含，不是整个数组 | 检查用的是 `is()` 还是 `all()` |
 | `mongoTemplate` 查询慢 | 没建索引 | `getIndexes()` 确认，`explain()` 看走没走索引 |
 | 聚合结果为空 | 分组字段名写错 / 用了嵌套文档字段但没写点号 | 检查 `$group._id` 的字段路径 |
+| 双写场景 MySQL 有数据 MongoDB 没有 | `saveProductDetail` 里 `StringUtils.hasLength` 过滤掉了 | 确认商品编辑时填了"详情"字段 |
+| 修改商品详情后 MySQL 更新了 MongoDB 还是旧的 | `update` 方法走 `deleteProductDetail` 删 MySQL 记录再重新 insert——但 MongoDB 没删旧文档 | 加上 `mongoTemplate.remove()` 清理旧文档，见 4.6 |
+| `@Indexed` 在 prod 环境不生效 | prod 关了 `auto-index-creation: true` | 联系 DBA 手动建索引，或确认启动日志有无自动建索引成功 |
 
 ## 第七步：总结与下一步
 
 <strong>这篇覆盖的全部内容</strong>：
 
-- <strong>@Document / @Id / @Field 注解</strong>：Java 对象与 MongoDB 文档的映射
-- <strong>MongoTemplate</strong>：CRUD（insert/save/find/updateFirst/updateMulti/upsert/findAndModify/remove）、Criteria 查询构建（比较/逻辑/数组/嵌套/正则）、分页排序、字段投影
+- <strong>@Document / @Id / @Field 注解</strong>：Java 对象与 MongoDB 文档的映射，含真实项目中的 `BaseEntity` 继承 + `@Indexed` 实践
+- <strong>MongoTemplate</strong>：CRUD（insert/save/find/updateFirst/updateMulti/upsert/findAndModify/remove）、Criteria 查询构建（比较/逻辑/数组/嵌套/正则）、分页排序、字段投影，含真实项目的批量插入 + 按业务键查询代码
 - <strong>MongoRepository</strong>：方法命名规则自动生成查询 + `@Query` 手写 JSON
 - <strong>聚合管道初探</strong>：`$match → $group → $sort → $limit` 的 Java 写法
-- <strong>完整用户自定义表单案例</strong>：MongoDB 对异构数据场景的天然优势
+- <strong>真实项目双写架构</strong>：MySQL + MongoDB 各司其职，TransactionTemplate 事务边界，数据一致性分析与隐患
+- <strong>两种 MongoDB 使用模式</strong>：双写辅助（商品详情）vs 纯 MongoDB 主存储（自定义表单），含选型对照表
 
 <strong>下一步建议</strong>：
 

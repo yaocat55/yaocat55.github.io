@@ -1,7 +1,7 @@
 ---
 title: "API 响应封装"
 date: 2022-09-26T11:30:03+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring全家桶", "源码分析"]
 categories: ["业务类"]
 author: "yaomingye"
 showToc: true
@@ -290,6 +290,8 @@ public class GlobalApiResultHandler implements ResponseBodyAdvice<Object> {
 | ⑥ | instanceof ApiResult | 防止二次包装。如果 GlobalExceptionHandler 已经返回了 ApiResult，这里透传即可 |
 | ⑦ | ApiResultUtil.success(body) | 核心包装逻辑：将任意业务返回值放入 ApiResult.data 字段 |
 
+> 📌 一个真实项目的细节：源码中 `StringUtils` 用的是 `com.alibaba.excel.util.StringUtils`，而不是 Apache Commons 或 Spring 的。这不是刻意选的——项目里引了 EasyExcel 做 Excel 导出，EasyExcel 带了自己的 `StringUtils`，IDE 自动补全时顺手用它了。功能上只是 `isBlank` + `contains` 判断，哪个库的 `StringUtils` 都可以。这个细节说明<strong>真实项目里经常会有这种"随手"的依赖选择——不影响功能，但值得注意避免同一个项目里混用三个不同库的 StringUtils</strong>。
+
 ### ⚖️ 3.4 Controller 写法对比
 
 | 场景 | 没有自动包装的写法 | 该项目的写法 |
@@ -343,9 +345,14 @@ flowchart TD
 @Data
 public class BusinessException extends RuntimeException {
 
-    private int code;      // ① 业务状态码（如 403、400、自定义码）
-    private String message; // ② 可读的错误描述
-    //                  ③ 继承 RuntimeException，不强制 try-catch
+    public static final long serialVersionUID = -6735897190745766939L;  // ① 显式声明序列化版本
+
+    private int code;      // ② 业务状态码（如 403、400、自定义码）
+    private String message; // ③ 可读的错误描述（可直接展示给前端）
+
+    public BusinessException() {
+        super();
+    }
 
     public BusinessException(String message) {
         this.code = HttpStatus.INTERNAL_SERVER_ERROR.value(); // 默认 500
@@ -355,43 +362,77 @@ public class BusinessException extends RuntimeException {
 ```
 
 设计要点：
-- **① code** ：直接使用 HTTP 标准状态码，而不是自定义 10001 之类的魔法数字。优点是网关和监控系统可以直接识别。
-- **② message** ：前端可以直接展示给用户看，所以写的是"无权限访问"而不是"AccessDeniedException at line 47"。
-- **③ 非受检异常** ：继承 RuntimeException 使得业务代码不必写 throws 声明，也不用在调用链上逐层 try-catch。
+- **① serialVersionUID**：`@Data` 是 Lombok 注解，编译期生成 `equals`/`hashCode`/`toString`，但 `serialVersionUID` 必须显式声明——Lombok 不会生成。没有它，JDK 序列化时会自动计算，不同 JVM 版本可能算出不同的值导致反序列化失败。
+- **② code**：直接使用 HTTP 标准状态码（`HttpStatus.INTERNAL_SERVER_ERROR.value()`），而不是自定义 10001 之类的魔法数字。网关 / Nginx / 监控系统可以直接识别。
+- **③ message**：前端可以直接展示给用户看，所以写的是"库存不足"而不是"NullPointerException at line 47"。
+- **继承 RuntimeException**：非受检异常使业务代码不必声明 `throws`，也不用在调用链上逐层 try-catch。
 
-### 🎯 4.3 GlobalExceptionHandler：唯一的异常出口
+### 🎯 4.3 GlobalExceptionHandler：唯一的异常出口（真实源码 + 逐行设计说明）
 
 ```java
 @Slf4j
 @RestControllerAdvice  // ① = @ControllerAdvice + @ResponseBody
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Throwable.class)  // ② 兜底捕获所有异常
-    public ApiResult handleException(Throwable e) {
-        if (e instanceof BusinessException) {           // ③ 业务异常——级别 info
-            BusinessException be = (BusinessException) e;
-            log.info("请求出现业务异常：", e);
-            return ApiResultUtil.error(be.getCode(), be.getMessage());
+    /**
+     * 统一处理异常
+     * @param e       抛出的异常
+     * @param request HTTP 请求对象（Spring 自动注入——@ExceptionHandler 支持）
+     */
+    @ExceptionHandler(Throwable.class)  // ② 兜底捕获所有异常（含 Error）
+    public ApiResult handleException(Throwable e, HttpServletRequest request) {
+
+        if (e instanceof BusinessException) {
+            BusinessException businessException = (BusinessException) e;
+            // ③ 业务异常 → warn（需要关注但不是事故）+ 带上 URI 方便排查
+            log.warn("业务异常, uri:{}, msg:{}",
+                    request.getRequestURI(), businessException.getMessage());
+            return ApiResultUtil.error(
+                    businessException.getCode(), businessException.getMessage());
+
+        } else if (e instanceof AccessDeniedException) {
+            // ④ 权限异常 → warn，带完整异常便于排查是哪个接口、什么权限不足
+            log.warn("权限异常, uri:{}", request.getRequestURI(), e);
+            return ApiResultUtil.error(
+                    HttpStatus.FORBIDDEN.value(), "无权限访问，请联系系统管理员！");
+
+        } else if (e instanceof MethodArgumentNotValidException) {
+            MethodArgumentNotValidException me =
+                    (MethodArgumentNotValidException) e;
+            BindingResult bindingResult = me.getBindingResult();
+            // ⑤ 防御性检查：理论上校验失败一定有 FieldError，但代码不能假设"理论上"
+            if (bindingResult.hasErrors()) {
+                String errorMsg = bindingResult.getFieldError().getDefaultMessage();
+                log.warn("参数校验失败, uri:{}, msg:{}",
+                        request.getRequestURI(), errorMsg);
+                return ApiResultUtil.error(HttpStatus.BAD_REQUEST.value(), errorMsg);
+            }
+            // ⑥ 兜底：极端情况下校验异常没有 field error
+            log.warn("参数校验失败, uri:{}", request.getRequestURI());
+            return ApiResultUtil.error(
+                    HttpStatus.BAD_REQUEST.value(), "参数校验失败");
         }
-        if (e instanceof AccessDeniedException) {       // ④ 权限异常——级别 info
-            log.info("权限异常：", e);
-            return ApiResultUtil.error(403, "无权限访问，请联系系统管理员！");
-        }
-        if (e instanceof MethodArgumentNotValidException) {  // ⑤ 参数校验
-            BindingResult br = ((MethodArgumentNotValidException) e).getBindingResult();
-            return ApiResultUtil.error(400, br.getFieldError().getDefaultMessage());
-        }
-        log.error("请求出现系统异常：", e);  // ⑥ 未知异常——级别 error
-        return ApiResultUtil.error(500, "服务器内部错误，请联系系统管理员！");
+
+        // ⑦ 未知异常 → error 级别（需要运维介入排查）
+        log.error("系统异常, uri:{}", request.getRequestURI(), e);
+        return ApiResultUtil.error(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "服务器内部错误，请联系系统管理员！");
     }
 }
 ```
 
-关键设计决策：
-- **② 捕获 Throwable.class** ：连 Error 也兜底。
-- **③ ④ 日志级别 = info** ：业务异常和权限异常是预期内的，不需要 error 级别触发告警。
-- **⑥ 日志级别 = error** ：未知异常需要运维介入，log.error 会输出完整栈轨迹到日志文件，但不暴露给前端。
-- **⑤ getFieldError().getDefaultMessage()** ：校验失败时只返回第一条错误信息。
+关键设计决策（和常见的"教程版"对比）：
+
+| 设计点 | 常见教程写法 | 该项目的真实写法 | 为什么 |
+|--------|----------|----------|------|
+| 日志级别 | `log.info` 记业务异常 | <strong>`log.warn`</strong> | `info` 是"正常流程日志"，`warn` 才是"预期内的异常情况"——业务规则被触发属于异常，应该引起注意但不需告警 |
+| 日志内容 | `log.info("请求出现业务异常")` | <strong>`log.warn("业务异常, uri:{}, msg:{}", uri, msg)`</strong> | 不记录 URI 的话，日志报警时运维无从得知是哪个接口抛的异常，排查全靠猜 |
+| 状态码 | `return ApiResultUtil.error(403, ...)` | <strong>`HttpStatus.FORBIDDEN.value()`</strong> | 魔法数字 403 的语义依赖读者记忆，`HttpStatus.FORBIDDEN` 是具名常量，一眼知道含义 |
+| null 安全 | `br.getFieldError().getDefaultMessage()` | <strong>先判断 `br.hasErrors()`</strong> | `getFieldError()` 可能返回 null——虽然校验失败理论上一定有 field error，但代码不能依赖"理论上" |
+| 异常参数 | `handleException(Throwable e)` | <strong>`handleException(Throwable e, HttpServletRequest request)`</strong> | Spring 自动向 `@ExceptionHandler` 方法注入 `HttpServletRequest`——不拿白不拿，拿来就能打 URI 日志 |
+| if 链 | 三个独立 `if` | <strong>`if-else if` 链</strong> | 异常类型互斥——一个异常不可能同时是 BusinessException 又是 AccessDeniedException，用 else-if 语义更明确且稍高效 |
+| 校验兜底 | 无 | <strong>`hasErrors()` 为 false 时返回通用 "参数校验失败"</strong> | 极端情况（bindingResult 为空）下不至于 NPE
 
 ### 📊 4.4 异常处理流程图（从抛出到 JSON 输出）
 
@@ -591,12 +632,14 @@ flowchart TD
 
 ### 📋 7.3 日志分级对运维友好
 
-| 异常类型 | 日志级别 | 是否会触发告警 | 原因 |
-|---------|:---:|:---:|------|
-| BusinessException | INFO | 否 | 预期的业务规则不让通过，不需要运维介入 |
-| AccessDeniedException | INFO | 否 | 权限框架的正常拦截行为，不是系统故障 |
-| MethodArgumentNotValidException | 无单独日志 | 否 | 前端校验就能拦截的，属于数据质量信息 |
-| 其他未捕获 Throwable | ERROR | 是 | NullPointerException、SQLException 需要运维排查 |
+| 异常类型 | 日志级别 | URI 是否带上 | 是否会触发告警 | 原因 |
+|---------|:---:|:---:|:---:|------|
+| BusinessException | <strong>WARN</strong> | ✅ | 否 | 业务规则不让通过是"预期内但不正常的"——`warn` 恰到好处：比 `info` 更值得注意，但没到 `error` 需要告警的程度 |
+| AccessDeniedException | <strong>WARN</strong> | ✅ | 否 | 权限拦截属于"值得注意但不需告警"——可能是用户在试探，也可能是前端 bug 传错了 token |
+| MethodArgumentNotValidException | <strong>WARN</strong> | ✅ | 否 | 校验失败带上前端传来的具体错误信息，方便排查是哪个参数的什么问题 |
+| 其他未捕获 Throwable | <strong>ERROR</strong> | ✅ | <strong>是</strong> | NPE、SQLException 需要运维介入排查——完整栈轨迹记在日志里，前端只看到"服务器内部错误" |
+
+> ⚠️ 新手提示：为什么用 `warn` 而不是 `info` 来记业务异常？`info` 级别的日志在大多数系统的默认配置下就会打——这意味着"用户没登录"这样的正常拦截日志会把你的应用日志塞满。`warn` 通常只占总日志的 5%~10%，搜 `grep WARN` 就能定位问题。一个实用的记忆公式：<strong>正常流程用 info、预期内的异常用 warn、需要人介入的用 error</strong>。
 
 ## 🎯 8. 总结
 

@@ -1,7 +1,7 @@
 ---
 title: "Caffeine 本地缓存核心与 SpringBoot 集成"
 date: 2022-10-30T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["数据存储", "最佳实践"]
 categories: ["缓存框架"]
 author: "yaomingye"
 showToc: true
@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "深入讲解 Caffeine 本地缓存的 W-TinyLFU 淘汰算法、过期策略、刷新策略、Spring Cache 注解式集成与统计监控，附带 Redis 宕机场景的本地缓存兜底方案。"
+description: "从数据字典真实缓存案例出发，讲解 Caffeine W-TinyLFU 淘汰算法、三种过期策略、Spring Cache 注解式集成（含自定义 KeyGenerator），对比 @Cacheable + Caffeine 与 @Cacheable + Redis 的本质区别。"
 disableShare: true
 hideSummary: false
 searchHidden: false
@@ -259,90 +259,101 @@ Cache<String, User> cache = Caffeine.newBuilder()
 </dependency>
 ```
 
+<strong>真实项目中的配置</strong>——一个商城项目的字典数据缓存（数据字典是什么？下拉框里的"订单状态""商品分类"这些选项）：
+
 ```yaml
 # application.yml
 spring:
   cache:
-    type: caffeine
+    cache-names: dict_data              # 缓存区域名——对应 @Cacheable 的 value
+    type: caffeine                      # 用 Caffeine 作为缓存实现
     caffeine:
-      spec: maximumSize=10000,expireAfterWrite=300s
+      spec: initialCapacity=50,maximumSize=500,expireAfterWrite=60s
 ```
 
-### 4.2 自定义缓存配置
-
-项目中不同数据需要不同的缓存策略——用户信息 30 分钟过期，验证码 5 分钟过期，配置项 1 小时刷新。用一个配置类统一管理：
-
 ```java
-@Configuration
+// ApiApplication.java —— 在启动类上开启 Spring Cache
 @EnableCaching
-public class CacheConfig {
-
-    // 验证码缓存：5 分钟过期，最多 5000 条
-    @Bean
-    public CacheManager smsCacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager();
-        manager.setCaffeine(Caffeine.newBuilder()
-            .maximumSize(5_000)
-            .expireAfterWrite(5, TimeUnit.MINUTES));
-        return manager;
-    }
-
-    // 用户缓存：10000 条，30 分钟过期，5 分钟异步刷新
-    @Bean("userCacheManager")
-    public CacheManager userCacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager();
-        manager.setCaffeine(Caffeine.newBuilder()
-            .maximumSize(10_000)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
-            .refreshAfterWrite(5, TimeUnit.MINUTES));
-        return manager;
-    }
-
-    // 如果只有一个 CacheManager，用这个更简洁的方式
-    @Bean
-    public CacheManager cacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager();
-        manager.setCaffeine(Caffeine.newBuilder()
-            .maximumSize(10_000)
-            .expireAfterWrite(10, TimeUnit.MINUTES));
-        return manager;
+@SpringBootApplication(scanBasePackages = {"com.mall"})
+public class ApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ApiApplication.class, args);
     }
 }
 ```
 
-多个 CacheManager 时，需要指定默认的：
+<strong>三个值得注意的配置细节</strong>：
+
+1. <strong>只需要一个 spec 字符串</strong>——`initialCapacity=50,maximumSize=500,expireAfterWrite=60s`。不需要像教程里那样写一个 `CacheManager` Bean。Spring Boot 的 Caffeine 自动配置会解析这个 spec 字符串，自动创建 `CaffeineCacheManager`。
+
+2. <strong>cache-names 是必须的</strong>——没有 `cache-names` 配置，`@Cacheable(value = "dict_data")` 会找不到缓存区域，注解的缓存不会生效。
+
+3. <strong>真实项目的参数很保守</strong>：500 条上限、60 秒 TTL。数据字典总条数不超过 500，所以不担心内存溢出；60 秒 TTL 保证即使字典被修改了，最慢 60 秒后所有实例都拿到新数据。
+
+### 4.2 自定义 Key 生成器
+
+Spring Cache 默认的 key 生成器只考虑方法参数——参数值变了 key 就不同。但有些场景需要一个更可控的 key 格式：
 
 ```java
-@Bean
-@Primary   // 标记默认的 CacheManager
-public CacheManager defaultCacheManager() { ... }
+// DictCacheKeyGenerator.java —— 真实项目中的自定义 Key 生成器
+public class DictCacheKeyGenerator implements KeyGenerator {
+    @Override
+    public Object generate(Object target, Method method, Object... params) {
+        // 生成 key 格式：DictService_order_status
+        return target.getClass().getSimpleName() + "_"
+                + StringUtils.arrayToDelimitedString(params, "_");
+    }
+}
 ```
 
-### 4.3 注解式缓存
-
-和 Redis 的 Spring Cache 用法完全一样——同一个 `@Cacheable` 注解，只是底层从 Redis 换成了 Caffeine：
+注册为 Bean：
 
 ```java
+// ApplicationConfig.java
+@Configuration
+public class ApplicationConfig {
+    @Bean
+    public DictCacheKeyGenerator dictCacheKeyGenerator() {
+        return new DictCacheKeyGenerator();
+    }
+}
+```
+
+当调用 `queryDictDetailEntity("order_status")` 时，生成的缓存 key 就是 `DictService_order_status`——可读、可排查、不会冲突。
+
+### 4.3 注解式缓存——真实用法
+
+```java
+// DictService.java —— 真实项目的数据字典服务
 @Service
-public class UserService {
+public class DictService {
 
-    @Cacheable(value = "user", key = "#id", unless = "#result == null")
-    public User getUserById(Long id) {
-        return userMapper.selectById(id);
-    }
-
-    @CachePut(value = "user", key = "#user.id")
-    public User updateUser(User user) {
-        userMapper.updateById(user);
-        return user;
-    }
-
-    @CacheEvict(value = "user", key = "#id")
-    public void deleteUser(Long id) {
-        userMapper.deleteById(id);
+    // @Cacheable：先从 Caffeine 取，取不到执行方法并自动缓存返回值
+    @Cacheable(value = "dict_data", keyGenerator = "dictCacheKeyGenerator")
+    public List<DictDetailEntity> queryDictDetailEntity(String dictName) {
+        // 这个方法只在 Caffeine 未命中时才执行
+        // 方法体从 Redis Hash 读取数据（不是直接查 MySQL）
+        List<DictDetailEntity> dataList = getDictDataFromRedis(dictName);
+        if (CollectionUtils.isEmpty(dataList)) {
+            return Collections.emptyList();
+        }
+        return dataList.stream()
+                .sorted(Comparator.comparing(DictDetailEntity::getSort))
+                .collect(Collectors.toList());
     }
 }
 ```
+
+<strong>和普通 Redis @Cacheable 的关键区别</strong>：
+
+| | Redis @Cacheable | Caffeine @Cacheable（真实用法） |
+|------|:---:|:---:|
+| 注解写法 | `@Cacheable(value = "user", key = "#id")` | `@Cacheable(value = "dict_data", keyGenerator = "...")` |
+| 缓存层 | Redis（远程） | Caffeine（JVM 本地堆内存） |
+| 数据源 | 方法体直接查 MySQL | 方法体查 Redis Hash（第二层缓存） |
+| Key 策略 | SpEL `#id` 简单拼接 | 自定义 KeyGenerator 统一生成 |
+
+> ⚠️ 新手提示：`@Cacheable` 只看注解——不看内容。底层是 Redis 还是 Caffeine，由 `application.yml` 的 `spring.cache.type` 决定。这意味着<strong>写代码时不需要关心底层是什么缓存实现</strong>，改配置文件就能切换。从 Redis 切到 Caffeine 只需要改一行配置。
 
 ### 4.4 编程式缓存 —— 更精细的控制
 
@@ -428,14 +439,18 @@ public Cache<String, User> userCache(MeterRegistry registry) {
 
 ## 五、🎯 总结
 
-本文从"Redis 再快也是远程调用"的延迟问题出发，拆解了 Caffeine 本地缓存的核心能力：
+本文从真实项目的数据字典缓存出发，拆解了 Caffeine 本地缓存的核心能力：
 
-1. <strong>W-TinyLFU</strong>：比 LRU 命中率高 5%~15%，用 Count-Min Sketch 近似统计访问频率，不受偶发性全量查询的污染。
+1. <strong>真实集成方式</strong>：`@EnableCaching` + `spring.cache.type: caffeine` + spec 字符串 + `@Cacheable(value, keyGenerator)`。不需要自己 new `CacheManager` Bean——Spring Boot 自动配置就够了。
 
-2. <strong>三种过期策略</strong>：`expireAfterWrite`（写入后固定过期）、`expireAfterAccess`（不访问就过期）、`refreshAfterWrite`（异步刷新不阻塞）。推荐 refresh + expire 组合。
+2. <strong>自定义 KeyGenerator</strong>：`DictCacheKeyGenerator` 生成 `ClassName_param1_param2` 格式的缓存 key——可读、可排查、不会冲突。
 
-3. <strong>Spring Cache 集成</strong>：完全兼容 `@Cacheable`/`@CachePut`/`@CacheEvict` 注解。编程式 API 提供更精细的控制（批量预热、统计信息）。
+3. <strong>@Cacheable 不看底层</strong>：代码里写 `@Cacheable` 注解时不需要关心底层是 Redis 还是 Caffeine——由 `spring.cache.type` 配置决定。改一行 yml 就能切换。
 
-4. <strong>统计监控</strong>：`recordStats()` 一行开启，命中率、加载耗时、淘汰量全部可监控。
+4. <strong>W-TinyLFU</strong>：比 LRU 命中率高 5%~15%，用 Count-Min Sketch 近似统计访问频率，不受偶发性全量查询的污染。
+
+5. <strong>三种过期策略</strong>：`expireAfterWrite`（写入后固定过期）、`expireAfterAccess`（不访问就过期）、`refreshAfterWrite`（异步刷新不阻塞）。推荐 refresh + expire 组合。
+
+6. <strong>统计监控</strong>：`recordStats()` 一行开启，命中率、加载耗时、淘汰量全部可监控。
 
 > 📖 <strong>下一步阅读</strong>：本地缓存用好了，下一步是把它和 Redis 结合起来——构建双层缓存架构。当 Redis 宕机时自动降级到 Caffeine 本地缓存，服务不中断、用户无感知。继续阅读 [<strong>Redis + Caffeine 双层缓存：降级与容错</strong>]({{< relref "RedisCaffeineMultiLevelCache.md" >}})，掌握缓存架构的终极方案。
