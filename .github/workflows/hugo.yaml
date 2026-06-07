@@ -3,9 +3,8 @@ name: 部署博客到 GitHub Pages 和 ECS
 on:
   push:
     branches:
-      - main  # 当你推送代码到 main 分支时自动触发
+      - main
 
-# 给 workflow 写权限，部署需要
 permissions:
   contents: write
 
@@ -27,7 +26,7 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      # 3. 构建博客（生成 public/ 目录）
+      # 3. 构建博客
       - name: 构建
         run: hugo --minify
 
@@ -37,30 +36,56 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-        continue-on-error: true  # 失败也继续下一步
 
-      # 5. 部署到 ECS（通过 SCP 传输文件）
-      - name: 部署到 ECS
+      # 5. 准备 ECS 部署文件（先打包）
+      - name: 打包 public 目录
+        run: |
+          tar -czf blog-public.tar.gz -C public .
+          ls -lh blog-public.tar.gz
+
+      # 6. 部署到 ECS（传输压缩包）
+      - name: 传输文件到 ECS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ECS_HOST }}
-          username: root
+          username: ${{ secrets.ECS_USERNAME }}
+          port: ${{ secrets.ECS_PORT }}
           key: ${{ secrets.ECS_SSH_KEY }}
-          port: 22
-          source: "public/*"
-          target: "/var/www/blog/"
-          strip_components: 1
-        continue-on-error: true  # 失败也继续下一步
+          source: "blog-public.tar.gz"
+          target: "/tmp/"
+          overwrite: true
 
-      # 6. 重启 ECS 上的 Nginx 容器
-      - name: 重启 Nginx
+      # 7. 在 ECS 上解压并部署
+      - name: 在 ECS 上执行部署
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ECS_HOST }}
-          username: root
+          username: ${{ secrets.ECS_USERNAME }}
+          port: ${{ secrets.ECS_PORT }}
           key: ${{ secrets.ECS_SSH_KEY }}
-          port: 22
           script: |
-            docker exec blog-nginx nginx -s reload
-            echo "Nginx reloaded successfully"
-        continue-on-error: true
+            # 解压到临时目录
+            mkdir -p /tmp/blog-deploy
+            tar -xzf /tmp/blog-public.tar.gz -C /tmp/blog-deploy/
+
+            # 备份旧文件
+            if [ -d "/var/www/blog" ]; then
+              rm -rf /var/www/blog.bak
+              mv /var/www/blog /var/www/blog.bak
+            fi
+
+            # 移动新文件
+            mv /tmp/blog-deploy /var/www/blog
+
+            # 清理临时文件
+            rm -f /tmp/blog-public.tar.gz
+            rm -rf /tmp/blog-deploy
+
+            # 设置权限
+            chown -R www-data:www-data /var/www/blog || true
+
+            # 验证 nginx 配置并重载
+            docker exec blog-nginx nginx -t && docker exec blog-nginx nginx -s reload
+
+            echo "✅ 部署完成"
+            echo "部署时间: $(date '+%Y-%m-%d %H:%M:%S')"
