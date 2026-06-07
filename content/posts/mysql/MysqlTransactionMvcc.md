@@ -255,10 +255,6 @@ ReadView 的核心数据结构简单但精妙。它是一个<strong>事务在读
 </div>
 </div>
 
-</div>
-
-<br/>
-
 <strong>可见性判断的完整规则</strong>（从一行数据的 DB_TRX_ID 开始逐条判断）：
 
 | 判断条件 | 结论 | 说明 |
