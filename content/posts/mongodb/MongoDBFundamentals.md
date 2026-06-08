@@ -312,14 +312,14 @@ db.users.insertOne({
   name: "张三",
   email: "zhangsan@example.com",
   age: 28,
-  tags: ["Java", "MongoDB"],
+  tags: ["数据存储"],
   address: { city: "北京", street: "中关村大街" }
 })
 // 返回：{ acknowledged: true, insertedId: ObjectId("...") }
 
 // 插入多条
 db.users.insertMany([
-  { name: "李四", email: "lisi@example.com", age: 32, tags: ["Go", "Docker"] },
+  { name: "李四", email: "lisi@example.com", age: 32, tags: ["数据存储"] },
   { name: "王五", email: "wangwu@example.com", age: 25 }   // 没有 tags 和 address，完全合法
 ])
 
@@ -464,7 +464,7 @@ db.users.find({ age: { $type: ["int", "long"] } })  // age 是整数类型的
 
 ```javascript
 // 精确匹配整个数组（很少用）
-db.users.find({ tags: ["Java", "MongoDB"] })
+db.users.find({ tags: ["数据存储"] })
 // 只匹配 tags 恰好 = ["Java", "MongoDB"] 的，顺序也必须一样
 
 // $all：包含所有指定值（无视顺序、无视额外元素）

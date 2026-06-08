@@ -1,7 +1,7 @@
 ---
 title: "RandomAccessFile 文件指针与任意位置读写"
 date: 2022-09-12T15:12:46+00:00
-tags: ["Java IO"]
+tags: ["基础技术"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

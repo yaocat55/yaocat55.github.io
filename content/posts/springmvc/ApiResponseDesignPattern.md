@@ -1,7 +1,7 @@
 ---
 title: "API 响应封装"
 date: 2022-09-26T11:30:03+00:00
-tags: ["Spring全家桶", "源码分析"]
+tags: ["Spring生态"]
 categories: ["业务类"]
 author: "yaomingye"
 showToc: true

@@ -98,7 +98,7 @@ MongoDB 最独特的索引类型之一。<strong>给数组字段建索引时，M
 
 ```javascript
 // 文档：
-// { name: "张三", tags: ["Java", "MongoDB", "Spring"] }
+// { name: "张三", tags: ["数据存储"] }
 
 db.users.createIndex({ tags: 1 })
 

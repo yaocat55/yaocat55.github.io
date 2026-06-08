@@ -1,7 +1,7 @@
 ---
 title: "CoAP 受限应用协议"
 date: 2022-10-05T03:01:01+00:00
-tags: ["Java IO"]
+tags: ["基础技术"]
 categories: ["IoT协议"]
 author: "yaomingye"
 showToc: true

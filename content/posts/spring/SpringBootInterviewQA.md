@@ -1,7 +1,7 @@
 ---
 title: "Spring Boot 面试突击"
 date: 2022-10-17T04:06:46+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["面试突击类"]
 author: "yaomingye"
 showToc: true

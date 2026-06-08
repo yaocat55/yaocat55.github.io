@@ -1,7 +1,7 @@
 ---
 title: "Nacos 核心概念与快速上手"
 date: 2022-12-13T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["注册中心"]
 author: "yaomingye"
 showToc: true

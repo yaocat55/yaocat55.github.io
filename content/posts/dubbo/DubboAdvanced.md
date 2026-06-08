@@ -1,7 +1,7 @@
 ---
 title: "Dubbo 集群容错、负载均衡与异步调用"
 date: 2022-11-21T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

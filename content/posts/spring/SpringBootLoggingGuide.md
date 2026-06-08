@@ -1,7 +1,7 @@
 ---
 title: "Spring Boot 日志"
 date: 2022-09-30T02:42:58+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["SpringBoot类"]
 author: "yaomingye"
 showToc: true

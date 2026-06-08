@@ -1,7 +1,7 @@
 ---
 title: "Caffeine 本地缓存核心与 SpringBoot 集成"
 date: 2022-10-30T08:00:00+00:00
-tags: ["数据存储", "最佳实践"]
+tags: ["数据存储"]
 categories: ["缓存框架"]
 author: "yaomingye"
 showToc: true

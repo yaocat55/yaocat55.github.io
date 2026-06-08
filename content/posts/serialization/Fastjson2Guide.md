@@ -1,7 +1,7 @@
 ---
 title: "Fastjson 进化史：从 1.x 漏洞到 Fastjson2"
 date: 2022-11-26T08:00:00+00:00
-tags: ["Spring全家桶"]
+tags: ["基础技术"]
 categories: ["序列化"]
 author: "yaomingye"
 showToc: true

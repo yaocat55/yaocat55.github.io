@@ -1,7 +1,7 @@
 ---
 title: "JVM 面试突击"
 date: 2022-10-18T05:09:46+00:00
-tags: ["运维与可观测"]
+tags: ["基础技术"]
 categories: ["面试突击类"]
 author: "yaomingye"
 showToc: true

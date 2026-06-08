@@ -1,7 +1,7 @@
 ---
 title: "Sentinel 核心概念与快速上手"
 date: 2022-12-06T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["限流熔断中间件"]
 author: "yaomingye"
 showToc: true

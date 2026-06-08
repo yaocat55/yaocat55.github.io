@@ -1,7 +1,7 @@
 ---
 title: "Dubbo 核心架构与 RPC 模型"
 date: 2022-11-19T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

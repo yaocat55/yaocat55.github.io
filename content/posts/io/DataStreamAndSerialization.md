@@ -1,7 +1,7 @@
 ---
 title: "Java IO 进阶"
 date: 2022-09-09T14:50:18+00:00
-tags: ["Java IO"]
+tags: ["基础技术"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

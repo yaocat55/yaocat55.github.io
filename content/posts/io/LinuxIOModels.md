@@ -1,7 +1,7 @@
 ---
 title: "Linux IO 模型"
 date: 2022-09-13T15:28:58+00:00
-tags: ["Java IO"]
+tags: ["基础技术"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

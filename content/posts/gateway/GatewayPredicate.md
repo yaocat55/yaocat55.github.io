@@ -1,7 +1,7 @@
 ---
 title: "Predicate 与路由规则全解"
 date: 2022-12-03T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["微服务网关"]
 author: "yaomingye"
 showToc: true

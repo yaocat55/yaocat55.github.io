@@ -1,7 +1,7 @@
 ---
 title: "SpringBoot RocketMQ 全操作指南"
 date: 2022-11-08T08:00:00+00:00
-tags: ["消息队列", "源码分析"]
+tags: ["消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

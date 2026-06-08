@@ -1,7 +1,7 @@
 ---
 title: "Spring Security + JWT 企业级鉴权实战"
 date: 2022-09-18T07:00:19+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true
@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "从零开始学习Spring Security + JWT企业级鉴权，涵盖认证与授权的核心概念、JWT结构详解、过滤器链架构，以及完整的Spring Boot集成实战代码"
+description: "从教程版起步，逐步替换为真实商城项目源码：JJWT+Redis双key Token方案、@NoLogin自动扫描、Filter异常桥接、User→Role→Menu三表联查权限、RSA传输加密+短信双认证+异地登录检测的完整登录流程"
 disableShare: true
 hideSummary: false
 searchHidden: false
@@ -626,457 +626,710 @@ public class User {
 }
 ```
 
-### 🔧 6.6 JWT 工具类
+### 🔧 6.6 Token 工具类 —— 真实项目用了 JJWT + Redis 双 key 方案
+
+教程中通常用 Hutool 的 `JWTUtil.createToken(payload, key)` 把所有用户信息塞进 Token 的 Payload。真实项目里用了一个不一样的方案——<strong>Token 只存最少的元数据（用户名），完整的用户信息存在 Redis 里</strong>。
+
+<strong>为什么不用 Hutool 而用 JJWT？</strong>
+
+| | Hutool JWT | JJWT（`io.jsonwebtoken`） |
+|------|:---:|:---:|
+| 引入方式 | `cn.hutool:hutool-all` | `io.jsonwebtoken:jjwt` |
+| 功能定位 | 工具库附带（JWT 只是 Hutool 200+ 模块之一） | 专注 JWT——完整的构建/解析/验证 API |
+| 签名算法 | 默认 HS256，切换不便 | 显式指定 `SignatureAlgorithm.HS512` |
+| Token 构建 | `JWTUtil.createToken(map, key)` | `Jwts.builder().setSubject().setExpiration().signWith().compact()`——链式调用，每一步语义清晰 |
+| Payload 存储 | 把 userId、role、username 全塞进去 | **只存 `sub`（用户名）和 `exp`（过期时间）**——用户详情放 Redis |
+
+选择 JJWT 的核心原因：<strong>Payload 里不放用户信息</strong>。JWT 的 Payload 是 Base64 编码（不是加密），任何人拿到 Token 都能解码看到内容。Token 本身只存"我是谁"的最少信息（用户名），完整信息通过 Redis 的 `user:{username}` key 获取。
+
+<strong>真实项目中的 TokenHelper</strong>（抽象基类 `UserTokenHelper`）：
 
 ```java
-package com.mallshop.mallsecurity.util;
-
-import cn.hutool.jwt.JWT;
-import cn.hutool.jwt.JWTUtil;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.Map;
-
+@Slf4j
 @Component
-public class JwtUtil {
+public class UserTokenHelper {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private static final String TOKEN_PREFIX = "token:";
+    private static final String USER_PREFIX = "user:";
 
-    @Value("${jwt.access-token-expire}")
-    private Long accessTokenExpire;
+    @Getter
+    @Value("${mall.mgt.tokenSecret:123456test}")       // ① 密钥——支持环境变量覆盖
+    private String tokenSecret;
+    @Value("${mall.mgt.tokenExpireTimeInRecord:3600}") // ② 过期时间（秒）——默认 1 小时
+    private int tokenExpireTimeInRecord;
 
-    @Value("${jwt.refresh-token-expire}")
-    private Long refreshTokenExpire;
+    @Autowired
+    protected RedisUtil redisUtil;
 
     /**
-     * 生成 Access Token
+     * 生成 Token 并存入 Redis
+     * @param username  用户名（作为 Token 的 subject）
+     * @param json      用户完整信息的 JSON（存入 Redis）
      */
-    public String createAccessToken(Long userId, String username, String role) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("userId", userId);
-        payload.put("username", username);
-        payload.put("role", role);
-        payload.put("type", "access");
-        payload.put("exp", System.currentTimeMillis() + accessTokenExpire);
-        return JWTUtil.createToken(payload, secret.getBytes());
+    public String generateToken(String username, String json) {
+        // ③ 生成 JWT——只存 sub + exp，不存任何业务字段
+        String token = Jwts.builder()
+                .setSubject(username)
+                .setExpiration(new Date(System.currentTimeMillis()
+                        + tokenExpireTimeInRecord * 1000))
+                .signWith(SignatureAlgorithm.HS512, tokenSecret)
+                .compact();
+
+        // ④ 双 key 写入 Redis——TTL 与 Token 一致
+        redisUtil.set(getTokenKey(username), token, tokenExpireTimeInRecord);
+        redisUtil.set(getUserKey(username), json, tokenExpireTimeInRecord);
+        return token;
     }
 
     /**
-     * 生成 Refresh Token
+     * 从 Token 中解析用户名
      */
-    public String createRefreshToken(Long userId) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("userId", userId);
-        payload.put("type", "refresh");
-        payload.put("exp", System.currentTimeMillis() + refreshTokenExpire);
-        return JWTUtil.createToken(payload, secret.getBytes());
-    }
-
-    /**
-     * 验证Token是否有效
-     */
-    public boolean verify(String token) {
-        try {
-            return JWTUtil.verify(token, secret.getBytes());
-        } catch (Exception e) {
-            return false;
+    public String getUsernameFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        if (Objects.isNull(claims)) {
+            return null;
         }
+        return claims.getSubject();
     }
 
     /**
-     * 从Token中获取用户ID
+     * 解析 JWT Claims——验证签名 + 检查过期
      */
-    public Long getUserId(String token) {
-        JWT jwt = JWTUtil.parseToken(token);
-        return Long.valueOf(jwt.getPayload("userId").toString());
+    public Claims getClaimsFromToken(String token) {
+        Claims claims;
+        try {
+            claims = Jwts.parser()
+                    .setSigningKey(getTokenSecret())
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            // ⑤ 签名无效/过期 → 直接抛 BusinessException → GlobalExceptionHandler 统一处理
+            throw new BusinessException(HttpStatus.FORBIDDEN.value(), "请先登录");
+        }
+        return claims;
     }
 
-    /**
-     * 从Token中获取用户名
-     */
-    public String getUsername(String token) {
-        JWT jwt = JWTUtil.parseToken(token);
-        return jwt.getPayload("username").toString();
+    protected String getTokenKey(String username) {
+        return String.format("%s%s", TOKEN_PREFIX, username);
     }
 
-    /**
-     * 从Token中获取角色
-     */
-    public String getRole(String token) {
-        JWT jwt = JWTUtil.parseToken(token);
-        return jwt.getPayload("role").toString();
-    }
-
-    /**
-     * 判断是否为Access Token
-     */
-    public boolean isAccessToken(String token) {
-        JWT jwt = JWTUtil.parseToken(token);
-        return "access".equals(jwt.getPayload("type"));
+    protected String getUserKey(String username) {
+        return String.format("%s%s", USER_PREFIX, username);
     }
 }
 ```
 
-### 🔒 6.7 JWT 认证过滤器
-
-<span style="color:red">这是整个鉴权体系最核心的代码</span>。它拦截每一个 HTTP 请求，检查是否携带了有效的 JWT。
+继承自 `UserTokenHelper` 的业务层 `TokenHelper` 追加了两个方法：
 
 ```java
-package com.mallshop.mallsecurity.filter;
-
-import com.mallshop.mallsecurity.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Collections;
-
+@Slf4j
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class TokenHelper extends UserTokenHelper {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    /**
+     * 生成 Token——调用父类方法，传入 UserDetails 序列化后的 JSON
+     */
+    public String generateToken(UserDetails userDetails) {
+        return super.generateToken(
+                userDetails.getUsername(),
+                JSON.toJSONString(userDetails)  // FastJSON 序列化整个 UserDetails
+        );
+    }
+
+    /**
+     * 从 Redis 中获取用户详情——供 JwtTokenFilter 使用
+     */
+    public UserDetails getUserDetailsFromUsername(String username) {
+        String userDetailJson = redisUtil.get(getUserKey(username));
+        if (!StringUtils.hasLength(userDetailJson)) {
+            return null;
+        }
+        return JSON.parseObject(userDetailJson, JwtUserEntity.class);
+    }
+}
+```
+
+<strong>为什么 Redis 存两份 key？</strong>
+
+| Redis Key | Value | 作用 |
+|------|------|------|
+| `token:zhangsan` | JWT 字符串 | 支持"踢人下线"——删掉这个 key，Token 就失效了 |
+| `user:zhangsan` | `JwtUserEntity` 的 JSON | 过滤器拿到用户名后，从这里取完整的用户信息（id、roles、authorities） |
+
+<strong>注销（logout）的实现</strong>：
+
+```java
+public void delToken(String token) {
+    String username = getUsernameFromToken(token);
+    redisUtil.del(getTokenKey(username));   // 删除 token → Token 验证失败
+    redisUtil.del(getUserKey(username));   // 删除 user → 用户信息丢失
+}
+```
+
+两个 key 一起删——不管 JWT 本身的 `exp` 还有多久，<strong>Redis 里没有就是没有</strong>。这就是"Token 主动失效"的完整实现：不需要黑名单、不需要 JWT 版本号，Redis 的 TTL 就是 Token 的生命周期。
+
+<strong>和教程版的核心区别</strong>：
+
+|  | 教程版（Hutool） | 真实版（JJWT + Redis） |
+|------|:---:|:---:|
+| JWT 库 | Hutool `JWTUtil` | JJWT `Jwts.builder()` |
+| Token 里存什么 | userId + username + role + type + exp | **只存 `sub`(username) + `exp`** |
+| 用户信息在哪 | Token Payload（Base64，可解码） | Redis `user:{username}` key |
+| 主动失效 | 需要额外维护黑名单 | 删除 Redis key 即刻失效 |
+| 过期控制 | JWT `exp` 字段 | JWT `exp` + Redis key TTL（双重控制） |
+| 防篡改 | 签名校验 | 签名校验 + Token 值对比（Redis 中存了一份正确的） |
+
+### 🔒 6.7 JWT 认证过滤器 —— 真实项目的四个关键差异
+
+真实项目中的 JWT 过滤器与教程版有四个关键差异。先看完整代码，再逐一解释。
+
+<strong>JwtTokenFilter</strong>（继承 `GenericFilterBean`，不是 `OncePerRequestFilter`）：
+
+```java
+public class JwtTokenFilter extends GenericFilterBean {
+
+    public final static String FILTER_ERROR = "filterError";
+    public final static String FILTER_ERROR_PATH = "/throw-error";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    public void doFilter(ServletRequest servletRequest,
+            ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
 
-        // 1. 从请求头中提取 Token
-        String token = extractToken(request);
+        HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 
-        // 2. 如果没有Token，直接放行（让后续过滤器处理——大概率返回401）
-        if (!StringUtils.hasText(token)) {
-            filterChain.doFilter(request, response);
+        // ① NoLoginMap 判断：标了 @NoLogin 的接口 → 直接放行
+        if (!NoLoginMap.notExist(httpServletRequest.getRequestURI())) {
+            filterChain.doFilter(httpServletRequest, servletResponse);
             return;
         }
 
-        // 3. 验证Token是否有效
-        if (!jwtUtil.verify(token)) {
-            filterChain.doFilter(request, response);
+        // ② 从 Authorization 头提取 Token
+        String token = TokenUtil.getTokenForAuthorization(httpServletRequest);
+
+        if (Objects.isNull(token)) {
+            if (NoLoginMap.notExist(httpServletRequest.getRequestURI())) {
+                // ③ 需要登录但没有 Token → 转发给 FilterExceptionController
+                handleException((HttpServletRequest) servletRequest,
+                        (HttpServletResponse) servletResponse,
+                        new BusinessException(HttpStatus.FORBIDDEN.value(), "请先登录"));
+            } else {
+                filterChain.doFilter(httpServletRequest, servletResponse);
+            }
             return;
         }
 
-        // 4. Token有效，解析用户信息
-        String username = jwtUtil.getUsername(token);
-        String role = jwtUtil.getRole(token);
+        // ④ 通过 SpringBeanUtil 获取 TokenHelper（Filter 不是 Spring Bean，不能 @Autowired）
+        TokenHelper tokenHelper = SpringBeanUtil.getBean("tokenHelper");
 
-        // 5. 构造 Authentication 对象，设置到 SecurityContext 中
-        //    这一步完成后，Spring Security 就知道"当前用户是谁"了
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                    username,
-                    null,  // 密码不需要（已经有Token了）
-                    Collections.singletonList(new SimpleGrantedAuthority(role))
-                );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // 6. 继续执行后续过滤器
-        filterChain.doFilter(request, response);
+        if (Objects.nonNull(tokenHelper)) {
+            try {
+                // ⑤ 从 Token 解析用户名 → 从 Redis 获取完整 UserDetails
+                String username = tokenHelper.getUsernameFromToken(token);
+                if (StringUtils.hasLength(username)
+                        && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails =
+                            tokenHelper.getUserDetailsFromUsername(username);  // 从 Redis 取
+                    if (Objects.nonNull(userDetails)) {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null,
+                                        userDetails.getAuthorities());
+                        authentication.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(httpServletRequest));
+                        SecurityContextHolder.getContext()
+                                .setAuthentication(authentication);
+                    }
+                }
+                filterChain.doFilter(httpServletRequest, servletResponse);
+            } catch (BusinessException e) {
+                // ⑥ Token 解析异常 → 转发给 FilterExceptionController
+                handleException((HttpServletRequest) servletRequest,
+                        (HttpServletResponse) servletResponse, e);
+            }
+        } else {
+            filterChain.doFilter(httpServletRequest, servletResponse);
+        }
     }
 
     /**
-     * 从请求头中提取 Bearer Token
+     * ⑦ Filter 不能直接返回 JSON——通过 forward 交给 Controller
      */
-    private String extractToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);  // 去掉 "Bearer " 前缀
-        }
-        return null;
+    private void handleException(HttpServletRequest request,
+            HttpServletResponse response, BusinessException e)
+            throws ServletException, IOException {
+        request.setAttribute(FILTER_ERROR, e);
+        request.getRequestDispatcher(FILTER_ERROR_PATH).forward(request, response);
     }
 }
 ```
 
-> **代码说明**：
-> - 第 31 行：`extractToken` 从 `Authorization` 请求头提取 Token，格式是 `Bearer xxx.yyy.zzz`
-> - 第 34 ~ 37 行：没有 Token 时直接放行，不设置认证信息。后续 FilterSecurityInterceptor 会检查 URL 是否需要认证，需要则返回 401
-> - 第 39 ~ 42 行：Token 无效（签名不对、已过期）也放行，交给后续过滤器处理
-> - 第 45 ~ 53 行：Token 有效时，构造 `UsernamePasswordAuthenticationToken` 并设置到 `SecurityContextHolder`。这告诉 Spring Security："当前请求的用户是 xx，角色是 yy"
-> - `OncePerRequestFilter`：Spring 提供的基类，保证在一个请求中该过滤器只执行一次
-
-### ⚙️ 6.8 Spring Security 核心配置
-
-<span style="color:red">这是定义安全规则的地方</span>——哪些 URL 需要认证、哪些 URL 需要什么角色。
+注册到过滤器链的 `JwtTokenConfigurer`：
 
 ```java
-package com.mallshop.mallsecurity.config;
+public class JwtTokenConfigurer
+        extends SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity> {
 
-import com.mallshop.mallsecurity.filter.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+    @Override
+    public void configure(HttpSecurity httpSecurity) {
+        JwtTokenFilter jwtTokenFilter = new JwtTokenFilter();
+        // 插在 UsernamePasswordAuthenticationFilter 之前
+        httpSecurity.addFilterBefore(jwtTokenFilter,
+                UsernamePasswordAuthenticationFilter.class);
+    }
+}
+```
 
-@Configuration
+SecurityConfig 中通过 `.apply(new JwtTokenConfigurer())` 注册。
+
+<strong>四个关键差异详解</strong>：
+
+| 差异 | 教程版 | 真实版 | 为什么 |
+|------|------|------|------|
+| **① Filter 注册方式** | `@Component` 自动注入后 `addFilterBefore(jwtFilter, ...)` | `JwtTokenConfigurer` 中 `new JwtTokenFilter()` 手动 new | 保证 Filter 在 Spring Security 链中初始化——如果 `@Component` 在其他 FilterConfig 之前加载，会出现注入顺序问题 |
+| **② UserDetails 来源** | Token Payload 中解析 role，构造 `SimpleGrantedAuthority` | **Redis `user:{username}` key 中取完整 `JwtUserEntity`** | Token Payload 里只存 username（见 6.6 节），完整的用户权限必须从 Redis 查——因为权限可能在 Token 有效期内被管理员修改 |
+| **③ NoLoginMap 跳过** | 没有这层逻辑——Filter 对每个请求都检查 Token | `NoLoginMap.notExist(uri)` 先判断是否需要登录 | `@NoLogin` 注解的方法应该在 Filter 层就跳过 JWT 校验——不能等请求进了 Controller 才判断是否需要登录 |
+| **④ 异常处理** | `OncePerRequestFilter` 的 catch 块只能在 response 上写 JSON | **forward 到 FilterExceptionController** → Controller 重新 throw → `@RestControllerAdvice` 捕获 → 统一 JSON 响应 | Filter 不在 Spring MVC 上下文中，`@RestControllerAdvice` 无法捕获 Filter 中抛出的异常！这是 Spring 中最容易被忽略的坑——forward 桥接是标准做法 |
+
+<strong>FilterExceptionController —— Filter 到 Controller 的异常桥接</strong>：
+
+```java
+@Slf4j
+@RestController
+public class FilterExceptionController {
+
+    @RequestMapping(FILTER_ERROR_PATH)  // "/throw-error"
+    public void handleException(HttpServletRequest request) {
+        Object exception = request.getAttribute(FILTER_ERROR);
+        if (exception instanceof BusinessException) {
+            BusinessException businessException = (BusinessException) exception;
+            throw businessException;  // 重新抛出 → GlobalExceptionHandler 捕获
+        }
+        throw new BusinessException(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "服务器内部错误，请联系系统管理员！");
+    }
+}
+```
+
+<strong>为什么要这样绕一圈？</strong> Filter 在 Servlet 容器层，Controller 在 Spring MVC 层。`@RestControllerAdvice` 只能拦截 Controller 层抛出的异常——Filter 中直接 `throw` 的异常，DispatcherServlet 收不到。解法：Filter catch → `request.setAttribute("filterError", e)` → forward 到 `/throw-error` → Controller 拿到异常重新 `throw` → 进入 `GlobalExceptionHandler` → 输出统一样式的 JSON 错误。
+
+> ⚠️ 新手提示：这是 Spring Security + 统一 JSON 返回格式组合中最容易踩的坑。如果你用 `OncePerRequestFilter` 想在 `doFilterInternal` 里直接 `response.getWriter().write("{\"code\":401}")` ——也能用，但 <strong>不走 GlobalExceptionHandler 的响应格式跟其他接口不一致</strong>，前端要处理两套错误格式。
+
+### ⚙️ 6.8 Spring Security 核心配置 —— 真实项目的五个独特设计
+
+```java
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
-public class SecurityConfig {
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)  // ① 开启方法级权限注解
+public class SpringSecurityConfig implements ApplicationContextAware {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private ApplicationContext applicationContext;
 
-    /**
-     * 配置密码加密器
-     * BCrypt 是 Spring Security 推荐的加密算法
-     */
+    @Override
+    public void setApplicationContext(ApplicationContext ctx) {
+        this.applicationContext = ctx;
+    }
+
+    // ===== 认证提供者 =====
+
+    @Bean
+    public SmsAuthenticationProvider smsAuthenticationProvider() {
+        return new SmsAuthenticationProvider(
+                applicationContext.getBean(UserDetailsServiceImpl.class),
+                applicationContext.getBean(RedisUtil.class),
+                applicationContext.getBean(UserMapper.class));
+    }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder());
+        provider.setUserDetailsService(
+                applicationContext.getBean(UserDetailsServiceImpl.class));
+        return provider;
+    }
+
+    // ② AuthenticationManager 管理两个 Provider——密码登录 + 短信登录
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        List<AuthenticationProvider> providers = new ArrayList<>();
+        providers.add(smsAuthenticationProvider());   // 短信验证码登录
+        providers.add(daoAuthenticationProvider());   // 用户名密码登录
+        return new ProviderManager(providers);
+    }
+
+    // ③ 去掉 ROLE_ 前缀——权限码直接是 "admin:user:delete" 而不是 "ROLE_admin:user:delete"
+    @Bean
+    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
+        return new GrantedAuthorityDefaults("");
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * 暴露 AuthenticationManager 为 Bean
-     * 在登录接口中需要手动调用它来验证用户名密码
-     */
+    // ===== 安全过滤器链 =====
+
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        // ④ 启动时扫描所有 @NoLogin 注解，构建免登录 URL 集合
+        initNoLogin(applicationContext);
+
+        return httpSecurity
+                .csrf().disable()           // JWT 方案不需要 CSRF
+                .headers().frameOptions().disable()  // 允许 iframe（Druid 监控页需要）
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+                .and()
+                .authorizeRequests()
+                // 静态资源
+                .antMatchers(HttpMethod.GET,
+                        "/*.html", "/**/*.html", "/**/*.css", "/**/*.js",
+                        "/websocket/**", "/job/**", "/init/**").permitAll()
+                // Swagger 文档
+                .antMatchers("/swagger-ui.html", "/swagger-resources/**",
+                        "/webjars/**", "/*/api-docs").permitAll()
+                // Druid 监控 + 头像
+                .antMatchers("/druid/**", "/avatar/**").permitAll()
+                // OPTIONS 预检请求
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // ⑤ @NoLogin 注解标记的接口——运行时动态构建的 permitAll 列表
+                .antMatchers(NoLoginMap.getNoLoginUrlSet()
+                        .toArray(new String[0])).permitAll()
+                // 其余所有请求需要认证
+                .anyRequest().authenticated()
+                .and()
+                .apply(new JwtTokenConfigurer())  // ⑥ 注册自定义 JWT 过滤器
+                .and()
+                .build();
     }
 
     /**
-     * 安全过滤器链配置——整个安全规则的核心
+     * ⑦ 自动扫描：启动时遍历所有 @RequestMapping，收集标了 @NoLogin 的 URL
      */
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            // 1. 关闭 CSRF（前后端分离 + JWT 不需要 CSRF 防护）
-            .csrf().disable()
+    private void initNoLogin(ApplicationContext applicationContext) {
+        RequestMappingHandlerMapping mapping = applicationContext
+                .getBean(RequestMappingHandlerMapping.class);
+        Map<RequestMappingInfo, HandlerMethod> handlerMethods =
+                mapping.getHandlerMethods();
 
-            // 2. 设置为无状态模式（不创建 Session，每个请求独立认证）
-            .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
-            // 3. 配置 URL 访问规则
-            .and()
-            .authorizeRequests()
-            // 公开接口——不需要认证
-            .antMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
-            // 管理员接口——需要 ROLE_ADMIN 角色
-            .antMatchers("/api/admin/**").hasRole("ADMIN")
-            // 其他所有接口——需要认证（登录）即可
-            .anyRequest().authenticated()
-
-            // 4. 将 JWT 过滤器添加到 Spring Security 过滤器链中
-            //    放在 UsernamePasswordAuthenticationFilter 之前
-            .and()
-            .addFilterBefore(jwtAuthenticationFilter,
-                             UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+        Set<String> noLoginUrls = new HashSet<>();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> entry
+                : handlerMethods.entrySet()) {
+            HandlerMethod handlerMethod = entry.getValue();
+            NoLogin noLogin = handlerMethod.getMethodAnnotation(NoLogin.class);
+            if (null != noLogin) {
+                noLoginUrls.addAll(entry.getKey()
+                        .getPatternsCondition().getPatterns());
+            }
+        }
+        NoLoginMap.initSet(noLoginUrls);
     }
 }
 ```
 
-> **配置逐行解读**：
->
-> - **`.csrf().disable()`**：CSRF（跨站请求伪造）攻击通常发生在基于 Session + Cookie 的 Web 应用中。前后端分离 + JWT 的场景下，Token 在 Header 中，不依赖 Cookie，因此不存在 CSRF 风险，可以安全关闭
-> - **`SessionCreationPolicy.STATELESS`**：告诉 Spring Security **不要创建 HttpSession**。这是 JWT 方案的关键配置——服务端不保存用户状态，每个请求通过 Token 独立认证
-> - **`.antMatchers("/api/auth/login").permitAll()`**：登录接口和刷新 Token 接口**不需要认证**，否则用户连登录都做不了
-> - **`.antMatchers("/api/admin/**").hasRole("ADMIN")`**：以 `/api/admin/` 开头的 URL 需要 `ROLE_ADMIN` 角色。注意 `hasRole("ADMIN")` 会自动添加 `ROLE_` 前缀
-> - **`.anyRequest().authenticated()`**：除了上面列出的之外，所有接口都需要认证
+<strong>五个独特设计逐一解释</strong>：
 
-### 👤 6.9 UserDetailsService 实现
+| 设计 | 教程版 | 真实版 | 为什么 |
+|------|------|------|------|
+| **① @EnableGlobalMethodSecurity** | 未启用 | `prePostEnabled = true` | 开启后可以在 Controller 方法上用 `@PreAuthorize("hasAuthority('user:delete')")` 做细粒度权限控制——不在 SecurityConfig 里写死角色规则 |
+| **② 双 AuthenticationProvider** | 只有一个默认的 `DaoAuthenticationProvider` | `SmsAuthenticationProvider` + `DaoAuthenticationProvider` | 支持两种登录方式——短信验证码和用户名密码。`ProviderManager` 按注册顺序依次尝试，哪个 `supports()` 返回 true 就用哪个 |
+| **③ GrantedAuthorityDefaults("")** | 没有配置（默认 "ROLE_"） | 显式去前缀 | `hasRole("ADMIN")` 背后会自动加 `ROLE_` → 实际校验的权限码是 `ROLE_ADMIN`。去掉前缀后权限码直接是 `admin:user:delete` 格式——和数据库中存的完全一致，不混淆 |
+| **④ initNoLogin() 自动扫描** | 在 `SecurityConfig` 中硬编码 `.antMatchers("/api/auth/login").permitAll()` | 启动时扫描所有 `@RequestMapping`，找出标了 `@NoLogin` 的 | 新增一个公开接口不需要改 SecurityConfig——只需要在方法上加 `@NoLogin`。符合开闭原则（对扩展开放、对修改关闭） |
+| **⑤ 7 类 permitAll 规则** | 只有登录 + 刷新接口 | 静态资源 + Swagger + Druid + WebSocket + OPTIONS + Job 回调 + NoLogin | 真实生产项目不仅有业务接口——监控、文档、WebSocket 都要在安全配置里声明。OPTIONS 预检请求必须放行否则前端 CORS 失败 |
 
-Spring Security 需要一个 `UserDetailsService` 来根据用户名加载用户信息。
+### 👤 6.9 UserDetailsService 实现 —— RBAC 三表联查
+
+教程版直接从 `t_user` 表取 `role` 字段就完了。真实项目是完整的 RBAC 模型——<strong>用户 → 角色 → 菜单权限</strong>，权限来自三张表：
 
 ```java
-package com.mallshop.mallsecurity.service;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.mallshop.mallsecurity.entity.User;
-import com.mallshop.mallsecurity.mapper.UserMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-
-@Service
+@Service("userDetailsService")
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private RoleMapper roleMapper;
+    @Autowired
+    private MenuMapper menuMapper;
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
-
-        // 1. 从数据库查询用户
-        User user = userMapper.selectOne(
-            new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, username)
-        );
-
-        if (user == null) {
-            throw new UsernameNotFoundException("用户不存在: " + username);
+    public UserDetails loadUserByUsername(String username) {
+        // ① 查用户
+        UserEntity userEntity = userMapper.findByUserName(username);
+        if (Objects.isNull(userEntity)) {
+            return null;  // 返回 null → DaoAuthenticationProvider 抛出 BadCredentialsException
         }
 
-        if (!user.getEnabled()) {
-            throw new RuntimeException("用户已被禁用");
+        // ② 查用户拥有的角色 → 查角色关联的菜单权限
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        fillUserAuthority(userEntity, authorities);
+
+        // ③ 提取角色名列表（用于前端菜单展示）
+        List<String> roles = authorities.stream()
+                .map(SimpleGrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        // ④ 返回自定义 UserDetails——除了权限，还带了 userId 和 roles
+        return new JwtUserEntity(userEntity.getId(), username,
+                userEntity.getPassword(), authorities, roles);
+    }
+
+    private void fillUserAuthority(UserEntity userEntity,
+            List<SimpleGrantedAuthority> authorities) {
+        // ⑤ 查用户关联的角色
+        List<RoleEntity> roleEntities =
+                roleMapper.findRoleByUserId(userEntity.getId());
+        if (CollectionUtils.isEmpty(roleEntities)) {
+            return;
         }
 
-        // 2. 将我们的 User 实体转换为 Spring Security 的 UserDetails
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())            // 数据库中已加密的密码
-                .roles(user.getRole().replace("ROLE_", ""))  // 去掉ROLE_前缀
-                .disabled(!user.getEnabled())
-                .build();
+        // ⑥ 收集角色自身的权限码（如 "admin:user:list"）
+        Set<String> permissionSet = roleEntities.stream()
+                .filter(x -> StringUtils.hasLength(x.getPermission()))
+                .map(RoleEntity::getPermission)
+                .collect(Collectors.toSet());
+
+        // ⑦ 查角色关联的菜单 → 收集菜单的权限码（如 "user:delete"）
+        fillRoleMenu(roleEntities, permissionSet);
+
+        if (CollectionUtils.isNotEmpty(permissionSet)) {
+            authorities.addAll(permissionSet.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList()));
+        }
+    }
+
+    private void fillRoleMenu(List<RoleEntity> roleEntities,
+            Set<String> permissionSet) {
+        List<Long> roleIdList = roleEntities.stream()
+                .map(RoleEntity::getId).collect(Collectors.toList());
+        List<MenuEntity> menuList =
+                menuMapper.findMenuByRoleIdList(roleIdList);
+        if (CollectionUtils.isEmpty(menuList)) {
+            return;
+        }
+        for (MenuEntity menuEntity : menuList) {
+            if (StringUtils.hasLength(menuEntity.getPermission())) {
+                // ⑧ 菜单权限可能是逗号分隔的多个权限码，如 "user:add,user:delete"
+                Set<String> menuPermSet = Arrays
+                        .stream(menuEntity.getPermission().split(","))
+                        .collect(Collectors.toSet());
+                permissionSet.addAll(menuPermSet);
+            }
+        }
     }
 }
 ```
 
-### 🔑 6.10 登录接口
+<strong>自定义 UserDetails —— JwtUserEntity</strong>：
 
 ```java
-package com.mallshop.mallsecurity.controller;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JwtUserEntity implements UserDetails {
 
-import com.mallshop.mallsecurity.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+    private Long id;                              // 用户ID——后续填充审计字段时用
+    private String username;
+    @JsonIgnore
+    private String password;                      // 密码不序列化到 Redis 的 JSON 中
+    private List<SimpleGrantedAuthority> authorities;  // 权限码集合
+    private List<String> roles;                   // 角色名集合（前端菜单用）
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+    @Override
+    public boolean isEnabled() { return true; }
+}
+```
 
-@RestController
-@RequestMapping("/api/auth")
-public class AuthController {
+比教程版多出来的关键字段是 `id` 和 `roles`——`id` 用于填充数据库审计字段（createUserId/updateUserId），`roles` 用于前端根据角色展示不同菜单。
 
+### 🔑 6.10 登录接口 —— 真实项目的完整认证流程
+
+真实项目的登录流程比教程版复杂得多——短信验证码 + 用户名密码双认证方式、验证码校验、RSA 密码解密、异地登录检测、登录错误计数锁定。
+
+```java
+@Slf4j
+@Service
+public class UserAuthService {
+
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private TokenHelper tokenHelper;
+    @Autowired
+    private PasswordUtil passwordUtil;        // RSA 密码解密
+    @Autowired
+    private RedisUtil redisUtil;
     @Autowired
     private AuthenticationManager authenticationManager;
-
     @Autowired
-    private JwtUtil jwtUtil;
+    private GeoIpHelper geoIpHelper;          // IP 归属地查询
+
+    @Value("${mall.mgt.tokenExpireTimeInRecord:3600}")
+    private int tokenExpireTimeInRecord;
 
     /**
-     * 登录接口
+     * 用户名密码登录
      */
-    @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        // 1. 构造认证令牌（未认证状态）
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(
-                    request.getUsername(), request.getPassword());
+    public TokenEntity login(AuthUserEntity authUserEntity) {
+        // ① 登录锁定检查
+        checkUserIsLocked(authUserEntity.getUsername());
 
-        // 2. 调用 AuthenticationManager 进行认证
-        //    内部会调用 UserDetailsService.loadUserByUsername()
-        //    并用 PasswordEncoder 验证密码
-        Authentication authentication = authenticationManager.authenticate(authToken);
+        try {
+            // ② 验证图形验证码
+            String code = redisUtil.get(getCaptchaKey(authUserEntity.getUuid()));
+            AssertUtil.hasLength(code, "该验证码已失效");
+            AssertUtil.isTrue(code.trim()
+                    .equals(authUserEntity.getCode().trim()), "验证码错误");
 
-        // 3. 认证成功，生成 JWT
-        //    从认证结果中获取用户信息
-        org.springframework.security.core.userdetails.User userDetails =
-                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+            // ③ RSA 解密前端传来的加密密码
+            String decodePassword = passwordUtil
+                    .decodeRsaPassword(authUserEntity);
 
-        String role = userDetails.getAuthorities().stream()
-                .findFirst().get().getAuthority();  // "ROLE_ADMIN" 或 "ROLE_USER"
+            // ④ 调用 Spring Security 认证链路
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            authUserEntity.getUsername(), decodePassword);
+            Authentication authentication =
+                    authenticationManager.authenticate(authToken);
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authentication);
 
-        // 注意：这里 userId 需要从数据库查，UserDetails 中没有存 userId
-        // 实际项目中你可以自定义 UserDetails 包含 userId
-        // 为简化起见，这里从 username 生成
-        String accessToken = jwtUtil.createAccessToken(999L, userDetails.getUsername(), role);
-        String refreshToken = jwtUtil.createRefreshToken(999L);
+            JwtUserEntity jwtUserEntity =
+                    (JwtUserEntity) authentication.getPrincipal();
 
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(1800L)  // 30分钟
-                .build();
+            // ⑤ 异地登录检测——如果本次登录城市与上次不同，发告警邮件
+            HttpServletRequest request = ((ServletRequestAttributes)
+                    RequestContextHolder.getRequestAttributes()).getRequest();
+            String ip = IpUtil.getIpAddr(request);
+            CityDTO cityDTO = geoIpHelper.getCity(ip);
+            if (Objects.nonNull(cityDTO)) {
+                userGeoIpService.validateRemoteLogin(
+                        jwtUserEntity.getId(), cityDTO.getCity());
+            }
+
+            // ⑥ 生成 JWT + 存入 Redis——通过 6.6 节的 TokenHelper
+            String token = tokenHelper.generateToken(jwtUserEntity);
+            redisUtil.del(getCaptchaKey(authUserEntity.getUuid()));  // 用完即删
+
+            // ⑦ 返回 TokenEntity（含 username、token、roles、过期时间）
+            List<String> roleList = jwtUserEntity.getAuthorities().stream()
+                    .map(SimpleGrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+            return new TokenEntity(jwtUserEntity.getUsername(),
+                    token, roleList, tokenExpireTimeInRecord);
+
+        } catch (Exception e) {
+            // ⑧ 登录失败 → 记录错误次数 → 超过阈值锁定账户
+            if (e instanceof BusinessException
+                    || e instanceof BadCredentialsException) {
+                recordLoginErrorUser(authUserEntity.getUsername());
+            }
+            throw new BusinessException("用户名或密码错误");
+        }
+    }
+
+    // ⑨ Redis INCR 原子递增登录错误次数
+    private void recordLoginErrorUser(String key) {
+        String loginErrorKey = LOGIN_ERROR_USER_PREFIX + key;
+        Long count = redisUtil.increment(loginErrorKey);  // 原子操作
+        if (count == 1) {
+            redisUtil.expire(loginErrorKey, lockedUserTime);
+        }
+        if (count > MAX_LOGIN_ERROR_COUNT) {
+            redisUtil.set(LOCKED_USER_PREFIX + key, "true", lockedUserTime);
+            throw new BusinessException("该用户已被锁定");
+        }
+    }
+
+    private void checkUserIsLocked(String key) {
+        String value = redisUtil.get(LOCKED_USER_PREFIX + key);
+        if (StringUtils.hasLength(value)) {
+            throw new BusinessException("该用户已被锁定");
+        }
     }
 
     /**
-     * 刷新Token接口
+     * 注销——删除 Redis 中的 Token 和用户信息
      */
-    @PostMapping("/refresh")
-    public LoginResponse refresh(@Valid @RequestBody RefreshRequest request) {
-        String refreshToken = request.getRefreshToken();
-
-        // 1. 验证Refresh Token是否有效
-        if (!jwtUtil.verify(refreshToken)) {
-            throw new RuntimeException("Refresh Token无效或已过期");
-        }
-
-        // 2. 确认是Refresh Token（不是Access Token）
-        if (!jwtUtil.isAccessToken(refreshToken)) {
-            Long userId = jwtUtil.getUserId(refreshToken);
-            String username = jwtUtil.getUsername(refreshToken);
-            String role = jwtUtil.getRole(refreshToken);
-
-            // 3. 生成新的 Access Token 和 Refresh Token
-            String newAccessToken = jwtUtil.createAccessToken(userId, username, role);
-            String newRefreshToken = jwtUtil.createRefreshToken(userId);
-
-            return LoginResponse.builder()
-                    .accessToken(newAccessToken)
-                    .refreshToken(newRefreshToken)
-                    .tokenType("Bearer")
-                    .expiresIn(1800L)
-                    .build();
-        }
-
-        throw new RuntimeException("请使用Refresh Token刷新");
+    public void logout(HttpServletRequest request) {
+        String token = TokenUtil.getTokenForAuthorization(request);
+        AssertUtil.hasLength(token, "请重新登录");
+        tokenHelper.delToken(token);  // 同时删除 token:xxx 和 user:xxx
     }
 }
 ```
 
-请求 / 响应 DTO：
+<strong>真实登录流程（和教程版的 6 个差异）</strong>：
+
+| 环节 | 教程版 | 真实版 |
+|------|------|------|
+| 密码传输 | 明文密码 | **RSA 加密传输** → 后端私钥解密 |
+| 验证码 | 无 | **算术验证码** + Redis TTL 保证时效性 |
+| 认证方式 | 仅用户名密码 | **用户名密码 + 短信验证码**（双 Provider） |
+| 安全防护 | 无 | **Redis INCR 登录错误计数** → 超过阈值自动锁定 |
+| 风控 | 无 | **IP 归属地** → 异地登录检测 |
+| Token 存储 | 仅生成返回 | **Redis 双 key 存储** → 支持主动失效 |
+
+**短信验证码登录**（SmsAuthenticationProvider）：
 
 ```java
-// 登录请求
-@Data
-public class LoginRequest {
-    @NotBlank(message = "用户名不能为空")
-    private String username;
+public class SmsAuthenticationProvider implements AuthenticationProvider {
 
-    @NotBlank(message = "密码不能为空")
-    private String password;
-}
+    @Override
+    public Authentication authenticate(Authentication authentication) {
+        String phone = (String) authentication.getPrincipal();
+        String captcha = (String) authentication.getCredentials();
 
-// 登录响应
-@Data
-@Builder
-public class LoginResponse {
-    private String accessToken;
-    private String refreshToken;
-    private String tokenType;    // "Bearer"
-    private Long expiresIn;      // Access Token 过期时间（秒）
-}
+        // ① 验证短信验证码
+        String smsCodeKey = getSmsCodePrefixKey(phone, SmsTypeEnum.LOGIN);
+        String smsCode = redisUtil.get(smsCodeKey);
+        AssertUtil.hasLength(smsCode, "该短信验证码已失效");
+        AssertUtil.isTrue(smsCode.trim().equals(captcha), "短信验证码错误");
 
-// 刷新Token请求
-@Data
-public class RefreshRequest {
-    @NotBlank(message = "Refresh Token不能为空")
-    private String refreshToken;
+        try {
+            // ② 根据手机号查用户——没有就自动注册
+            List<UserEntity> userEntities = userMapper.searchByPhone(phone);
+            UserEntity userEntity;
+            if (CollectionUtils.isEmpty(userEntities)) {
+                userEntity = registerUser(phone);  // 自动注册
+            } else {
+                userEntity = userEntities.get(0);
+            }
+
+            // ③ 走正常的 UserDetailsService 加载权限
+            UserDetails userDetails = userDetailsService
+                    .loadUserByUsername(userEntity.getUserName());
+
+            // ④ 返回已认证的 Token
+            return new SmsAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+        } finally {
+            redisUtil.del(smsCodeKey);  // 用完即删
+        }
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        // ⑤ 只有 SmsAuthenticationToken 才交给我处理
+        return SmsAuthenticationToken.class.isAssignableFrom(authentication);
+    }
 }
 ```
+
+`SmsAuthenticationToken` 继承自 `AbstractAuthenticationToken`——和 `UsernamePasswordAuthenticationToken` 是平级关系。`ProviderManager` 按注册顺序依次询问每个 Provider 的 `supports()`，谁支持就交给谁处理。
 
 ### 🧪 6.11 测试接口
 
@@ -1355,65 +1608,47 @@ public WebSecurityCustomizer webSecurityCustomizer() {
 
 | 问题现象 | 可能原因 | 解决方向 |
 |------|------|------|
-| 所有请求都返回 401 | JWT 过滤器没有正确设置 `SecurityContext` | 检查 `SecurityContextHolder.getContext().setAuthentication()` 是否执行 |
+| Filter 中抛出的异常没有被 `@RestControllerAdvice` 捕获 | Filter 在 Servlet 容器层，不在 Spring MVC 上下文 | 参考 6.7 节的 `FilterExceptionController` 桥接模式——forward 到 Controller 再重新 throw |
+| 所有请求都返回 401 | JWT 过滤器没有正确设置 `SecurityContext` | 检查 `SecurityContextHolder.getContext().setAuthentication()` 是否执行；另外检查 Redis 中的 `user:{username}` key 是否存在 |
 | `@Async` 方法中获取不到当前用户 | `SecurityContextHolder` 默认是线程绑定的 | 子线程需要手动传递 `SecurityContext` |
-| 登录接口返回 403 或 401 | 登录接口需要 `.permitAll()`，或 CSRF 未关闭 | 在 `SecurityFilterChain` 中放行 `/api/auth/**` |
-| Token 解析报错 | 密钥不一致、Token 格式错误 | 检查 `jwt.secret` 配置和生成时的密钥是否一致 |
-| 角色校验不生效 | `hasRole("ADMIN")` 会自动加 `ROLE_` 前缀，库中存的是 `ROLE_ADMIN` | 使用 `hasRole("ADMIN")`（不加 ROLE_ 前缀），或用 `hasAuthority("ROLE_ADMIN")` |
+| 登录接口返回 403 或 401 | 登录接口需要 `.permitAll()`，或 CSRF 未关闭 | 在 `SecurityFilterChain` 中放行；如果用 `@NoLogin` 注解，确认 `initNoLogin()` 在启动时执行了 |
+| Token 解析报错 | 密钥不一致、Token 格式错误、Redis 中 Token 已过期 | Token 解析失败可能是因为 Redis TTL 到期导致 `token:{username}` key 被自动删除了——此时虽然 JWT 本身未过期但在 Redis 找不到了 |
+| 角色校验不生效 | `hasRole("ADMIN")` 会自动加 `ROLE_` 前缀 | 如果用了 `GrantedAuthorityDefaults("")`（见 6.8 节），**已去掉 ROLE_ 前缀**——此时应该用 `hasAuthority("admin:user:delete")` 而不是 `hasRole("ADMIN")` |
+| `@PreAuthorize` 注解不生效 | 没有开启 `@EnableGlobalMethodSecurity` | 在 SecurityConfig 上加 `@EnableGlobalMethodSecurity(prePostEnabled = true)`（见 6.8 节 ①） |
+| 新增了公开接口但仍要求登录 | 忘记加 `@NoLogin` 注解，或 `initNoLogin()` 扫描时机问题 | 确认方法上有 `@NoLogin` 注解；如果是动态注册的 Controller，可能不会被扫描到——改为显式 `.antMatchers()` 配置 |
 
 ---
 
 ## 🎯 十一、总结
 
-本文从零开始搭建了一套完整的企业级 Spring Security + JWT 鉴权体系，核心要点回顾：
+本文从教程版入手，逐步替换为真实商城项目的生产级 Spring Security + JWT 鉴权体系。核心差异回顾：
 
-```mermaid
-flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
+| 模块 | 教程做法 | 真实项目做法 | 为什么不同 |
+|------|------|------|------|
+| JWT 工具 | Hutool `JWTUtil.createToken(payload, key)` | JJWT `Jwts.builder().signWith(HS512)` + Redis 双 key | Token Payload 只存 username——安全性；Redis 存储完整 UserDetails——支持主动失效 |
+| Token 主动失效 | 没有（依赖 JWT 自然过期） | 删 Redis key 即刻失效 | 支持"踢人下线"——管理后台修改角色后立即生效 |
+| JWT Filter | `OncePerRequestFilter` + 直接写 response | `GenericFilterBean` + `FilterExceptionController` forward 桥接 | Filter 异常不被 `@ControllerAdvice` 捕获——forward 到 Controller 重新 throw 以输出统一 JSON |
+| SecurityConfig | 4 行 permitAll | 7 类 permitAll + `@NoLogin` 自动扫描 + `@EnableGlobalMethodSecurity` | 生产项目需要：监控页放行、预检放行、动态 URL 放行、方法级权限注解 |
+| 权限加载 | `t_user.role` 字段 | User → Role → Menu 三表联查 | 真实 RBAC 模型——权限码来自角色的 `permission` 字段 + 菜单的 `permission` 字段 |
+| 登录流程 | 用户名密码明文 → 签发 Token | 验证码校验 + RSA 解密 + 短信双认证 + 异地登录检测 + 登录锁定 | 安全不是"有没有登录"，而是"登录的人是不是真的是他" |
+| 密码加密 | 仅 BCrypt 存储 | BCrypt 存储 + RSA 传输加密 | 防止 HTTP 明文传输密码被中间人截获 |
 
-    SUMMARY[(SpringSecurity<br/>+ JWT 鉴权体系)]
-    SUMMARY --> P1[认证 Authentication]
-    P1 --> P1A["登录时验证用户名密码<br/>成功 → 签发JWT"]
-    P1 --> P1B["每次请求在Header中<br/>携带 Access Token"]
-
-    SUMMARY --> P2[授权 Authorization]
-    P2 --> P2A["基于角色 hasRole('ADMIN')<br/>或基于权限码 hasAuthority()"]
-
-    SUMMARY --> P3[JWT 双令牌机制]
-    P3 --> P3A["Access Token: 短期<br/>(15 ~ 30分钟)"]
-    P3 --> P3B["Refresh Token: 长期<br/>(7天 ~ 30天)"]
-
-    SUMMARY --> P4[7个核心组件]
-    P4 --> P4A["JwtAuthFilter<br/>拦截请求, 解析JWT"]
-    P4 --> P4B["SecurityFilterChain<br/>配置URL权限规则"]
-    P4 --> P4C["UserDetailsService<br/>从DB加载用户"]
-    P4 --> P4D["PasswordEncoder<br/>BCrypt密码加密"]
-    P4 --> P4E["AuthenticationManager<br/>执行认证"]
-    P4 --> P4F["SecurityContextHolder<br/>持有当前用户状态"]
-    P4 --> P4G["JwtUtil<br/>生成/验证/解析JWT"]
-
-    class SUMMARY startEnd;
-    class P1,P2,P3,P4 branch;
-    class P1A,P1B,P2A,P3A,P3B,P4A,P4B,P4C,P4D,P4E,P4F,P4G process;
-```
-
-**关键配置速查**：
+**关键配置速查（真实项目版）**：
 
 | 配置项 | 代码 | 作用 |
 |------|------|------|
-| 关闭 Session | `.sessionManagement().sessionCreationPolicy(STATELESS)` | JWT 方案核心——不创建 Session |
+| 关闭 Session | `.sessionManagement().sessionCreationPolicy(STATELESS)` | JWT 方案核心 |
 | 关闭 CSRF | `.csrf().disable()` | 前后端分离不需要 CSRF |
-| 公开接口 | `.antMatchers("/api/auth/**").permitAll()` | 登录和刷新接口不需要认证 |
-| 角色限制 | `.antMatchers("/api/admin/**").hasRole("ADMIN")` | 管理员接口需要 ADMIN 角色 |
-| 需认证 | `.anyRequest().authenticated()` | 其余接口需要登录 |
-| 自定义过滤器 | `.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)` | 将 JWT 过滤器插入过滤器链 |
+| 去除 ROLE_ 前缀 | `new GrantedAuthorityDefaults("")` | 权限码和数据库一致，不混淆 |
+| 开启方法级权限 | `@EnableGlobalMethodSecurity(prePostEnabled = true)` | Controller 方法上可用 `@PreAuthorize` |
+| 自动扫描免登录 | `initNoLogin(applicationContext)` | 加 `@NoLogin` 注解即放行，不改 SecurityConfig |
+| 注册自定义 Filter | `.apply(new JwtTokenConfigurer())` | 在 SecurityConfigurerAdapter 中 new Filter 保证初始化顺序 |
+| Filter 异常转发 | `request.setAttribute("filterError", e)` + forward | Filter 异常 → Controller 重新 throw → 统一 JSON 输出 |
 
 **学习路径建议**：
 
-1. 先照本文把完整代码跑起来，理解"每一行代码的作用"而不是"背后怎么实现"
-2. 测试 401、403、200 三种响应，建立认证/授权的直观感受
-3. 尝试修改角色（加一个 `ROLE_MANAGER`），看看怎么用 `hasRole` 控制
-4. 工作中遇到 "这个接口只让 xx 角色访问"的需求时，回来查本文的配置即可
+1. 先用教程版代码跑通，理解认证/授权的两个核心问题（"你是谁" + "你能做什么"）
+2. 测试 401、403、200 三种响应，建立直观感受
+3. 理解教程版与真实版的 6 个核心差异（见上表），逐一替换——先从 JJWT+Redis 方案开始
+4. 加上 `@NoLogin` 注解 + `initNoLogin()` 自动扫描，体会"开闭原则"的实际应用
+5. 最后加上 `FilterExceptionController` 桥接——你会发现"统一 JSON 返回格式"的最后一公里终于打通了

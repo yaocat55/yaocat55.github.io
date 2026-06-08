@@ -1,7 +1,7 @@
 ---
 title: "JWT + Redis 双令牌鉴权实战"
 date: 2022-09-19T08:42:45+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

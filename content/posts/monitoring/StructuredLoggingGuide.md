@@ -1,7 +1,7 @@
 ---
 title: "一个商城项目的结构化日志改造实录"
 date: 2023-01-10T12:00:00+00:00
-tags: ["结构化日志", "实践教程"]
+tags: ["运维与可观测"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

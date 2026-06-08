@@ -1,7 +1,7 @@
 ---
 title: "SSO 与 JWT+Redis 的定位差异"
 date: 2022-09-21T10:32:38+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

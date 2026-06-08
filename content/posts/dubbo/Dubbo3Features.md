@@ -1,7 +1,7 @@
 ---
 title: "Dubbo 3.x 新特性：Triple 协议与应用级服务发现"
 date: 2022-11-23T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

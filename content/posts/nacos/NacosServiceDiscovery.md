@@ -1,7 +1,7 @@
 ---
 title: "Nacos 服务发现深度解析"
 date: 2022-12-14T08:00:00+00:00
-tags: ["RPC与微服务治理"]
+tags: ["微服务中间件"]
 categories: ["注册中心"]
 author: "yaomingye"
 showToc: true

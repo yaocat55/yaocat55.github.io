@@ -1,7 +1,7 @@
 ---
 title: "Netty"
 date: 2022-09-15T09:15:00+00:00
-tags: ["Java IO"]
+tags: ["基础技术"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

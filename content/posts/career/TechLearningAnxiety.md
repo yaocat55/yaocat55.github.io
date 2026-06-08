@@ -1,7 +1,7 @@
 ---
 title: "学会够用就行"
 date: 2022-10-08T09:43:26+00:00
-tags: ["运维与可观测"]
+tags: ["基础技术"]
 categories: ["职业规划类"]
 author: "yaomingye"
 showToc: true

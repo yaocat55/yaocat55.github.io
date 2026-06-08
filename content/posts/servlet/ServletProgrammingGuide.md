@@ -1,7 +1,7 @@
 ---
 title: "Servlet 网络编程"
 date: 2022-09-25T11:30:03+00:00
-tags: ["Spring全家桶"]
+tags: ["基础技术"]
 categories: ["SpringBoot类"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "序列化本质与 Jackson 全操作指南"
 date: 2022-11-25T08:00:00+00:00
-tags: ["Spring全家桶"]
+tags: ["基础技术"]
 categories: ["序列化"]
 author: "yaomingye"
 showToc: true

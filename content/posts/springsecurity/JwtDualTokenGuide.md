@@ -1,7 +1,7 @@
 ---
 title: "JWT 与双令牌机制详解"
 date: 2022-09-20T09:42:16+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

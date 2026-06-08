@@ -1,7 +1,7 @@
 ---
 title: "数据库迁移实战"
 date: 2022-10-06T07:49:23+00:00
-tags: ["数据存储"]
+tags: ["运维与可观测"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

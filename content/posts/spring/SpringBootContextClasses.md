@@ -1,7 +1,7 @@
 ---
 title: "Spring Boot 开发中的上下文"
 date: 2022-10-07T09:43:26+00:00
-tags: ["Spring全家桶"]
+tags: ["Spring生态"]
 categories: ["SpringBoot类"]
 author: "yaomingye"
 showToc: true
