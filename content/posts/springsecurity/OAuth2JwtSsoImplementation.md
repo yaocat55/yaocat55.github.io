@@ -1050,5 +1050,3 @@ sequenceDiagram
 | <strong>client_secret 不出浏览器</strong> | 凭据泄露 | /token 调用是 Server-to-Server，浏览器不可见 |
 
 这篇文章覆盖了 OAuth 2.0 授权码 + PKCE 从浏览器到后端的完整实现。如果你在接入微信/Google/GitHub 登录，它们的流程和本文完全一致——只是 `/authorize` 和 `/token` 的地址换成了第三方认证中心。
-
-> 📖 <strong>前置概念补充</strong>：如果想了解 OAuth 2.0 四种角色（Resource Owner / Client / Auth Server / Resource Server）和四种授权模式（authorization_code / implicit / password / client_credentials）的定义层面知识，建议阅读 [<strong>OAuth 2.0 概念速览</strong>]({{< relref "OAuth2Fundamentals.md" >}})。本文聚焦于<strong>交互流程和代码实现</strong>，概念只在实际用到的地方展开。
