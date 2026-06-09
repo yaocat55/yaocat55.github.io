@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "从 Google 内部"一个慢请求到底卡在哪个服务上"的排查噩梦出发，拆解 Dapper 论文的核心模型——TraceId 串联全局、SpanId 标记每一步、父子关系重建调用树，以及 SkyWalking 如何自动埋点实现无侵入追踪"
+description: "从 Google 内部一个慢请求到底卡在哪个服务上的排查噩梦出发，拆解 Dapper 论文的核心模型——TraceId 串联全局、SpanId 标记每一步、父子关系重建调用树，以及 SkyWalking 如何自动埋点实现无侵入追踪"
 disableShare: true
 hideSummary: false
 searchHidden: false
