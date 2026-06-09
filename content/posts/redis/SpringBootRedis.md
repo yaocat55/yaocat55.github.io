@@ -209,6 +209,173 @@ private StringRedisTemplate stringRedisTemplate;  // key 和 value 都是 String
 - <strong>StringRedisTemplate</strong>：存字符串，适合计数器、分布式锁、简单的 JSON 字符串缓存
 - <strong>RedisTemplate</strong>：存对象，适合直接存取 Java 对象（自动序列化/反序列化）
 
+#### 🧰 附：封装 RedisUtil 工具类
+
+真实项目中不建议在每个业务类里直接注入 `StringRedisTemplate` 然后到处 `try-catch`。下面是一个生产级的封装，后面的真实项目案例都会用这个工具类：
+
+```java
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Redis 工具类 —— 封装 StringRedisTemplate 全部常用操作 + 统一异常处理
+ */
+@Slf4j
+@Component
+public class RedisUtil {
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    // ==================== Hash 操作 ====================
+
+    /** 批量保存 Hash */
+    public void putHashMap(String key, Map<Object, Object> map) {
+        try {
+            stringRedisTemplate.opsForHash().putAll(key, map);
+        } catch (Exception e) {
+            log.error("Redis保存数据失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** 保存单个 Hash 字段 */
+    public void putHashValue(String key, Object hashKey, Object value) {
+        try {
+            stringRedisTemplate.opsForHash().put(key, hashKey, value);
+        } catch (Exception e) {
+            log.error("Redis保存数据失败, key={}, hashKey={}", key, hashKey, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** 读取 Hash 字段 */
+    public Object getHashValue(String key, Object hashKey) {
+        if (key == null || hashKey == null) return null;
+        try {
+            return stringRedisTemplate.opsForHash().get(key, hashKey);
+        } catch (Exception e) {
+            log.error("Redis获取数据失败, key={}, hashKey={}", key, hashKey, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    // ==================== String 操作 ====================
+
+    /** 设值 + 过期时间（秒） */
+    public void set(String key, String value, long expireSeconds) {
+        try {
+            stringRedisTemplate.opsForValue().set(key, value, expireSeconds, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Redis保存数据失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** 设值（永不过期） */
+    public void set(String key, String value) {
+        try {
+            stringRedisTemplate.opsForValue().set(key, value);
+        } catch (Exception e) {
+            log.error("Redis保存数据失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** 仅当 key 不存在时设值（SETNX） */
+    public boolean setIfAbsent(String key, String value) {
+        try {
+            return Boolean.TRUE.equals(
+                    stringRedisTemplate.opsForValue().setIfAbsent(key, value));
+        } catch (Exception e) {
+            log.error("Redis保存数据失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** 读取 */
+    public String get(String key) {
+        if (key == null) return null;
+        try {
+            return stringRedisTemplate.opsForValue().get(key);
+        } catch (Exception e) {
+            log.error("Redis获取数据失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    // ==================== 计数器操作 ====================
+
+    /** INCRBY — 增加指定数值 */
+    public Long increment(String key, long value) {
+        try {
+            return stringRedisTemplate.opsForValue().increment(key, value);
+        } catch (Exception e) {
+            log.error("Redis increment操作失败, key={}, value={}", key, value, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** INCR — 原子 +1 */
+    public Long increment(String key) {
+        try {
+            return stringRedisTemplate.opsForValue().increment(key, 1);
+        } catch (Exception e) {
+            log.error("Redis increment操作失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** DECR — 原子 -1 */
+    public Long decrement(String key) {
+        try {
+            return stringRedisTemplate.opsForValue().increment(key, -1);
+        } catch (Exception e) {
+            log.error("Redis decrement操作失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    // ==================== 通用操作 ====================
+
+    /** 设置过期时间（秒） */
+    public Boolean expire(String key, long expireSeconds) {
+        try {
+            return stringRedisTemplate.expire(key, expireSeconds, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Redis expire操作失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+
+    /** 删除 key */
+    public void del(String key) {
+        try {
+            if (StringUtils.hasLength(key)) {
+                stringRedisTemplate.delete(key);
+            }
+        } catch (Exception e) {
+            log.error("Redis删除数据失败, key={}", key, e);
+            throw new RuntimeException("Redis操作失败", e);
+        }
+    }
+}
+```
+
+这个类只有 150 行，三个设计点值得注意：
+
+1. **统一异常处理**：每个方法都有 `try-catch`，Redis 挂了不会吞异常——`log.error` 记录现场 + `throw RuntimeException` 触发 Spring 全局异常处理，上层业务代码不用到处写 try-catch
+2. **空值保护**：`get()` 和 `getHashValue()` 在 key 为 null 时直接返回 null，防止 NPE（`del()` 同理，空 key 直接跳过）
+3. **只选 StringRedisTemplate**：项目中绝大多数 Redis 操作都是字符串级别（计数器、分布式锁、验证码），对象序列化走 JSON 字符串即可。没必要再引入 `RedisTemplate` 让工程变复杂
+
+下面所有真实项目案例中的 `redisUtil.xxx()` 都是调的这个类。
+
 ### 📝 4.3 String 类型操作
 
 String 是最基础的类型，一个 key 对应一个 value。但"String"这个名字有误导性——value 不仅是文本，还可以是整数、浮点数、二进制数据。
@@ -866,32 +1033,98 @@ public TradeEntity reduceStock(TradeEntity tradeEntity) {
 }
 ```
 
-RedissonUtil 封装：
+这个案例中调用的 `redissonUtil.tryMultiLock()` 来自下面这个封装类。跟 `RedisUtil` 一样，真实项目中不应该在业务代码里到处写 `redissonClient.getLock()` + `try-finally` —— 样本代码一多就容易出现加锁忘解锁、中断不处理等问题。统一封装后业务代码只需传 key 和一个 Lambda：
 
 ```java
-public <T> T tryMultiLock(List<String> keys, long waitSeconds,
-                           long leaseSeconds, Supplier<T> supplier) {
-    RLock[] locks = keys.stream()
-            .map(redissonClient::getLock).toArray(RLock[]::new);
-    RedissonMultiLock multiLock = new RedissonMultiLock(locks);
-    try {
-        if (multiLock.tryLock(waitSeconds, leaseSeconds, TimeUnit.SECONDS)) {
-            return supplier.get();
+import com.mall.common.exception.BusinessException;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.RedissonMultiLock;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+/**
+ * Redisson 工具类 —— 封装 tryLock / tryMultiLock + 统一异常处理
+ */
+@Component
+@Slf4j
+public class RedissonUtil {
+
+    @Autowired
+    private RedissonClient redissonClient;
+
+    /**
+     * 尝试锁定单个资源
+     *
+     * @param key       锁 key
+     * @param waitTime  加锁等待时间（秒）
+     * @param leaseTime 锁持有时间（秒）
+     * @param supplier  业务操作（Lambda）
+     */
+    public <T> T tryLock(String key, long waitTime, long leaseTime, Supplier<T> supplier) {
+        if (!StringUtils.hasLength(key)) {
+            throw new IllegalArgumentException("key不能为空");
         }
-        throw new BusinessException("服务器内部错误");
-    } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new BusinessException("服务器内部错误");
-    } finally {
-        multiLock.unlock();
+        RLock rLock = redissonClient.getLock(key);
+        return doTryLock(rLock, key, waitTime, leaseTime, supplier);
+    }
+
+    /**
+     * 尝试锁定多个资源（联锁）—— 全部成功才算成功，任一失败全部释放
+     *
+     * @param keys      锁 key 列表
+     * @param waitTime  加锁等待时间（秒）
+     * @param leaseTime 锁持有时间（秒）
+     * @param supplier  业务操作（Lambda）
+     */
+    public <T> T tryMultiLock(List<String> keys, long waitTime, long leaseTime,
+                               Supplier<T> supplier) {
+        if (keys == null || keys.isEmpty()) {
+            throw new IllegalArgumentException("keys不能为空");
+        }
+        RLock[] rLocks = new RLock[keys.size()];
+        for (int i = 0; i < keys.size(); i++) {
+            rLocks[i] = redissonClient.getLock(keys.get(i));
+        }
+        RedissonMultiLock multiLock = new RedissonMultiLock(rLocks);
+        String collectKey = keys.stream().collect(Collectors.joining());
+        return doTryLock(multiLock, collectKey, waitTime, leaseTime, supplier);
+    }
+
+    /** 统一加锁逻辑 —— try-finally 保证释放 + 中断处理 */
+    private <T> T doTryLock(RLock rLock, String key, long waitTime,
+                            long leaseTime, Supplier<T> supplier) {
+        try {
+            if (rLock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS)) {
+                try {
+                    return supplier.get();
+                } finally {
+                    rLock.unlock();
+                }
+            } else {
+                log.info("分布式锁加锁失败, key:{}", key);
+                throw new BusinessException("服务器内部错误");
+            }
+        } catch (InterruptedException e) {
+            log.info("获取分布式锁请求被中断, key:{}", key);
+            throw new BusinessException("服务器内部错误");
+        }
     }
 }
 ```
 
-三个关键设计点：
-- 锁粒度是**商品级别**（`reduceStockLock:{productId}`）而不是订单级别——只有买同一个商品的两个订单才互斥，买不同商品可以并行扣
-- 锁等待时间和持有时间都设了 20 秒——ShardingSphere 分库分表下 `@Transactional` 不生效，所以用 `TransactionTemplate` 在锁内手动开启 DB 事务
-- 用 `Supplier<T>` 接口封装业务逻辑，`tryMultiLock` 统一处理获取失败、中断、释放——业务代码只关心锁内做什么
+四个关键设计点：
+- **Supplier 模式**：用 `Supplier<T>` 接口接收业务 Lambda，`RedissonUtil` 统一处理加锁/解锁/异常，上层的库存扣减代码只需要关心 `() -> { ... return result; }`
+- **单锁和多锁两套接口**：`tryLock` 用于普通场景，`tryMultiLock` 用于多商品下单——联锁确保所有商品锁**全部获取成功**才算成功，任一失败全部释放，杜绝部分扣库存的一致性 bug
+- **锁内 finally-unlock**：`doTryLock` 的嵌套 try-finally 保证只要加锁成功，无论业务逻辑抛不抛异常，锁一定释放。加锁失败（`tryLock=false`）则直接抛异常，不走 finally
+- **锁粒度是商品级别**（`reduceStockLock:{productId}`）——只有买同一个商品的两个订单才互斥，买不同商品可以并行扣。锁等待时间和持有时间都设了 20 秒，配合 `TransactionTemplate` 在锁内手动开启 DB 事务
 
 <strong>看门狗（Watchdog）机制</strong>：
 
