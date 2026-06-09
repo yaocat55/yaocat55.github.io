@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "从 Paxos 太难懂的痛点出发，拆解 Raft 协议如何用"多数派"机制实现 CP 模型——领导者选举、日志复制、安全保证，以及为什么配置中心需要强一致"
+description: "从 Paxos 太难懂的痛点出发，拆解 Raft 协议如何用多数派机制实现 CP 模型——领导者选举、日志复制、安全保证，以及为什么配置中心需要强一致"
 disableShare: true
 hideSummary: false
 searchHidden: false
