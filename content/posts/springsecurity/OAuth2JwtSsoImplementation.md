@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "从OAuth 2.0四种角色与授权模式出发，深入拆解授权码+PKCE的完整流程，结合DrawIO流程图与Spring Security完整代码实战，实现基于OAuth 2.0+JWT的单点登录系统"
+description: "从浏览器、业务系统、认证中心三方交互视角出发，逐帧拆解 OAuth 2.0 授权码+PKCE 完整流程，配合 Spring Security 完整代码实战，实现基于 OAuth 2.0+JWT 的单点登录系统"
 disableShare: true
 hideSummary: false
 searchHidden: false
@@ -26,221 +26,184 @@ cover:
     hidden: true
 ---
 
-# OAuth 2.0 + JWT 单点登录：授权码模式、PKCE 增强与 Spring Security 完整实战
+# OAuth 2.0 + JWT 单点登录实战
 
-## 🤔 一、问题切入：为什么需要 OAuth 2.0 做 SSO？
+## 一、从一个登录按钮说起
 
-在上一篇文章 [SSO 与 JWT+Redis 的定位差异](../SsoVsJwtRedisAuth) 中，我们厘清了 SSO（单点登录，Single Sign-On）是一种**认证架构模式**——有一个独立的认证中心，所有业务系统委托它做身份验证。但那篇文章只给出了概念层面的三种方案对比（CAS / OAuth 2.0 / JWT 共享密钥），没有深入到具体实现的代码层面。
+你在商家后台（`merchant.shop.com`）点了"登录"，页面跳转到了一个统一的登录页，你输入账号密码，然后又跳回了商家后台——你已经在系统里了。然后你打开运营后台（`ops.shop.com`），不用再输密码，直接进去了。
 
-本篇文章聚焦于 **OAuth 2.0 + OpenID Connect** 这一当下最流行的 SSO 实现方案，从协议原理到完整代码，让你能直接落地。
-
-先看一个真实场景：
-
-> 你所在的电商公司有 3 个系统：商家后台（`merchant.shop.com`）、运营后台（`ops.shop.com`）、数据平台（`data.shop.com`）。你们还接入了微信扫码登录和 GitHub OAuth 登录。现在老板要求：**用户在一个系统登录后，切换到其他系统时不需要重新输入密码；同时支持自建账号和第三方登录。**
-
-这就需要 OAuth 2.0 + OpenID Connect（简称 OIDC）来搭建统一的认证中心。
-
-**OAuth 2.0** 是授权协议（Authorization），**OpenID Connect** 是在 OAuth 2.0 之上叠加的身份认证层（Authentication）。两者组合后，既解决了"用户是谁"（认证），又解决了"用户能访问什么"（授权），是 SSO 的工业级标准实现。
-
----
-
-## 📖 二、OAuth 2.0 核心概念速览
-
-### 👥 2.1 四种角色
-
-OAuth 2.0 定义了四个参与角色，理解它们是阅读后续流程的前提：
+这就是单点登录（SSO）。背后有三个角色在协作：
 
 ```mermaid
-flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+sequenceDiagram
+    participant Browser as 浏览器
+    participant Biz as 业务系统<br/>merchant.shop.com
+    participant SSO as 认证中心<br/>sso.company.com
 
-    ROOT[OAuth 2.0 四种角色]
-
-    ROOT --> RO1[Resource Owner<br/>资源所有者]
-    RO1 --> RO1A["用户本人<br/>拥有数据的人<br/>可以授权第三方访问"]
-
-    ROOT --> RO2[Client<br/>客户端]
-    RO2 --> RO2A["业务系统<br/>想要访问用户数据<br/>需先获得授权"]
-
-    ROOT --> RO3[Authorization Server<br/>授权服务器]
-    RO3 --> RO3A["认证中心<br/>负责用户登录<br/>签发Token"]
-
-    ROOT --> RO4[Resource Server<br/>资源服务器]
-    RO4 --> RO4A["API网关/业务API<br/>持有用户数据<br/>验证Token后提供数据"]
-
-    class ROOT root;
-    class RO1,RO2,RO3,RO4 branch;
-    class RO1A,RO2A,RO3A,RO4A leaf;
+    Browser->>Biz: 1. 访问商家后台
+    Biz-->>Browser: 2. 302: 去认证中心登录
+    Browser->>SSO: 3. 跳转到登录页
+    SSO-->>Browser: 4. 返回登录页面
+    Browser->>SSO: 5. 提交用户名密码
+    SSO-->>Browser: 6. 302: 登录成功，回业务系统
+    Browser->>Biz: 7. 带着凭证回商家后台
+    Biz->>SSO: 8. 后端验证凭证
+    SSO-->>Biz: 9. 返回用户身份
+    Biz-->>Browser: 10. 登录成功，进入系统
 ```
 
-| 角色 | 对应系统中的谁 | 职责 |
-|------|------|------|
-| **Resource Owner**（资源所有者） | 用户（User） | 拥有数据，可以授权 Client 访问自己的数据 |
-| **Client**（客户端） | 商家后台、运营后台 | 请求访问用户数据，必须先拿到 Token |
-| **Authorization Server**（授权服务器） | SSO 认证中心（`sso.company.com`） | 验证用户身份，签发 Token |
-| **Resource Server**（资源服务器） | API 网关 / 订单服务 / 用户服务 | 持有受保护的数据，验证 Token 后返回数据 |
+这里面有两个关键问题：
 
-**关键理解**：Authorization Server 和 Resource Server 可以是同一个服务，也可以是独立部署的服务。在微服务架构中，通常是独立的认证中心 + 独立的 API 网关。
+1. <strong>第 5 步中，用户的密码交给了谁？</strong> 答案：只交给了认证中心。业务系统从头到尾都没见过用户的密码。
+2. <strong>第 7 步中，浏览器带回的"凭证"是什么？</strong> 答案：是一个一次性的授权码（code），不是用户名密码，也不是最终的身份令牌。
 
-### 📊 2.2 四种授权模式对比
-
-OAuth 2.0 定义了四种授权模式（Grant Type），不同场景用不同模式：
-
-| 授权模式 | Grant Type 值 | 适用场景 | 安全性 | SSO 适用 |
-|------|------|------|:---:|:---:|
-| **授权码模式（Authorization Code）** | `authorization_code` | 有后端的 Web 应用、SPA + BFF | ⭐⭐⭐⭐⭐ | ✅ 首选 |
-| **授权码 + PKCE** | `authorization_code` + PKCE | SPA（纯前端）、移动 App | ⭐⭐⭐⭐⭐ | ✅ 推荐 |
-| 隐式模式（Implicit） | `implicit`（OAuth 2.1 已移除） | 纯前端 SPA（历史遗留） | ⭐⭐ | ❌ 已废弃 |
-| 密码模式（Resource Owner Password） | `password`（OAuth 2.1 已移除） | 自家前端直接收集密码 | ⭐ | ❌ 已废弃 |
-| 客户端凭据模式（Client Credentials） | `client_credentials` | 服务间调用（没有用户参与） | ⭐⭐⭐⭐ | ❌ 无用户身份 |
-
-**为什么授权码模式是 SSO 的首选？**
-
-1. 用户的用户名密码**只提交给授权服务器**，业务系统永远接触不到
-2. 授权码（code）是一次性的、短有效期的，且通过浏览器 URL 传递，配合 PKCE 即使被截获也无法使用
-3. Token 的换取在后端完成（Server-to-Server），`client_secret` 不出现在浏览器
-
-### 🔗 2.3 OAuth 2.0 / OIDC 核心端点
-
-授权服务器对外暴露以下端点（Endpoint）：
-
-| 端点 | HTTP 方法 | 用途 | 谁调用 |
-|------|:---:|------|------|
-| `/authorize` | GET | 发起授权请求，返回授权码 | 浏览器（通过重定向） |
-| `/token` | POST | 用授权码换 Token / 刷新 Token | Client 后端 |
-| `/userinfo` | GET | 获取用户身份信息（OIDC 标准端点） | Client 后端 |
-| `/revoke` | POST | 吊销 Token（主动登出） | Client 后端 |
-| `/.well-known/openid-configuration` | GET | OIDC 发现端点，返回所有端点地址 | 任何人 |
+这就是 OAuth 2.0 授权码模式的核心思路：<strong>用户密码只给认证中心，业务系统通过一个间接的"授权码"来确认用户身份</strong>。
 
 ---
 
-## 🔄 三、核心流程：授权码模式 + PKCE 逐帧拆解
+## 二、逐帧拆解：一次登录的完整交互
 
-### 🤔 3.1 为什么需要 PKCE？
+下面以一个真实场景走一遍完整流程。三个参与者：
 
-先看**没有 PKCE 时**的攻击场景：
+| 参与者 | 对应系统 | 职责 |
+|--------|----------|------|
+| <strong>浏览器</strong> | 用户正在用的 Chrome / Edge | 用户操作的入口，负责跳转和提交凭据 |
+| <strong>业务系统</strong> | CRM 应用（`crm.company.com:8080`） | 用户真正想用的系统，需要确认"你是谁" |
+| <strong>认证中心</strong> | SSO 服务器（`sso.company.com:9000`） | 唯一能验证用户名密码的地方，签发身份令牌 |
 
-授权码（code）通过浏览器 URL 的 QueryString 传递：`/callback?code=abc123`。恶意程序如果注册了相同的回调 URL Scheme（在移动端尤其常见），就能截获这个授权码。拿到授权码后，攻击者用它去 `/token` 端点换取真正的 Token——因为授权服务器只校验 `code` + `client_id` + `redirect_uri`，而这些都是公开的（除了 `client_secret`，但移动端和 SPA 无法安全存储 `client_secret`）。
-
-**PKCE（Proof Key for Code Exchange，发音 "pixy"）** 的核心思想：在 `/authorize` 请求时发送 `code_challenge`（code_challenge = SHA256(code_verifier) 的 Base64URL 编码），在 `/token` 请求时发送 `code_verifier` 原始值。授权服务器验证两者的 SHA256 关系——攻击者即使截获了 code，因为没有 `code_verifier`，无法通过 `/token` 的校验。
-
-### 🔄 3.2 授权码 + PKCE 完整流程
-
-以下是 OAuth 2.0 授权码模式 + PKCE 的完整交互流程（17 个步骤），每个 HTTP 请求都标注了方法、URL 和参数：
-
-![OAuth 2.0 授权码模式 + PKCE 完整流程](/images/oauth2-auth-code-pkce-flow.drawio.svg)
-
-### 🔍 3.3 每个步骤的技术细节
-
-**步骤 2：生成 PKCE 参数**
-
-PKCE 的 `code_verifier` 和 `code_challenge` 的生成算法：
-
-```java
-// 1. 生成 code_verifier：43 ~ 128 字符的高熵随机字符串
-//    允许字符集：[A-Z] [a-z] [0-9] - . _ ~
-SecureRandom secureRandom = new SecureRandom();
-byte[] randomBytes = new byte[32]; // 32 bytes → 43 chars after Base64URL
-secureRandom.nextBytes(randomBytes);
-String codeVerifier = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-
-// 2. 计算 code_challenge：BASE64URL(SHA256(code_verifier))
-MessageDigest md = MessageDigest.getInstance("SHA-256");
-byte[] digest = md.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
-String codeChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
-```
-
-**关键点**：`code_verifier` 使用 `US_ASCII` 编码而非 `UTF-8`，因为字符集限制在 ASCII 可打印字符内。
-
-**步骤 3：GET /authorize 请求参数详解**
-
-| 参数 | 必填 | 说明 |
-|------|:---:|------|
-| `response_type` | ✅ | 固定值 `code`，表示使用授权码模式 |
-| `client_id` | ✅ | Client 在授权服务器注册时获得的 ID |
-| `redirect_uri` | ✅ | 授权成功后的回调地址，**必须与注册时一致** |
-| `scope` | ✅ | 请求的权限范围，OIDC 必须包含 `openid` |
-| `state` | ✅ | 随机字符串，用于防 CSRF（Cross-Site Request Forgery，跨站请求伪造），回调时原样返回 |
-| `code_challenge` | ✅ | PKCE 的 challenge 值 |
-| `code_challenge_method` | ✅ | 固定值 `S256`，表示使用 SHA-256 |
-
-**步骤 3 中 `state` 的作用**：Client 在发起 `/authorize` 前将 `state` 值存入 Session / Redis，在步骤 10 收到回调时对比 `state` 参数是否一致。如果不一致，说明这是一个 CSRF 攻击（攻击者构造了恶意回调 URL）。
-
-**步骤 8：授权码（code）的安全特性**：
-
-- 一次性使用：同一个 code 只能换一次 Token，防止重放攻击
-- 短有效期：通常 30 秒 ~ 60 秒，减少被截获后的风险窗口
-- 不暴露用户信息：code 本身只是一个随机字符串，不包含任何用户数据
-
-**步骤 11 ~ 12：PKCE 校验流程**
-
-![PKCE S256 校验流程](/images/pkce-s256-verification.drawio.svg)
-
-Client 端只需要生成一次 `code_verifier`，但需要在两个时间点使用它：
-- 步骤 2：计算出 `code_challenge`，随 `/authorize` 发送
-- 步骤 11：把原始 `code_verifier` 随 `/token` 发送
-
-Authorization Server 端：
-- 步骤 4：收到 `code_challenge`，与生成的 code 关联存储
-- 步骤 12：收到 `code_verifier`，计算 `SHA256(code_verifier)`，与存储的 `code_challenge` 逐字节比较
-
-**步骤 12：Token 响应结构**：
-
-```json
-{
-  "access_token": "eyJhbGciOi...",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "refresh_token": "dGhpcyBpcyBh...",
-  "id_token": "eyJhbGciOi...",
-  "scope": "openid profile"
-}
-```
-
----
-
-## 🔑 四、JWT 在 OAuth 2.0 中的角色
-
-### 🆚 4.1 ID Token vs Access Token vs Refresh Token
-
-OIDC 在 OAuth 2.0 的基础上新增了 **ID Token**，形成了三 Token 体系。三者职责严格分离：
+下面是完整的交互流程——<strong>请重点关注每个角色在每一步做了什么</strong>：
 
 ```mermaid
-flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+sequenceDiagram
+    participant B as 浏览器
+    participant C as 业务系统(CRM)<br/>:8080
+    participant A as 认证中心(SSO)<br/>:9000
 
-    ROOT[OIDC 三Token体系]
-    ROOT --> T1[ID Token]
-    T1 --> T1A["格式: JWT<br/>签发者: Auth Server<br/>受众(aud): Client<br/>用途: 告诉Client用户是谁"]
-    ROOT --> T2[Access Token]
-    T2 --> T2A["格式: JWT 或 Opaque<br/>签发者: Auth Server<br/>受众(aud): Resource Server<br/>用途: 访问受保护的API"]
-    ROOT --> T3[Refresh Token]
-    T3 --> T3A["格式: 随机字符串<br/>签发者: Auth Server<br/>受众(aud): Auth Server自己<br/>用途: 换取新的Access Token"]
+    Note over B,A: ══════ 第一阶段：发起授权 ══════
 
-    class ROOT root;
-    class T1,T2,T3 leaf;
-    class T1A,T2A,T3A highlight;
+    B->>C: GET /home (想访问首页)
+    C-->>B: 302 /login (你没登录，去登录)
+
+    Note over C: 生成 PKCE 参数:<br/>code_verifier (随机字符串)<br/>code_challenge = SHA256(verifier)<br/>生成 state (防 CSRF 随机数)
+
+    C-->>B: 302 → sso.company.com:9000/oauth2/authorize?<br/>client_id=crm_app&redirect_uri=...&<br/>code_challenge=xxx&state=yyy
+
+    Note over B,A: ══════ 第二阶段：用户登录 ══════
+
+    B->>A: GET /oauth2/authorize?client_id=...&code_challenge=...
+    A-->>B: 返回登录页面 (用户在此输入账号密码)
+    B->>A: POST /login (username=zhangsan&password=***)
+    A->>A: 验证用户名密码，检查用户是否已登录(SSO)
+
+    Note over A: 生成一次性授权码 code (UUID)<br/>将 code + userId + code_challenge<br/>存入 Redis，TTL 60秒
+
+    A-->>B: 302 → crm.company.com:8080/login/oauth2/code/crm?<br/>code=abc123&state=yyy
+
+    Note over B,A: ══════ 第三阶段：换取 Token ══════
+
+    B->>C: GET /login/oauth2/code/crm?code=abc123&state=yyy
+
+    Note over C: 校验 state 是否与步骤2一致<br/>(防 CSRF 攻击)
+
+    C->>A: POST /oauth2/token (Server-to-Server)<br/>code=abc123&code_verifier=原始值&<br/>client_id=crm_app&client_secret=***
+
+    Note over A: 从 Redis 取出 code 对应信息<br/>SHA256(code_verifier) == code_challenge ?<br/>校验通过 → 删除 code (一次性使用)
+
+    A-->>C: { access_token, id_token, refresh_token }
+
+    Note over C: 解析 ID Token 获取用户身份<br/>创建本地 Session<br/>存储 access_token + refresh_token
+
+    C-->>B: 302 /home (登录成功)
+
+    Note over B,A: ══════ 第四阶段：后续请求 ══════
+
+    B->>C: GET /api/orders (Header: Authorization: Bearer access_token)
+    C->>C: 验证 JWT 签名 + 过期时间 + 吊销状态
+    C-->>B: 200 订单数据
 ```
 
-| 对比维度 | ID Token | Access Token | Refresh Token |
-|------|------|------|------|
-| **目的** | 认证（Authentication）— 证明"用户是谁" | 授权（Authorization）— 证明"我有权访问这个资源" | 续期 — 在不打扰用户的情况下刷新 Access Token |
-| **格式** | JWT | JWT（自包含）或 Opaque Token（引用型） | 随机字符串 |
-| **`aud` 字段** | Client 的 `client_id` | Resource Server 的 URL | 无（不是 JWT） |
-| **包含用户信息** | 是（sub, name, email, picture...） | 可能包含（不推荐，会导致 Token 过大） | 否 |
-| **有效期** | 短（5 ~ 15 分钟） | 短（15 ~ 60 分钟） | 长（7 ~ 30 天） |
-| **暴露给谁** | Client 后端 | API 网关 / Resource Server | 仅 Client 后端和 Auth Server |
-| **可吊销** | 是（黑名单） | 是（黑名单 / 缩短过期时间） | 是（删除存储） |
+把这个流程拆成四个阶段来看：
 
-**理解 `aud` 字段的关键区别**：JWT 的 `aud`（audience，受众）字段声明"这个 Token 是给谁用的"。ID Token 的 `aud` 必须是 Client 的 `client_id`（因为它的作用是让 Client 知道用户是谁）。Access Token 的 `aud` 是 Resource Server（因为它是给 API 验证的）。如果拿 ID Token 去调用 API，Resource Server 发现 `aud` 不匹配，应该拒绝请求。
+### 第一阶段：发起授权（业务系统在做什么）
 
-### 🔍 4.2 ID Token 的 JWT 结构示例
+用户访问 `crm.company.com/home`，业务系统发现用户没登录。此时<strong>业务系统做了三件事</strong>：
 
-以下是一个真实的 ID Token 解码示例（Payload 部分）：
+1. 生成一个随机字符串叫 `code_verifier`，然后计算它的 SHA256 哈希叫 `code_challenge`
+2. 生成另一个随机字符串叫 `state`
+3. 把用户浏览器重定向到认证中心的 `/authorize` 地址
+
+这里 `code_challenge` 和 `state` 有什么用在后面会看到。现在只需要知道：<strong>业务系统生成了两个随机数，把其中一个（challenge）传给认证中心，另一个（verifier）自己留着</strong>。
+
+### 第二阶段：用户登录（认证中心在做什么）
+
+浏览器跳到了认证中心的页面。认证中心检查了两件事：
+
+1. `client_id=crm_app` 是不是一个已注册的合法业务系统
+2. `redirect_uri` 是不是和注册时填的一模一样（<strong>必须精确匹配，包括端口号</strong>——防止授权码被重定向到攻击者的地址）
+
+校验通过后，认证中心返回登录页面。用户输入账号密码，认证中心验证身份，然后：
+
+1. 生成一个一次性授权码 `code`（本质是一个 UUID，30~60 秒过期）
+2. 把 `code` + 用户ID + 之前收到的 `code_challenge` <strong>一起存到 Redis</strong>
+3. 把浏览器重定向回业务系统的回调地址，URL 后面带上 `?code=abc123&state=yyy`
+
+<strong>关键安全机制</strong>：授权码 `code` 通过浏览器 URL 传递（明文出现在地址栏），所以它必须是一次性的、短有效期的。即使被截获，攻击者也只能在 60 秒内使用一次——后面会看到为什么即使截获了也用不了。
+
+### 第三阶段：换取 Token（双方后端在通信）
+
+浏览器带着 `code` 回到业务系统。业务系统做了三件事：
+
+1. <strong>校验 state</strong>：对比 URL 中的 `state` 和第一阶段自己生成的是否一致。不一致 = 有人伪造了回调请求（CSRF 攻击），直接拒绝。
+2. <strong>后端调用认证中心</strong>：用 `RestTemplate` 发一个 POST 请求到 `/oauth2/token`，带上 `code` + `code_verifier`（第一阶段自己保留的那个原始随机数）+ `client_id` + `client_secret`。这个请求是 <strong>Server-to-Server</strong>，浏览器完全看不到。
+3. <strong>创建本地会话</strong>：拿到认证中心返回的 Token 后，解析用户身份，创建本地 Session。
+
+认证中心在 `/token` 端点做了什么：
+
+1. 从 Redis 取出 `code` 对应的信息（userId + code_challenge）
+2. 计算 `SHA256(code_verifier)`，和存储的 `code_challenge` 逐字节比较
+3. <strong>立即删除 Redis 中的 code</strong>（保证同一个 code 不能换两次 Token）
+4. 签发三个 Token 返回给业务系统
+
+<strong>这就是 PKCE 发挥作用的地方</strong>：假设攻击者在第二阶段截获了 URL 中的 `code=abc123`，他来到第三阶段想用这个 code 换 Token。但他没有 `code_verifier`——这个值从未在网络上传输过，只在第一阶段的业务系统内存中。没有 `code_verifier`，就通不过 SHA256 校验，code 就是废的。
+
+### 第四阶段：后续请求（Token 怎么用）
+
+用户已经登录，现在每次访问 `crm.company.com/api/orders` 时：
+
+1. 浏览器在请求头带上 `Authorization: Bearer <access_token>`
+2. 业务系统本地验证 JWT 的签名（不需要每次调认证中心）
+3. 同时检查 Token 是否在 Redis 黑名单里（已被吊销的 Token 拒绝访问）
+
+### state 和 PKCE 各自防什么？
+
+这两个容易搞混，一句话区分：
+
+| 机制 | 防什么 | 攻击场景 |
+|------|--------|----------|
+| <strong>state</strong> | 防 CSRF（跨站请求伪造） | 攻击者在自己网站嵌入 `<img src="sso.company.com/authorize?client_id=crm">`，诱导用户点击后，用户浏览器带着攻击者的 state 去授权。回调时 state 不匹配，拒绝。 |
+| <strong>PKCE</strong> | 防授权码截获 | 恶意 App 注册了相同的回调 URL Scheme，截获了浏览器 URL 中的 `code`。但没有 `code_verifier`，无法通过 `/token` 的 SHA256 校验。 |
+
+---
+
+## 三、三种 Token 的分工
+
+第二阶段认证中心签发了三个 Token，它们各自有不同的用途：
+
+| Token | 格式 | 给谁看 | 用途 | 有效期 |
+|-------|------|--------|------|--------|
+| <strong>ID Token</strong> | JWT | 业务系统 | 告诉业务系统"用户是谁"（name, email, sub） | 5~15 分钟 |
+| <strong>Access Token</strong> | JWT | API / 资源服务器 | 证明"我有权访问这个 API" | 15~60 分钟 |
+| <strong>Refresh Token</strong> | 随机字符串 | 认证中心自己 | 在 Access Token 过期后换一个新的，用户无需重新登录 | 7~30 天 |
+
+用一个具体的例子来理解三者的区别：
+
+> ID Token 像<strong>身份证</strong>——上面写着你的名字和照片，你给前台看一眼证明你是谁，前台不会拿走它。
+> Access Token 像<strong>工牌</strong>——刷卡进办公室，门禁系统只关心你有没有权限，不关心你叫什么。
+> Refresh Token 像<strong>人事部的续签表</strong>——工牌过期了，拿着续签表去换一张新工牌，不用重新面试。
+
+实际数据长这样：
+
+<strong>ID Token</strong> 的 JWT Payload：
 
 ```json
 {
@@ -249,69 +212,38 @@ flowchart LR
   "aud": "crm_app",
   "exp": 1660123456,
   "iat": 1660123156,
-  "auth_time": 1660123150,
-  "nonce": "n-0S6_WzA2Mj",
   "name": "Zhang San",
-  "email": "zhangsan@company.com",
-  "picture": "https://avatar.company.com/10086.jpg",
-  "email_verified": true
+  "email": "zhangsan@company.com"
 }
 ```
 
-| 字段 | 全称 | 说明 |
-|------|------|------|
-| `iss` | Issuer | 签发者，授权服务器的 URL |
-| `sub` | Subject | 用户唯一标识（在授权服务器内的 ID） |
-| `aud` | Audience | 受众，**必须是 Client 的 `client_id`** |
-| `exp` | Expiration | 过期时间（Unix 秒级时间戳） |
-| `iat` | Issued At | 签发时间 |
-| `auth_time` | Authentication Time | 用户上次输入密码的时间（OIDC 特有，用于安全敏感操作的重新认证判断） |
-| `nonce` | Number used Once | Client 在 `/authorize` 请求中发送的防重放随机数 |
+重点看 `aud`（audience，受众）字段——它是 `crm_app`（业务系统的 client_id）。这意味着<strong>这个 Token 是给 CRM 系统看的</strong>，用来让它知道用户是谁。
 
-### 📋 4.3 Access Token 的两种格式
+<strong>Access Token</strong> 的 JWT Payload：
 
-| 对比维度 | JWT Access Token（自包含） | Opaque Token（引用型） |
-|------|------|------|
-| **格式** | 三段式 JWT | 随机字符串（如 UUID） |
-| **验证方式** | Resource Server 本地验签即可 | Resource Server 必须调用 `/introspect` 端点 |
-| **性能** | 高（无网络调用） | 低（每次验证都要远程调用） |
-| **吊销** | 无法即时吊销（需配合黑名单） | 即时吊销（删除存储即可） |
-| **Token 大小** | 较大（几百字节到几 KB） | 小（几十字节） |
-| **适用场景** | 高并发微服务（网关本地验签） | Token 需要频繁吊销的金融/安全场景 |
+```json
+{
+  "iss": "https://sso.company.com",
+  "sub": "10086",
+  "aud": "https://api.company.com",
+  "exp": 1660126756,
+  "client_id": "crm_app",
+  "scope": "openid profile"
+}
+```
 
-**生产环境常见做法**：API 网关使用 JWT Access Token（本地验签，性能高），同时维护一个 Redis 黑名单（定期同步吊销列表）。这是 JWT 和 Opaque Token 的折中方案，兼顾了性能和安全性。
+注意这里的 `aud` 变成了 `https://api.company.com`——<strong>这个 Token 是给 API 服务器验证的</strong>。如果拿 ID Token 去调 API，API 服务器发现 `aud` 不是自己，应该直接拒绝。
 
 ---
 
-## 💻 五、Spring Security 完整实战
+## 四、授权服务器实现
 
-### 🏗️ 5.1 项目架构与依赖
+架构说明：实战项目分为两个独立服务：
 
-实战项目分为两个独立服务：
+- <strong>auth-server</strong>（认证中心，端口 9000）：负责用户登录、签发 Token、刷新与吊销
+- <strong>crm-app</strong>（业务系统，端口 8080）：接入 SSO，保护业务资源
 
-- **`auth-server`**（授权服务器，端口 9000）：负责用户登录、签发 Token、Token 刷新与吊销
-- **`crm-app`**（业务系统 Client，端口 8080）：接入 SSO，受保护资源
-
-```mermaid
-flowchart LR
-    classDef start fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef svc fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-
-    U[用户浏览器] -->|访问| CRM[CRM应用 :8080]
-    CRM -->|重定向到登录| AUTH[Auth Server :9000]
-    U -->|提交凭据| AUTH
-    AUTH --> R[AUTH的Redis]
-    AUTH --> DB[用户MySQL]
-    CRM -->|验证Token| AUTH
-    CRM -->|携带Access Token| RS[资源API]
-
-    class U start;
-    class CRM,AUTH,RS svc;
-    class R,DB data;
-```
-
-**Maven 依赖（auth-server）**：
+### 4.1 依赖
 
 ```xml
 <!-- Spring Boot 2.7.x -->
@@ -322,7 +254,6 @@ flowchart LR
 </parent>
 
 <dependencies>
-    <!-- Web + Security 基础 -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-web</artifactId>
@@ -332,7 +263,7 @@ flowchart LR
         <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
-    <!-- JWT: JJWT -->
+    <!-- JWT: JJWT 0.11.5 -->
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
@@ -351,13 +282,10 @@ flowchart LR
         <scope>runtime</scope>
     </dependency>
 
-    <!-- Redis -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
-
-    <!-- MySQL + MyBatis-Plus -->
     <dependency>
         <groupId>com.baomidou</groupId>
         <artifactId>mybatis-plus-boot-starter</artifactId>
@@ -367,8 +295,6 @@ flowchart LR
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
     </dependency>
-
-    <!-- Lombok -->
     <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
@@ -377,50 +303,7 @@ flowchart LR
 </dependencies>
 ```
 
-### ⚙️ 5.2 授权服务器核心实现
-
-#### 5.2.1 配置类：OAuth2 端点与客户端注册信息
-
-```java
-@Data
-@Configuration
-@ConfigurationProperties(prefix = "oauth2")
-public class OAuth2Config {
-
-    /** 授权服务器自身的签发者 URL */
-    private String issuer = "https://sso.company.com";
-
-    /** JWT 签名密钥（生产环境应从 Vault / KMS 读取） */
-    private String jwtSecret = "your-256-bit-secret-key-must-be-at-least-256-bits-long";
-
-    /** Access Token 有效期（秒），默认 1 小时 */
-    private int accessTokenExpireSec = 3600;
-
-    /** Refresh Token 有效期（秒），默认 7 天 */
-    private int refreshTokenExpireSec = 604800;
-
-    /** ID Token 有效期（秒），默认 5 分钟 */
-    private int idTokenExpireSec = 300;
-
-    /** 授权码有效期（秒），默认 60 秒 */
-    private int authCodeExpireSec = 60;
-
-    /** 注册的客户端列表 */
-    private List<ClientRegistration> clients = new ArrayList<>();
-
-    @Data
-    public static class ClientRegistration {
-        private String clientId;
-        private String clientSecret;
-        private List<String> redirectUris;
-        private List<String> scopes;
-        /** 是否需要 PKCE（公开客户端如 SPA 必须开启） */
-        private boolean requirePkce = true;
-    }
-}
-```
-
-对应的 `application.yml` 配置：
+### 4.2 配置：注册哪些业务系统可以接入
 
 ```yaml
 oauth2:
@@ -450,7 +333,38 @@ oauth2:
       require-pkce: true
 ```
 
-#### 5.2.2 Token 服务：JWT 签发与校验
+对应的配置类：
+
+```java
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "oauth2")
+public class OAuth2Config {
+
+    private String issuer = "https://sso.company.com";
+    private String jwtSecret;
+    private int accessTokenExpireSec = 3600;
+    private int refreshTokenExpireSec = 604800;
+    private int idTokenExpireSec = 300;
+    private int authCodeExpireSec = 60;
+    private List<ClientRegistration> clients = new ArrayList<>();
+
+    @Data
+    public static class ClientRegistration {
+        private String clientId;
+        private String clientSecret;
+        private List<String> redirectUris;
+        private List<String> scopes;
+        private boolean requirePkce = true;
+    }
+}
+```
+
+<strong>每个业务系统在认证中心注册时，要提供</strong>：`client_id`（系统标识）、`client_secret`（用于 `/token` 端点的后端认证）、`redirect_uris`（允许回调到哪些地址——必须精确匹配，这是安全关键）、`require_pkce`（SPA 或移动端必须开启）。
+
+### 4.3 JWT Token 服务：签发与校验
+
+这是认证中心最核心的组件，负责三件事：<strong>签发 Token、验证 Token、吊销 Token</strong>。
 
 ```java
 @Component
@@ -466,26 +380,28 @@ public class JwtTokenService {
     }
 
     /**
-     * 签发 ID Token
+     * 签发 ID Token —— 告诉 Client "用户是谁"
+     * aud 必须是 Client 的 client_id
      */
     public String createIdToken(UserDetails user, String clientId, String nonce) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .setIssuer(oauth2Config.getIssuer())
                 .setSubject(user.getUserId().toString())
-                .setAudience(clientId)               // aud = Client 的 client_id
+                .setAudience(clientId)
                 .claim("name", user.getUsername())
                 .claim("email", user.getEmail())
                 .claim("nonce", nonce)
                 .setIssuedAt(new Date(now))
                 .setExpiration(new Date(now + oauth2Config.getIdTokenExpireSec() * 1000L))
-                .setId(UUID.randomUUID().toString()) // jti
+                .setId(UUID.randomUUID().toString())
                 .signWith(getSigningKey())
                 .compact();
     }
 
     /**
-     * 签发 Access Token
+     * 签发 Access Token —— 给 API 验证权限用
+     * aud 必须是 Resource Server 的 URL
      */
     public String createAccessToken(UserDetails user, String clientId,
                                      List<String> scopes) {
@@ -494,7 +410,7 @@ public class JwtTokenService {
         return Jwts.builder()
                 .setIssuer(oauth2Config.getIssuer())
                 .setSubject(user.getUserId().toString())
-                .setAudience("https://api.company.com") // aud = Resource Server
+                .setAudience("https://api.company.com")
                 .claim("client_id", clientId)
                 .claim("scope", String.join(" ", scopes))
                 .setIssuedAt(new Date(now))
@@ -505,12 +421,12 @@ public class JwtTokenService {
     }
 
     /**
-     * 创建 Refresh Token（随机字符串，非 JWT）
+     * 创建 Refresh Token —— 随机字符串，存 Redis
+     * 不是 JWT！这样吊销时直接删 Redis Key 即可
      */
     public String createRefreshToken(UserDetails user, String clientId) {
         String refreshToken = UUID.randomUUID().toString() + "." +
                               UUID.randomUUID().toString();
-        // 存入 Redis，key = refresh_token 值，value = 用户信息
         String redisKey = "oauth2:refresh:" + refreshToken;
         Map<String, String> tokenInfo = new HashMap<>();
         tokenInfo.put("userId", user.getUserId().toString());
@@ -522,7 +438,7 @@ public class JwtTokenService {
     }
 
     /**
-     * 验证 JWT 并返回 Claims
+     * 验证 JWT 签名 + 过期时间
      */
     public Claims validateJwt(String token) {
         return Jwts.parserBuilder()
@@ -533,7 +449,8 @@ public class JwtTokenService {
     }
 
     /**
-     * 吊销 Access Token（加入黑名单）
+     * 吊销 Access Token：将 jti 加入 Redis 黑名单
+     * TTL = Token 剩余有效期，过期自动清理
      */
     public void revokeAccessToken(String jti, long expireAt) {
         long ttl = expireAt - System.currentTimeMillis();
@@ -544,9 +461,6 @@ public class JwtTokenService {
         }
     }
 
-    /**
-     * 检查 Access Token 是否已被吊销
-     */
     public boolean isRevoked(String jti) {
         return Boolean.TRUE.equals(
                 redisTemplate.hasKey("oauth2:blacklist:" + jti));
@@ -554,13 +468,15 @@ public class JwtTokenService {
 }
 ```
 
-**关键设计点**：
+<strong>三个设计决策</strong>：
 
-- **ID Token 的 `aud` 设置为 `client_id`**，Access Token 的 `aud` 设置为 Resource Server 的 URL——这是 OIDC 规范的要求，也是区分二者的核心依据
-- **Refresh Token 不是 JWT**，而是随机字符串，存储在 Redis 中。这样吊销时只需要删除 Redis Key，实现即时吊销
-- **Access Token 吊销用黑名单模式**：将 `jti` 加入 Redis 黑名单，TTL = Token 剩余有效期。Token 过期后黑名单自动清理，不用额外任务
+- <strong>ID Token 的 aud = client_id，Access Token 的 aud = API 地址</strong>——这是 OIDC 规范的要求。如果拿 ID Token 去调 API，API 校验 aud 不匹配直接拒绝。
+- <strong>Refresh Token 不是 JWT，是随机字符串存 Redis</strong>——吊销时直接 `redisTemplate.delete(key)`，即时生效。如果 Refresh Token 也是 JWT，吊销就麻烦多了（需要维护黑名单）。
+- <strong>Access Token 吊销用黑名单</strong>——把 `jti`（JWT ID）加入 Redis，TTL = Token 剩余过期时间。Token 自然过期后黑名单自动清理，无需额外定时任务。
 
-#### 5.2.3 授权端点：GET /oauth2/authorize
+### 4.4 授权端点：GET /oauth2/authorize
+
+这是流程图中<strong>第一阶段和第二阶段的认证中心侧实现</strong>——接收业务系统的授权请求，引导用户登录，生成授权码。
 
 ```java
 @RestController
@@ -573,8 +489,14 @@ public class AuthorizationController {
     private final UserDetailsServiceImpl userDetailsService;
 
     /**
-     * 授权端点 —— 第一步：重定向到登录页
      * GET /oauth2/authorize?response_type=code&client_id=xxx&redirect_uri=xxx&...
+     *
+     * 这个端点做了五件事：
+     * 1. 校验 client_id 和 redirect_uri 是否合法
+     * 2. 校验 PKCE 参数（code_challenge 必须存在，method 必须是 S256）
+     * 3. 将授权请求参数暂存 Redis（登录完成后用）
+     * 4. 检查用户是否已在认证中心登录 → SSO 的关键：已登录就跳过登录页
+     * 5. 未登录 → 重定向到登录页
      */
     @GetMapping("/authorize")
     public void authorize(HttpServletRequest request, HttpServletResponse response)
@@ -594,18 +516,18 @@ public class AuthorizationController {
             return;
         }
 
-        // 2. 校验 client_id 与 redirect_uri 是否匹配（严格匹配，不能模糊）
+        // 2. 校验 client_id 与 redirect_uri（严格精确匹配）
         OAuth2Config.ClientRegistration client = findClient(clientId);
         if (client == null || !client.getRedirectUris().contains(redirectUri)) {
             sendError(response, redirectUri, "invalid_client", state);
             return;
         }
 
-        // 3. 校验 PKCE 参数（如果该 Client 要求 PKCE）
+        // 3. 校验 PKCE 参数
         if (client.isRequirePkce()) {
             if (codeChallenge == null || !"S256".equals(codeChallengeMethod)) {
                 sendError(response, redirectUri, "invalid_request",
-                        "PKCE required: code_challenge and code_challenge_method=S256", state);
+                        "PKCE required", state);
                 return;
             }
         }
@@ -623,28 +545,27 @@ public class AuthorizationController {
                 "oauth2:auth_request:" + sessionId, authRequest);
         redisTemplate.expire("oauth2:auth_request:" + sessionId, 5, TimeUnit.MINUTES);
 
-        // 5. 检查用户是否已登录（SSO 的核心：已有 Session 则跳过登录）
+        // 5. 检查用户是否已登录 —— SSO 的核心逻辑
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()
                 && !(auth instanceof AnonymousAuthenticationToken)) {
-            // 已登录，直接生成授权码
+            // 已登录 → 跳过登录页，直接生成授权码
             issueAuthorizationCode(response, auth, authRequest);
         } else {
-            // 未登录，重定向到登录页
+            // 未登录 → 重定向到登录页
             response.sendRedirect("/login?session=" + sessionId);
         }
     }
 
     /**
-     * 生成授权码并重定向回 Client
+     * 生成授权码并重定向回业务系统
      */
     private void issueAuthorizationCode(HttpServletResponse response,
                                          Authentication auth,
                                          Map<String, String> authRequest) throws IOException {
-        // 生成一次性授权码（UUID + 随机数）
         String code = UUID.randomUUID().toString().replace("-", "");
 
-        // 将授权码与用户信息、PKCE参数关联存入 Redis，TTL 60 秒
+        // 授权码 + 用户信息 + PKCE challenge → Redis（TTL 60秒）
         String redisKey = "oauth2:code:" + code;
         Map<String, String> codeInfo = new HashMap<>();
         codeInfo.put("userId", ((UserDetails) auth.getPrincipal()).getUserId().toString());
@@ -655,43 +576,32 @@ public class AuthorizationController {
         redisTemplate.expire(redisKey, oauth2Config.getAuthCodeExpireSec(),
                 TimeUnit.SECONDS);
 
-        // 302 重定向回 Client 的回调地址
+        // 302 重定向回业务系统的回调地址
         String redirectUri = authRequest.get("redirectUri");
         String state = authRequest.get("state");
         String location = String.format("%s?code=%s&state=%s", redirectUri, code, state);
         response.sendRedirect(location);
     }
-
-    private void sendError(HttpServletResponse response, String redirectUri,
-                           String error, String state) throws IOException {
-        String location = String.format("%s?error=%s&state=%s", redirectUri, error, state);
-        response.sendRedirect(location);
-    }
-
-    private void sendError(HttpServletResponse response, String redirectUri,
-                           String error, String description, String state) throws IOException {
-        String location = String.format("%s?error=%s&error_description=%s&state=%s",
-                redirectUri, error, URLEncoder.encode(description, "UTF-8"), state);
-        response.sendRedirect(location);
-    }
-
-    private OAuth2Config.ClientRegistration findClient(String clientId) {
-        return oauth2Config.getClients().stream()
-                .filter(c -> c.getClientId().equals(clientId))
-                .findFirst().orElse(null);
-    }
 }
 ```
 
-**关键设计点**：
+<strong>第 5 步是 SSO "一次登录，处处可用"的代码体现</strong>：用户已经在认证中心登录过（浏览器有 Session），再次访问 `/authorize` 时直接生成授权码，不需要重新输入密码。用户无感。
 
-- 步骤 4 中，如果用户已经在授权服务器登录过（有有效 Session），**跳过登录页直接生成授权码**——这就是 SSO 的"一次登录，处处可用"在代码层面的体现
-- `redirect_uri` 必须**严格精确匹配**（包括路径、端口），不允许模糊匹配。这是防止授权码被重定向到恶意地址的关键安全措施
-- 所有错误都通过 `redirect_uri` 返回（OAuth 2.0 规范要求），而不是直接返回 HTTP 错误。错误参数格式：`?error=xxx&error_description=xxx&state=xxx`
+### 4.5 Token 端点：POST /oauth2/token
 
-#### 5.2.4 Token 端点：POST /oauth2/token
+这是流程图中<strong>第三阶段的认证中心侧实现</strong>——业务系统后端拿 code 来换 Token。
 
 ```java
+/**
+ * POST /oauth2/token
+ *
+ * 这个端点做了六件事：
+ * 1. 校验 client_id + client_secret（确认调用方是合法业务系统）
+ * 2. 从 Redis 取出授权码信息（读后即删，保证一次性）
+ * 3. 校验 redirect_uri 与 /authorize 时一致
+ * 4. PKCE 校验：SHA256(code_verifier) == code_challenge ?
+ * 5. 签发三 Token（ID Token + Access Token + Refresh Token）
+ */
 @PostMapping("/token")
 public Map<String, Object> token(@RequestParam("grant_type") String grantType,
                                   @RequestParam("code") String code,
@@ -700,31 +610,30 @@ public Map<String, Object> token(@RequestParam("grant_type") String grantType,
                                   @RequestParam("client_secret") String clientSecret,
                                   @RequestParam("redirect_uri") String redirectUri) {
 
-    // 1. 校验 client_id + client_secret
+    // 1. 校验 client 凭据
     OAuth2Config.ClientRegistration client = findClient(clientId);
     if (client == null || !client.getClientSecret().equals(clientSecret)) {
         throw new InvalidClientException("Invalid client credentials");
     }
 
-    // 2. 仅支持 authorization_code 模式
     if (!"authorization_code".equals(grantType)) {
         throw new UnsupportedGrantTypeException("Only authorization_code is supported");
     }
 
-    // 3. 从 Redis 取出授权码信息（读后即删，保证一次性使用）
+    // 2. 从 Redis 取出授权码信息 —— 读后即删
     String codeKey = "oauth2:code:" + code;
     Map<Object, Object> codeInfo = redisTemplate.opsForHash().entries(codeKey);
     if (codeInfo.isEmpty()) {
         throw new InvalidGrantException("Invalid or expired authorization code");
     }
-    redisTemplate.delete(codeKey); // 立即删除，防止重用
+    redisTemplate.delete(codeKey);  // 立即删除，同一个 code 不能换两次
 
-    // 4. 校验 redirect_uri 必须与 /authorize 时一致
+    // 3. 校验 redirect_uri
     if (!redirectUri.equals(client.getRedirectUris().get(0))) {
         throw new InvalidGrantException("redirect_uri mismatch");
     }
 
-    // 5. PKCE 校验：SHA256(code_verifier) == code_challenge ?
+    // 4. PKCE 校验
     String storedChallenge = (String) codeInfo.get("codeChallenge");
     if (client.isRequirePkce() && storedChallenge != null) {
         String computedChallenge = computeS256Challenge(codeVerifier);
@@ -733,7 +642,7 @@ public Map<String, Object> token(@RequestParam("grant_type") String grantType,
         }
     }
 
-    // 6. 签发 Token 三元组
+    // 5. 签发 Token
     String userId = (String) codeInfo.get("userId");
     String scopeStr = (String) codeInfo.get("scope");
     List<String> scopes = Arrays.asList(scopeStr.split(" "));
@@ -753,9 +662,6 @@ public Map<String, Object> token(@RequestParam("grant_type") String grantType,
     return result;
 }
 
-/**
- * 计算 S256 PKCE challenge
- */
 private String computeS256Challenge(String codeVerifier) {
     try {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -767,45 +673,17 @@ private String computeS256Challenge(String codeVerifier) {
 }
 ```
 
-**关键设计点**：
+<strong>这里三个安全措施是串联的</strong>：code 从 Redis 读后立即删除（一次性使用）→ redirect_uri 必须与 /authorize 时一致（即使 code 被截获，攻击者也不知道原始 redirect_uri）→ PKCE 校验（即使攻击者同时截获了 code 和 redirect_uri，也没有 code_verifier）。
 
-- 步骤 3：从 Redis 读取授权码后**立即删除**（`redisTemplate.delete(codeKey)`），保证授权码只能使用一次
-- 步骤 4：`redirect_uri` 在 `/token` 端点中**再次校验**——即使授权码已被截获，攻击者没有原始 `redirect_uri` 也无法使用（除非攻击者也截获了 `redirect_uri` 参数，但那意味着整个请求都被截获了）
-- 步骤 5：PKCE 校验使用 `US_ASCII` 编码计算 `code_verifier` 的 SHA-256，与 Client 端保持一致。如果使用 `UTF-8` 编码，可能因为字符集差异导致校验失败
+---
 
-### 🔌 5.3 业务系统（CRM）接入代码
+## 五、业务系统接入
 
-业务系统作为 OAuth 2.0 Client，需要处理两件事：**发起授权流程**和**验证 Access Token**。
+上面是认证中心的实现。对于业务系统（CRM），需要做三件事：<strong>发起授权、处理回调、验证 Token</strong>。
 
-#### 5.3.1 Spring Security 配置
+### 5.1 发起授权：重定向到认证中心
 
-```java
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeRequests(auth -> auth
-                .antMatchers("/login", "/login/oauth2/**", "/error").permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .csrf().disable()
-            // 注册自定义的 Bearer Token 过滤器
-            .addFilterBefore(
-                new BearerTokenAuthenticationFilter(authServerClient),
-                UsernamePasswordAuthenticationFilter.class
-            );
-        return http.build();
-    }
-}
-```
-
-#### 5.3.2 发起授权（重定向到授权服务器）
+对应流程图的<strong>第一阶段</strong>。用户访问业务系统，发现没登录，生成 PKCE 参数后重定向到认证中心。
 
 ```java
 @Controller
@@ -813,19 +691,22 @@ public class LoginController {
 
     @Value("${oauth2.auth-server.base-url}")
     private String authServerBaseUrl;
-
     @Value("${oauth2.client.client-id}")
     private String clientId;
-
     @Value("${oauth2.client.redirect-uri}")
     private String redirectUri;
-
     @Value("${oauth2.client.scope}")
     private String scope;
 
     /**
-     * 发起 OAuth 2.0 授权 —— 重定向到授权服务器
-     * GET /login → 302 → https://sso.company.com/oauth2/authorize?...
+     * 发起授权 —— 重定向到认证中心
+     * GET /login → 302 → sso.company.com:9000/oauth2/authorize?...
+     *
+     * 业务系统在这一步做了四件事：
+     * 1. 生成 PKCE 参数（code_verifier + code_challenge）
+     * 2. 生成 state 防 CSRF
+     * 3. 把 code_verifier 和 state 暂存 Session
+     * 4. 构建 /authorize URL 并 302 重定向
      */
     @GetMapping("/login")
     public void login(HttpServletRequest request, HttpServletResponse response)
@@ -838,12 +719,12 @@ public class LoginController {
         // 2. 生成 state 防 CSRF
         String state = UUID.randomUUID().toString();
 
-        // 3. 将 code_verifier 和 state 暂存 Session/Redis（回调时需要）
+        // 3. 存入 Session（回调时需要取出校验）
         HttpSession session = request.getSession(true);
         session.setAttribute("code_verifier", codeVerifier);
         session.setAttribute("oauth_state", state);
 
-        // 4. 构建 /authorize URL
+        // 4. 构建 /authorize URL 并重定向
         String authorizeUrl = UriComponentsBuilder
                 .fromHttpUrl(authServerBaseUrl + "/oauth2/authorize")
                 .queryParam("response_type", "code")
@@ -860,14 +741,14 @@ public class LoginController {
 }
 ```
 
-**PKCE 工具类**（Client 端和 Auth Server 端共享同样的算法）：
+PKCE 工具类（<strong>业务系统和认证中心必须用同样的算法</strong>）：
 
 ```java
 public class PkceUtil {
 
     public static String generateCodeVerifier() {
         SecureRandom secureRandom = new SecureRandom();
-        byte[] randomBytes = new byte[32]; // 32 bytes → 43 chars
+        byte[] randomBytes = new byte[32];
         secureRandom.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
@@ -884,12 +765,23 @@ public class PkceUtil {
 }
 ```
 
-#### 5.3.3 回调处理（接收授权码 + 换取 Token）
+<strong>注意 `US_ASCII` 编码</strong>——PKCE 规范要求 code_verifier 的字符集限制在 `[A-Z][a-z][0-9]-._~`，即 ASCII 可打印字符。如果用 `UTF-8` 编码计算 SHA256，可能因为字符集差异导致校验失败。
+
+### 5.2 处理回调：用授权码换 Token
+
+对应流程图的<strong>第三阶段</strong>。认证中心带着授权码重定向回业务系统。
 
 ```java
 /**
- * 授权服务器回调 —— 接收授权码，换取 Token
+ * 认证中心回调 —— 接收授权码，换取 Token
  * GET /login/oauth2/code/crm?code=xxx&state=yyy
+ *
+ * 业务系统在这一步做了五件事：
+ * 1. 校验 state（防 CSRF）
+ * 2. 取出之前暂存的 code_verifier
+ * 3. 后端调用认证中心 /token（Server-to-Server，浏览器不可见）
+ * 4. 解析 ID Token 获取用户身份
+ * 5. 创建本地会话
  */
 @GetMapping("/login/oauth2/code/crm")
 public String callback(@RequestParam("code") String code,
@@ -906,19 +798,19 @@ public String callback(@RequestParam("code") String code,
         throw new SecurityException("State mismatch - possible CSRF attack");
     }
 
-    // 2. 取出之前暂存的 code_verifier
+    // 2. 取出 code_verifier
     String codeVerifier = (String) session.getAttribute("code_verifier");
     session.removeAttribute("code_verifier");
     session.removeAttribute("oauth_state");
 
-    // 3. 后端用授权码换取 Token（Server-to-Server，浏览器不可见）
+    // 3. 后端用授权码换 Token（Server-to-Server）
     Map<String, String> tokenResponse = exchangeCodeForToken(code, codeVerifier);
 
     // 4. 解析 ID Token 获取用户信息
     String idToken = tokenResponse.get("id_token");
     Map<String, Object> userInfo = parseIdToken(idToken);
 
-    // 5. 创建本地会话，存储 Access Token + Refresh Token
+    // 5. 创建本地会话
     session.setAttribute("user", userInfo);
     session.setAttribute("access_token", tokenResponse.get("access_token"));
     session.setAttribute("refresh_token", tokenResponse.get("refresh_token"));
@@ -927,7 +819,8 @@ public String callback(@RequestParam("code") String code,
 }
 
 /**
- * 后端调用 /token 端点换取 Token
+ * 后端调用认证中心 /token 端点
+ * 这个请求浏览器完全看不到 —— client_secret 不会泄露
  */
 private Map<String, String> exchangeCodeForToken(String code, String codeVerifier) {
     RestTemplate restTemplate = new RestTemplate();
@@ -956,23 +849,16 @@ private Map<String, String> exchangeCodeForToken(String code, String codeVerifie
     result.put("id_token", (String) body2.get("id_token"));
     return result;
 }
-
-/**
- * 解析 ID Token（JWT）获取用户身份
- */
-private Map<String, Object> parseIdToken(String idToken) {
-    // 注意：生产环境应该验证签名，这里只展示解码 Payload
-    String[] parts = idToken.split("\\.");
-    String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
-    return new ObjectMapper().readValue(payload, Map.class);
-}
 ```
 
-#### 5.3.4 验证 Access Token 并访问受保护资源
+### 5.3 验证 Token：每个请求都要做的事
+
+对应流程图的<strong>第四阶段</strong>。用户登录后访问业务 API，业务系统需要验证每个请求带的 Access Token。
 
 ```java
 /**
  * Bearer Token 过滤器 —— 从请求头提取 Access Token 并校验
+ * 每个请求都要经过这个过滤器
  */
 public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -988,11 +874,8 @@ public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String accessToken = authHeader.substring(7);
 
-            // 方式1: 如果 Access Token 是 JWT，本地验签即可
+            // Access Token 是 JWT → 本地验签（不需要每次调认证中心）
             Claims claims = authServerClient.validateAccessTokenLocally(accessToken);
-
-            // 方式2: 如果 Access Token 是 Opaque，调用 /introspect
-            // Map<String, Object> introspect = authServerClient.introspectToken(accessToken);
 
             // 构建认证对象，注入 SecurityContext
             List<SimpleGrantedAuthority> authorities = extractAuthorities(claims);
@@ -1006,9 +889,40 @@ public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
 }
 ```
 
-### 🔄 5.4 Token 刷新与吊销
+对应的 Spring Security 配置：
 
-**Token 刷新端点**（在 Client 的 Controller 中）：
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeRequests(auth -> auth
+                .antMatchers("/login", "/login/oauth2/**", "/error").permitAll()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .csrf().disable()
+            .addFilterBefore(
+                new BearerTokenAuthenticationFilter(authServerClient),
+                UsernamePasswordAuthenticationFilter.class
+            );
+        return http.build();
+    }
+}
+```
+
+---
+
+## 六、Token 生命周期管理
+
+### 6.1 刷新 Access Token
+
+Access Token 有效期短（15~60 分钟），过期后用 Refresh Token 换新的，用户无需重新登录：
 
 ```java
 @PostMapping("/auth/refresh")
@@ -1019,7 +933,7 @@ public Map<String, String> refreshAccessToken(HttpSession session) {
         throw new UnauthorizedException("No refresh token in session");
     }
 
-    // 调用授权服务器的 /token 端点，grant_type=refresh_token
+    // 调用认证中心的 /token 端点，grant_type=refresh_token
     RestTemplate restTemplate = new RestTemplate();
     MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
     body.add("grant_type", "refresh_token");
@@ -1034,11 +948,10 @@ public Map<String, String> refreshAccessToken(HttpSession session) {
     ResponseEntity<Map> response = restTemplate.postForEntity(
             authServerBaseUrl + "/oauth2/token", request, Map.class);
 
+    // 更新 Session 中的 Token
     Map<String, String> newTokens = new LinkedHashMap<>();
     newTokens.put("access_token", (String) response.getBody().get("access_token"));
     newTokens.put("refresh_token", (String) response.getBody().get("refresh_token"));
-
-    // 更新 Session 中的 Token
     session.setAttribute("access_token", newTokens.get("access_token"));
     session.setAttribute("refresh_token", newTokens.get("refresh_token"));
 
@@ -1046,18 +959,22 @@ public Map<String, String> refreshAccessToken(HttpSession session) {
 }
 ```
 
-**全局登出（吊销所有 Token）**——在授权服务器中实现：
+### 6.2 吊销 Token（全局登出）
+
+在认证中心实现：
 
 ```java
+/**
+ * POST /oauth2/revoke —— 吊销指定 Token
+ */
 @PostMapping("/oauth2/revoke")
 public void revoke(@RequestParam("token") String token,
-                   @RequestParam("token_type_hint") String tokenTypeHint,
-                   Authentication auth) {
+                   @RequestParam("token_type_hint") String tokenTypeHint) {
     if ("refresh_token".equals(tokenTypeHint)) {
-        // 吊销 Refresh Token：直接删除 Redis Key
+        // Refresh Token 存在 Redis → 直接删 Key
         redisTemplate.delete("oauth2:refresh:" + token);
     } else if ("access_token".equals(tokenTypeHint)) {
-        // 吊销 Access Token：将 jti 加入黑名单
+        // Access Token 是 JWT → 将 jti 加入黑名单
         try {
             Claims claims = jwtTokenService.validateJwt(token);
             jwtTokenService.revokeAccessToken(
@@ -1068,17 +985,12 @@ public void revoke(@RequestParam("token") String token,
         }
     }
 }
-```
 
-**吊销用户所有 Token**（用于强制登出所有设备）：
-
-```java
 /**
- * 管理员操作：吊销指定用户的所有活跃 Token
+ * 管理员操作：强制登出指定用户的所有设备
  */
 @PostMapping("/admin/revoke-user/{userId}")
 public void revokeAllUserTokens(@PathVariable String userId) {
-    // 查询该用户的所有 Refresh Token 并删除
     Set<String> keys = redisTemplate.keys("oauth2:refresh:*");
     for (String key : keys) {
         String storedUserId = (String) redisTemplate.opsForHash().get(key, "userId");
@@ -1086,60 +998,57 @@ public void revokeAllUserTokens(@PathVariable String userId) {
             redisTemplate.delete(key);
         }
     }
-    // 注意：已发出的 JWT Access Token 在过期前仍然有效，
-    // 严格场景下还需将受影响的 jti 加入黑名单（或降低 Access Token 过期时间）
 }
 ```
 
+<strong>Refresh Token 的吊销是即时的</strong>（删 Redis Key），<strong>Access Token 的吊销是近实时的</strong>（加入黑名单，TTL 为剩余有效期）。已发出的 JWT Access Token 在加入黑名单前有短暂窗口——降低 Access Token 有效期（如 15 分钟）可以缩小这个窗口。
+
 ---
 
-## 🎯 六、总结
+## 七、总结
+
+用一张图回顾全文的核心流程：
 
 ```mermaid
-flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+sequenceDiagram
+    participant B as 浏览器
+    participant C as 业务系统(CRM)
+    participant A as 认证中心(SSO)
 
-    SUMMARY[(OAuth 2.0 + JWT SSO 核心要点)]
-
-    SUMMARY --> P1[OAuth 2.0 四种角色]
-    P1 --> P1A["Resource Owner / Client / Auth Server / Resource Server"]
-
-    SUMMARY --> P2[授权码 + PKCE 流程]
-    P2 --> P2A["code_challenge 前置 → 授权码回调 → code_verifier 校验 → 签发Token"]
-
-    SUMMARY --> P3[三Token体系]
-    P3 --> P3A["ID Token(认证) / Access Token(授权) / Refresh Token(续期)"]
-
-    SUMMARY --> P4[安全措施]
-    P4 --> P4A["state防CSRF / PKCE防code截获 / code一次性 / redirect_uri严格匹配"]
-
-    SUMMARY --> P5[代码落地方案]
-    P5 --> P5A["Spring Security + JJWT + Redis /authorize + /token + /revoke 端点实现"]
-
-    class SUMMARY startEnd;
-    class P1,P2,P3,P4,P5 process;
-    class P1A,P2A,P3A,P4A,P5A highlight;
+    B->>C: 访问业务系统
+    C->>C: 生成 PKCE + state
+    C-->>B: 302 → 认证中心 /authorize
+    B->>A: 跳转到登录页
+    B->>A: 提交用户名密码
+    A->>A: 验证身份 → 生成 code<br/>code + userId + challenge → Redis
+    A-->>B: 302 → 业务系统回调?code=abc&state=yyy
+    B->>C: 回调 (带上 code)
+    C->>C: 校验 state
+    C->>A: POST /token (Server-to-Server)<br/>code + code_verifier + client_secret
+    A->>A: SHA256(verifier) == challenge ?<br/>通过 → 删除 code → 签发 Token
+    A-->>C: { id_token, access_token, refresh_token }
+    C->>C: 解析 ID Token → 创建本地会话
+    C-->>B: 登录成功
 ```
 
-**关键要点回顾**：
+<strong>三个角色各自的职责一句话总结</strong>：
 
-| 层次 | 核心内容 | 一句话 |
-|------|------|------|
-| **协议层** | OAuth 2.0 授权码模式 + OIDC | 用户凭据只给认证中心，业务系统通过授权码间接获取用户身份 |
-| **安全层** | PKCE + state + redirect_uri 严格匹配 | PKCE 防授权码截获重放，state 防 CSRF，redirect_uri 防重定向劫持 |
-| **Token 层** | ID Token + Access Token + Refresh Token 三元组 | ID Token 给 Client 看用户是谁，Access Token 给 API 验证权限，Refresh Token 用于无感续期 |
-| **代码层** | `/authorize` → `/token` → 验签/吊销 | 授权码一次性使用（读后即删），Refresh Token 存在 Redis（可即时吊销），Access Token JWT 本地验签（高性能） |
+| 角色 | 职责 |
+|------|------|
+| <strong>浏览器</strong> | 负责跳转和提交凭据，<strong>只知道 code，不知道 Token</strong> |
+| <strong>业务系统</strong> | 发起授权（生成 PKCE + state），用 code 换 Token（后端完成），验证 Token（本地验签）。<strong>从没见过用户密码</strong> |
+| <strong>认证中心</strong> | 唯一拥有用户密码的地方。验证身份 → 签发 code → 校验 PKCE → 签发 Token → 管理 Token 生命周期 |
 
-**OAuth 2.0 + JWT 在三种 SSO 方案中的定位**（对比上篇文章）：
+<strong>五个安全措施环环相扣</strong>：
 
-| 对比维度 | CAS（票据模式） | JWT 共享密钥 | **OAuth 2.0 + OIDC（本文）** |
-|------|------|------|------|
-| 现代性 | 2000 年代初设计 | 2015 年后流行 | 2012 年发布，OIDC 2014 年发布，**当前行业标准** |
-| 生态 | Java 为主 | 自建 | Keycloak / Auth0 / Okta / Azure AD / Spring Authorization Server |
-| 移动端 / SPA | 差 | 中 | **优**（PKCE 专为移动端设计） |
-| 第三方登录 | 不支持 | 不支持 | **原生支持**（社交登录、企业联邦） |
-| 学习曲线 | 中 | 低 | 高（但生态工具降低门槛） |
+| 措施 | 防什么 | 怎么做到的 |
+|------|--------|-----------|
+| <strong>redirect_uri 严格匹配</strong> | 授权码被重定向到攻击者地址 | 注册时固定回调地址，/authorize 和 /token 两次校验 |
+| <strong>state 参数</strong> | CSRF（攻击者伪造回调请求） | 业务系统生成随机数 → 回调时对比 |
+| <strong>PKCE</strong> | 授权码在传输中被截获 | code_verifier 从未上过网络，只有 code_challenge 的哈希在 URL 中 |
+| <strong>code 一次性使用</strong> | 授权码被重放 | Redis 读后即删，同一个 code 只能换一次 Token |
+| <strong>client_secret 不出浏览器</strong> | 凭据泄露 | /token 调用是 Server-to-Server，浏览器不可见 |
 
-选择 OAuth 2.0 + OIDC 作为 SSO 方案，意味着选择了**最广泛的工业标准、最活跃的开源生态和最完整的安全模型**。虽然学习和部署成本比 CAS 或共享 JWT 高，但这套方案能支撑从 10 人团队到千万级用户的全部阶段。
+这篇文章覆盖了 OAuth 2.0 授权码 + PKCE 从浏览器到后端的完整实现。如果你在接入微信/Google/GitHub 登录，它们的流程和本文完全一致——只是 `/authorize` 和 `/token` 的地址换成了第三方认证中心。
+
+> 📖 <strong>前置概念补充</strong>：如果想了解 OAuth 2.0 四种角色（Resource Owner / Client / Auth Server / Resource Server）和四种授权模式（authorization_code / implicit / password / client_credentials）的定义层面知识，建议阅读 [<strong>OAuth 2.0 概念速览</strong>]({{< relref "OAuth2Fundamentals.md" >}})。本文聚焦于<strong>交互流程和代码实现</strong>，概念只在实际用到的地方展开。
