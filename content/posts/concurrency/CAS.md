@@ -1,7 +1,7 @@
 ---
 title: "CAS 从硬件到 Java：MESI 视角下的原子操作与 12 个原子类"
 date: 2022-08-21T08:47:41+00:00
-tags: ["Java并发"]
+tags: ["内存模型", "原理解析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -27,54 +27,17 @@ cover:
 ---
 # CAS 从硬件到 Java：MESI 视角下的原子操作与 12 个原子类
 
-## 🤔 一、问题切入：`i++` 为什么不能直接加锁
+## 🤔 一、Intel 的工程师为什么要给 CPU 加一条 `lock cmpxchg` 指令
 
-### ❓ 1.1 一段"看起来没问题"的计数器代码
+多线程编程中最基础的问题——`count++` 不是原子操作。Java 层面它是三条字节码，CPU 层面它是 "LOAD → ADD → STORE" 三条指令。两个核心同时执行，结果必然互相覆盖。
 
-```java
-public class Counter {
-    private int count = 0;
+一种解决思路是加锁——`synchronized` 把整个 `count++` 包住，一次只有一个线程执行。但锁的代价高：上下文切换、线程阻塞/唤醒、内核态切换。高竞争场景下，线程在等待锁上花的时间可能比干活的时间还多。
 
-    public void increment() {
-        count++;  // 非原子操作！由三条指令组成
-    }
+有没有办法**不阻塞线程、靠硬件指令**实现原子更新？Intel 的 CPU 架构师提供了一个答案：`lock cmpxchg`（Compare and Swap）指令。它将"比较旧值→如果匹配就写新值"这个过程变成一条不可分割的 CPU 指令，配合 `lock` 前缀锁定总线（或缓存行），保证同一时刻只有一个核心能成功操作该内存地址。
 
-    public int get() {
-        return count;
-    }
-}
-```
+这个思路的妙处在于：**把"锁"从软件层（JVM / OS Mutex）下沉到硬件层（CPU 缓存一致性协议）**。失败重试的代价只是几个 CPU 周期，不死锁、不阻塞、不切换上下文。道格·李在 JUC 中大量依赖 CAS 来构建无锁数据结构——`ConcurrentHashMap` 的 bucket 写入、`ConcurrentLinkedQueue` 的节点插入、AQS 的 state 更新，底层全是 CAS。
 
-10 个线程各执行 1000 次 `increment()`，预期结果是 10000，实际结果在 8000 ~ 9500 之间波动。
-
-原因：`count++` 在 CPU 层面不是一条指令，而是三条：
-
-```
-(1) LOAD:   从内存/缓存读取 count 的值到 CPU 寄存器
-(2) ADD:    在寄存器中对值 +1
-(3) STORE:  将寄存器中的新值写回内存/缓存
-```
-
-两个线程同时执行这三步会交错。假设 count 初始为 0：
-
-| 时刻 | Core A           | Core B           |
-| ---- | ---------------- | ---------------- |
-| t1   | LOAD count → 0  |                  |
-| t2   |                  | LOAD count → 0  |
-| t3   | ADD 0+1 → 1     | ADD 0+1 → 1     |
-| t4   | STORE count ← 1 |                  |
-| t5   |                  | STORE count ← 1 |
-
-两个线程各执行了一次 `++`，count 最终是 1 而不是 2——丢失了一次更新。
-
-### 📊 1.2 解决方案对比：synchronized vs CAS
-
-| 方案                                | 实现方式                       |                开销                | 问题                  |
-| ----------------------------------- | ------------------------------ | :--------------------------------: | --------------------- |
-| `synchronized`                    | JVM 锁升级（偏向→轻量→重量） | 高竞争时涉及 OS Mutex + 上下文切换 | 线程阻塞/唤醒成本高   |
-| `AtomicInteger.incrementAndGet()` | CAS（Compare And Swap）循环    |         无阻塞，失败时重试         | 高竞争时 CPU 自旋消耗 |
-
-本文要讲的是第二种：CAS 是什么、它在硬件层怎么工作、Java 提供了哪些原子类。
+本文从 CAS 的硬件原理开始，一直讲到 Java 的 12 个原子类。
 
 ## 🏗️ 二、MESI 视角：为什么硬件需要 CAS
 

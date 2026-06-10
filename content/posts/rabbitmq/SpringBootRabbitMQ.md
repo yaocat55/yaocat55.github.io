@@ -1,7 +1,7 @@
 ---
 title: "SpringBoot RabbitMQ 全操作指南"
 date: 2022-11-03T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["RabbitMQ", "实践教程", "SpringBoot"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

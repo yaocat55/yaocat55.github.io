@@ -1,7 +1,7 @@
 ---
 title: "时序数据库在物联网日志系统中的设计与实践"
 date: 2023-01-16T11:30:03+00:00
-tags: ["时序数据库", "实践教程"]
+tags: ["工程实践", "实践教程", "SpringBoot"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

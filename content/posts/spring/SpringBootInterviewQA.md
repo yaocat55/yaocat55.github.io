@@ -1,7 +1,7 @@
 ---
 title: "Spring Boot 面试突击"
 date: 2022-10-17T04:06:46+00:00
-tags: ["Spring生态"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["面试突击类"]
 author: "yaomingye"
 showToc: true

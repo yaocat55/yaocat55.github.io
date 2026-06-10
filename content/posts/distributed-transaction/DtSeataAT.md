@@ -1,7 +1,7 @@
 ---
 title: "Seata AT 模式——undo_log 与二阶段原理"
 date: 2022-12-28T08:00:00+00:00
-tags: ["分布式架构"]
+tags: ["分布式事务", "实践教程", "SpringCloud"]
 categories: ["分布式事务中间件"]
 author: "yaomingye"
 showToc: true

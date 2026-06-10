@@ -1,7 +1,7 @@
 ---
 title: "SkyWalking 分布式链路追踪——从零搭建 APM 平台"
 date: 2022-12-19T08:00:00+00:00
-tags: ["运维与可观测"]
+tags: ["可观测性", "入门指南", "SpringCloud"]
 categories: ["日志分析工具"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "Flyway 数据库迁移：告别手工执行 SQL 脚本"
 date: 2023-01-12T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["MySQL", "实践教程", "工程实践"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

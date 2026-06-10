@@ -1,7 +1,7 @@
 ---
 title: "Redis 缓存策略进阶：六大模式全解析"
 date: 2022-10-21T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["Redis", "原理解析", "实践教程"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

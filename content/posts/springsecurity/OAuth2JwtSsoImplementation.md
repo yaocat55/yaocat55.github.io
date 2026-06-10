@@ -1,7 +1,7 @@
 ---
 title: "OAuth 2.0 + JWT 单点登录"
 date: 2022-09-22T12:36:00+00:00
-tags: ["Spring生态"]
+tags: ["安全认证", "实践教程", "SpringBoot"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

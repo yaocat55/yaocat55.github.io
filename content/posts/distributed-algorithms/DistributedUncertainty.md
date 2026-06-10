@@ -1,7 +1,7 @@
 ---
 title: "如果网络会骗你，时钟也会骗你——分布式世界的两个不确定性"
 date: 2023-01-01T11:30:03+00:00
-tags: ["分布式架构"]
+tags: ["分布式理论", "原理解析", "工程实践"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

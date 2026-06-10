@@ -1,7 +1,7 @@
 ---
 title: "第1步：写出你的第一个 K8s 应用"
 date: 2023-01-06T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["容器技术", "实践教程", "Kubernetes"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

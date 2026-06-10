@@ -1,7 +1,7 @@
 ---
 title: "GitLab CI/CD 搭建与 Pipeline 语法精讲"
 date: 2022-12-24T08:00:00+00:00
-tags: ["运维与可观测"]
+tags: ["CI/CD", "入门指南", "容器技术"]
 categories: ["CICD类"]
 author: "yaomingye"
 showToc: true

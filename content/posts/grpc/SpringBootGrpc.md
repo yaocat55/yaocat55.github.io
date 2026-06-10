@@ -1,7 +1,7 @@
 ---
 title: "SpringBoot gRPC 全操作指南"
 date: 2022-11-29T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["RPC框架", "实践教程", "SpringBoot"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

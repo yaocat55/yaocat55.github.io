@@ -1,7 +1,7 @@
 ---
 title: "所有中间件指标接入 Prometheus——统一仪表盘实战"
 date: 2022-12-18T08:00:00+00:00
-tags: ["运维与可观测"]
+tags: ["可观测性", "实践教程", "SpringCloud"]
 categories: ["日志分析工具"]
 author: "yaomingye"
 showToc: true

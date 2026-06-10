@@ -1,7 +1,7 @@
 ---
 title: "Raft 协议：选举、日志复制与强一致"
 date: 2023-01-19T11:30:03+00:00
-tags: ["分布式架构", "原理解析"]
+tags: ["分布式理论", "原理解析", "实践教程"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

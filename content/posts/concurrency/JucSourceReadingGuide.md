@@ -1,7 +1,7 @@
 ---
 title: "JUC 源码阅读路线图"
 date: 2022-09-06T09:00:00+00:00
-tags: ["Java并发"]
+tags: ["Java并发", "实践教程", "工程实践"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,13 +28,15 @@ cover:
 
 # JUC 源码阅读路线图：从 LockSupport 到 ForkJoinPool 的完整导读
 
-## ❓ 1️⃣ 一、这篇博客解决什么问题
+## ❓ 1️⃣ 一、道格·李的 JUC 有明确的分层设计——读源码必须按这个顺序
 
-你已经读过多篇 JUC 各组件的中文解析博客，对其中的概念（CAS、AQS、Condition、线程池 ctl 等）有了基本认识。现在你准备 **亲自打开 JDK 源码** ，从头到尾啃一遍 `java.util.concurrent` 包。
+道格·李在设计 `java.util.concurrent` 包时，不是把二十几个类平铺在一个包里的。JUC 有严格的分层：**底层原语**（CAS、volatile、LockSupport）→ **核心框架**（AQS）→ **具体实现**（锁、同步器、集合、线程池）。
 
-第一个问题就来了：**从哪个类开始？按什么顺序读？每个类几百到几千行，应该重点看哪些方法？**
+这个分层意味着：如果你一上来就读 `ReentrantLock.lock()` 的源码，三行之后就会遇到 `tryAcquire()`，再往下就是 CAS 修改 AQS state、`LockSupport.park()` 阻塞线程——全是底层 API。不知道 CAS 的语义，不知道 state 的 CLH 入队流程，不知道 `park/unpark` 的 permit 机制，每走一步都得暂停查资料，阅读体验极差。
 
-这篇博客就是为这个场景准备的。它不会逐行分析源码（各组件详细分析见本系列其他文章），而是提供一份 **源码阅读路线图**——告诉你每个组件在 JDK 中的位置、入口 API、核心函数调用链、推荐阅读顺序、以及读完这个组件你能学到什么设计思想。
+反之，如果你按道格·李的设计顺序来读——先理解 CAS 和 `LockSupport`（地基），再啃透 AQS（骨架），然后逐一看 ReentrantLock、Semaphore、CountDownLatch 怎么在骨架上加肉（定制 `tryAcquire` / `tryRelease`）——整个 JUC 包的结构就一目了然了。
+
+这篇博客提供的就是这份**按设计分层排列的源码阅读路线图**——告诉你每个组件在 JDK 中的位置、入口 API、核心函数调用链、推荐阅读顺序、以及读完这个组件你能学到什么设计思想。不会逐行分析源码（各组件详细分析见本系列其他文章）。
 
 ## 🏗️ 2️⃣ 二、总览：JUC 全景架构图
 

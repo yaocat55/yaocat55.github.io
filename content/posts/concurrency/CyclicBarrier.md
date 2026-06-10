@@ -1,7 +1,7 @@
 ---
 title: "CyclicBarrier 可循环屏障"
 date: 2022-09-05T09:30:00+00:00
-tags: ["Java并发"]
+tags: ["并发工具", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,128 +28,19 @@ cover:
 
 # CyclicBarrier 可循环屏障：源码解析、代际机制与 CountDownLatch 对比全解析
 
-## 🤔 一、问题切入：多线程分片计算的"等所有人到齐"问题
+## 🤔 一、道格·李为什么需要一个可循环的屏障
 
-### 🌐 1.1 一个具体的场景
+`CountDownLatch` 解决了一个问题：一个线程等待多个线程完成操作。但道格·李在设计 JSR 166 时意识到，还有一种更复杂的同步场景没有覆盖：<strong>多个线程彼此等待</strong>——所有线程都到达同一个"集合点"后，再一起继续往下走。这在分片并行计算中非常常见：N 个线程各算各的，算完之后需要"对表"（交叉校验、汇总），然后继续算下一阶段。
 
-假设你要做一次数据迁移，需要从 5 张表中各读取数据进行清洗，全部清洗完毕后汇总写入目标库。最简单的多线程方案——主线程起 5 个子线程，各自处理一张表，最后主线程汇总：
+`CountDownLatch` 做不了这件事——它是一次性的，计数器归零后无法重置。而且它的语义是"一个线程等 N 个线程"，不是"N 个线程彼此等"。
 
-```java
-public class DataMigration {
-    public static void main(String[] args) throws InterruptedException {
-        List<String> cleanedData = new CopyOnWriteArrayList<>();
+`Thread.join()` 也做不了——`join()` 等的是线程终止，不是线程到达某个执行点。如果线程需要继续执行（而不是终止），`join()` 完全不对路。
 
-        Thread t1 = new Thread(() -> cleanedData.addAll(cleanTable("table1")));
-        Thread t2 = new Thread(() -> cleanedData.addAll(cleanTable("table2")));
-        Thread t3 = new Thread(() -> cleanedData.addAll(cleanTable("table3")));
-        Thread t4 = new Thread(() -> cleanedData.addAll(cleanTable("table4")));
-        Thread t5 = new Thread(() -> cleanedData.addAll(cleanTable("table5")));
+道格·李因此设计了 `CyclicBarrier`：<strong>一组线程各自执行到某个"屏障点"后调用 `await()`，先到的线程阻塞等待，直到最后一个线程也到达屏障，所有线程同时被唤醒，继续往下执行</strong>。屏障打开后自动重置，可以用于下一个阶段——这就是 `Cyclic`（可循环）的含义。
 
-        t1.start(); t2.start(); t3.start(); t4.start(); t5.start();
-
-        t1.join(); t2.join(); t3.join(); t4.join(); t5.join(); // 等所有人完成
-
-        writeToTarget(cleanedData); // 汇总写入
-    }
-}
-```
-
-这种 `join()` 方案能工作，但有三个痛点：
-
-1. **主线程和子线程的关系是单向等待**：主线程等子线程，但子线程之间不能互相等待。如果清洗过程中各子线程需要互相校验数据（如 T1 清完后需要等 T2 也清完才能做关联校验），`join()` 无法做到。
-2. **每个线程都要单独 join**：线程多了之后代码臃肿。
-3. **不可复用**：如果要分批次清洗（先清 A 类表 → 再清 B 类表），需要重新创建线程，无法重用已创建的线程。
-
-### 📌 1.2 用 CyclicBarrier 解决
-
-CyclicBarrier（可循环屏障）是 JUC 提供的一个同步辅助类。它的核心功能是：<span style="color:red">让一组线程到达同一个"屏障点"后互相等待，直到所有线程都到达，屏障才打开，所有线程同时继续执行</span>。
-
-用一张图直观理解这个概念：
-
-```mermaid
-flowchart TD
-    classDef thread fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef barrier fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef after fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-
-    subgraph PHASE1["每个线程独立执行阶段一"]
-        T1_START[T1:清洗table1] --> T1_WAIT[T1到达屏障]
-        T2_START[T2:清洗table2] --> T2_WAIT[T2到达屏障]
-        T3_START[T3:清洗table3] --> T3_WAIT[T3到达屏障]
-        T4_START[T4:清洗table4] --> T4_WAIT[T4到达屏障]
-        T5_START[T5:清洗table5] --> T5_WAIT[T5到达屏障]
-    end
-
-    T1_WAIT --> BARRIER["🔒 屏障点\n所有5个线程到齐后\n屏障打开"]
-    T2_WAIT --> BARRIER
-    T3_WAIT --> BARRIER
-    T4_WAIT --> BARRIER
-    T5_WAIT --> BARRIER
-
-    BARRIER --> T1_GO[T1继续:交叉校验]
-    BARRIER --> T2_GO[T2继续:交叉校验]
-    BARRIER --> T3_GO[T3继续:交叉校验]
-    BARRIER --> T4_GO[T4继续:交叉校验]
-    BARRIER --> T5_GO[T5继续:交叉校验]
-
-    class T1_START,T2_START,T3_START,T4_START,T5_START thread;
-    class T1_WAIT,T2_WAIT,T3_WAIT,T4_WAIT,T5_WAIT thread;
-    class BARRIER barrier;
-    class T1_GO,T2_GO,T3_GO,T4_GO,T5_GO after;
-```
-
-将上述场景用 CyclicBarrier 实现：
-
-```java
-public class DataMigration {
-    private static final int THREAD_COUNT = 5;
-
-    public static void main(String[] args) {
-        List<String> cleanedData = new CopyOnWriteArrayList<>();
-
-        // 创建一个屏障，等 5 个线程到齐后执行汇总逻辑
-        CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT, () -> {
-            // 这个 Runnable 由最后一个到达屏障的线程执行
-            System.out.println("所有表清洗完毕，开始汇总，数据量: " + cleanedData.size());
-            writeToTarget(new ArrayList<>(cleanedData));
-        });
-
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            final int tableNum = i;
-            new Thread(() -> {
-                try {
-                    List<String> result = cleanTable("table" + tableNum);
-                    cleanedData.addAll(result);
-                    System.out.println("table" + tableNum + " 清洗完成，到达屏障");
-
-                    barrier.await(); // 等待其他 4 个线程
-
-                    // 所有线程都 await 后，从这里一起继续执行
-                    System.out.println("table" + tableNum + " 继续执行后续逻辑");
-                } catch (InterruptedException | BrokenBarrierException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
-        }
-    }
-}
-```
-
-输出示例：
-
-```
-table1 清洗完成，到达屏障
-table3 清洗完成，到达屏障
-table5 清洗完成，到达屏障
-table2 清洗完成，到达屏障
-table4 清洗完成，到达屏障
-所有表清洗完毕，开始汇总，数据量: 5000
-table4 继续执行后续逻辑
-table1 继续执行后续逻辑
-...
-```
-
-关键点：5 个线程各洗各的，先洗完的调用 `barrier.await()` 会 **阻塞等待**，直到第 5 个线程也调用 `await()`，屏障打开，最后一个到达的线程执行汇总回调，然后 <span style="color:red">所有 5 个线程同时被唤醒，一起继续执行</span>。
+与 `CountDownLatch` 的核心设计区别：
+- `CountDownLatch`：外部协调者等待 N 个工人完成任务（一次性，一个等 N 个）
+- `CyclicBarrier`：N 个工人彼此等到齐后一起行动（可循环，N 个彼此等）
 
 ## 🔄 二、数据结构展开：CyclicBarrier 的六大核心字段
 

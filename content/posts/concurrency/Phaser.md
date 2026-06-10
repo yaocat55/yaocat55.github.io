@@ -1,7 +1,7 @@
 ---
 title: "Phaser 可重用动态线程同步屏障"
 date: 2022-09-07T11:51:00+00:00
-tags: ["Java并发"]
+tags: ["并发工具", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,63 +28,17 @@ cover:
 
 # Phaser 可重用动态线程同步屏障：双栈编排机制、64 位状态字与多阶段调度全解析
 
-## 🤔 一、问题切入：多阶段并行计算的同步困境
+## 🤔 一、道格·李为什么需要比 CyclicBarrier 更灵活的屏障
 
-### 🌐 1.1 一个 CountDownLatch 和 CyclicBarrier 都无法优雅解决的场景
+`CountDownLatch` 和 `CyclicBarrier` 分别覆盖了两种同步场景：前者是"一个线程等 N 个线程完成"，后者是"N 个线程彼此等到齐后一起走"。但道格·李在后续实践中发现了一个覆盖盲区：<strong>多阶段计算中，每阶段的参与者数量可能并不相同</strong>。
 
-假设你要实现一个图片批量处理管线，分为 3 个阶段：加载 → 滤镜 → 保存。每个阶段由 3 个工作线程并行处理， **所有线程必须完成当前阶段后才能进入下一阶段** ：
+举个例子：分片计算一个大型数据集，第一阶段 8 个线程并行处理各自的分片；第二阶段某些分片的数据已经为空，对应的线程应该退出，剩下 5 个线程继续；第三阶段可能又加入 2 个新线程处理汇总结果。
 
-```java
-public class ImagePipeline {
-    static final int THREADS = 3;
+`CountDownLatch` 做不到——它是一次性的，三个阶段需要三个实例。
 
-    public static void main(String[] args) {
-        // 阶段1: 加载
-        for (int i = 0; i < THREADS; i++) {
-            final int tid = i;
-            new Thread(() -> loadImage(tid)).start();
-        }
-        // 如何等 3 个线程都完成加载后再进入阶段2？
+`CyclicBarrier` 也做不到——它的 `parties` 数量在构造时固定，运行期间不能增删参与者。如果有线程中途退出，`CyclicBarrier` 会永远等不到第 N 个线程而永久阻塞（或者触发 BrokenBarrierException）。
 
-        // 阶段2: 滤镜
-        // 阶段3: 保存
-    }
-}
-```
-
-**先看 `CountDownLatch`（一次性门闩，详见 CountDownLatch 文章）** ：每个阶段需要一个新 `CountDownLatch`，三个阶段就要创建 3 个，且线程数固定为 3，无法中途增减：
-
-```java
-CountDownLatch phase1 = new CountDownLatch(3);
-CountDownLatch phase2 = new CountDownLatch(3);
-CountDownLatch phase3 = new CountDownLatch(3);
-// 每阶段结束都要 new 一个新的 Latch，繁琐且无法动态增删线程
-```
-
-**再看 `CyclicBarrier`（可循环屏障，详见 CyclicBarrier 文章）** ：可以复用，但 `parties` 数量在构造时固定， **运行期间不能动态增加或减少参与者** 。如果阶段 2 有一位线程因为数据为空需要提前退出，`CyclicBarrier` 就会永久阻塞——因为永远等不到第 3 个线程到达。
-
-**Phaser 的解决方案**：一个 `Phaser` 实例同时满足"可复用"和"动态参与者数"两个需求：
-
-```java
-Phaser phaser = new Phaser(3);  // 初始 3 个参与者
-
-for (int i = 0; i < 3; i++) {
-    new Thread(() -> {
-        loadImage();                          // 阶段1
-        phaser.arriveAndAwaitAdvance();       // 等所有人完成阶段1
-
-        applyFilter();                        // 阶段2
-        phaser.arriveAndAwaitAdvance();       // 等所有人完成阶段2
-
-        saveResult();                         // 阶段3
-        phaser.arriveAndAwaitAdvance();       // 等所有人完成阶段3
-    }).start();
-}
-```
-
-如果某线程在阶段 2 需要退出，直接调用 `arriveAndDeregister()` 即可—— `Phaser` 会自动将参与者总数减 1，其余线程不会死等。
-
-<span style="color:red">这就是 Phaser 的核心价值：可循环使用 + 动态参与者管理，是 CountDownLatch 和 CyclicBarrier 的超集。</span>
+道格·李因此在 Java 7 引入了 `Phaser`：一个<strong>支持动态参与者数量 + 多阶段循环使用的同步屏障</strong>。线程可以在运行时通过 `register()` 加入、通过 `arriveAndDeregister()` 退出，`Phaser` 自动调整每轮的等待计数。内部用一个 64 位的 `state` 字段打包了阶段号、已到达计数、未到达计数等所有状态信息，通过 CAS 无锁操作更新——这是 JUC 中最复杂的一个状态字设计。
 
 ## 🎚️ 二、Phaser 核心概念（术语定义）
 

@@ -1,7 +1,7 @@
 ---
 title: "学会够用就行"
 date: 2022-10-08T09:43:26+00:00
-tags: ["基础技术"]
+tags: ["工程实践", "原理解析", "故障排查"]
 categories: ["职业规划类"]
 author: "yaomingye"
 showToc: true

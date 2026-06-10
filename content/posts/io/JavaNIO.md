@@ -1,7 +1,7 @@
 ---
 title: "Java NIO"
 date: 2022-09-14T09:05:00+00:00
-tags: ["基础技术"]
+tags: ["网络编程", "原理解析", "Java并发"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

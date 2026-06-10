@@ -1,7 +1,7 @@
 ---
 title: "分布式事务本质——CAP、BASE 与四大方案"
 date: 2022-12-27T08:00:00+00:00
-tags: ["分布式架构"]
+tags: ["分布式事务", "原理解析", "工程实践"]
 categories: ["分布式事务中间件"]
 author: "yaomingye"
 showToc: true

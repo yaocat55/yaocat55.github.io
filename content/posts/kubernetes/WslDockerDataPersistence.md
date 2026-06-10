@@ -1,7 +1,7 @@
 ---
 title: "WSL2 Docker 数据持久化"
 date: 2022-10-10T03:19:10+00:00
-tags: ["运维与可观测"]
+tags: ["容器技术", "故障排查", "工程实践"]
 categories: ["容器技术"]
 author: "yaomingye"
 showToc: true

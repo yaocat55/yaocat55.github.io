@@ -1,7 +1,7 @@
 ---
 title: "Java IO API 基础入门"
 date: 2022-09-07T14:21:50+00:00
-tags: ["基础技术"]
+tags: ["网络编程", "入门指南", "Java并发"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

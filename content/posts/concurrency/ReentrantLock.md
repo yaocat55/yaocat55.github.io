@@ -1,7 +1,7 @@
 ---
 title: "ReentrantLock 源码解析"
 date: 2022-08-24T11:30:03+00:00
-tags: ["Java并发"]
+tags: ["锁与AQS", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,69 +28,32 @@ cover:
 
 # ReentrantLock 源码解析：AQS 同步队列、可重入机制与公平锁实现
 
-## 🚀 从一个具体问题开始
+## 🚀 道格·李为什么需要一把新锁
 
-先看一个多线程计数的代码。下面这段代码启动 10 个线程，每个线程对 `count` 执行 10000 次自增，预期结果是 100000：
+在 Java 1.0 时代，多线程互斥只有一个选择——`synchronized`。它用起来简单：在方法签名上加个关键字，JVM 自动处理加锁和解锁。但随着并发编程场景的复杂化，`synchronized` 的局限越来越明显：
 
-```java
-public class CounterTest {
-    private static int count = 0;
+1. <strong>无法尝试获取锁</strong>：线程要么拿到锁，要么无限期阻塞。没有"试一下，拿不到就先干别的"这个选项。这在需要获取多个锁（避免死锁）的场景里是致命的——一旦第一个锁拿到但第二个锁拿不到，已持有的锁无法自动释放
+2. <strong>无法中断等待</strong>：如果一个线程在 `synchronized` 上阻塞了，外部无法通过 `interrupt()` 让它停止等待。这在需要超时取消的场合（比如用户点了取消按钮）完全没办法
+3. <strong>无法实现公平锁</strong>：`synchronized` 的锁分配由 JVM 内部机制决定，不保证先来后到。高并发下可能出现线程饥饿——某个线程永远抢不到锁
+4. <strong>一个对象只有一个条件队列</strong>：`synchronized` 配合 `wait/notify` 使用时，所有线程在同一个 wait set 上等待，无法区分"因为缓冲区满了而等待的生产者"和"因为缓冲区空了而等待的消费者"
 
-    public static void main(String[] args) throws InterruptedException {
-        Thread[] threads = new Thread[10];
-        for (int i = 0; i < 10; i++) {
-            threads[i] = new Thread(() -> {
-                for (int j = 0; j < 10000; j++) {
-                    count++;  // 非原子操作：读→改→写，三步可被中断
-                }
-            });
-            threads[i].start();
-        }
-        for (Thread t : threads) t.join();
-        System.out.println("期望 100000，实际 " + count);
-    }
-}
-```
+道格·李在设计 JSR 166（`java.util.concurrent` 包的基础）时意识到：<strong>要构建一个可靠的并发工具包，必须有一把比 `synchronized` 更灵活的锁</strong>。这把锁需要支持尝试获取、超时获取、可中断获取、公平调度——这些 `synchronized` 做不到的事，是构建 Semaphore、CountDownLatch、BlockingQueue 这些高级并发组件的基础。
 
-多次运行，输出通常在 40000 ~ 90000 之间浮动，永远不到 100000。原因：`count++` 不是原子操作——它包含"读取当前值 → 加 1 → 写回内存"三个步骤，多个线程交替执行时会互相覆盖。
-
-用 `ReentrantLock` 修复：
+这就是 `ReentrantLock` 的诞生背景。它不是简单地把 `synchronized` 重写一遍，而是<strong>把锁的控制权从 JVM 内部暴露给开发者</strong>——开发者可以决定：要不要公平、等多久算超时、拿到锁之后要不要释放。
 
 ```java
-import java.util.concurrent.locks.ReentrantLock;
+// synchronized 做不到的三件事：
+// ① tryLock：试一下，拿不到就做别的
+if (lock.tryLock()) { try { ... } finally { lock.unlock(); } }
 
-public class CounterTest {
-    private static int count = 0;
-    private static final ReentrantLock lock = new ReentrantLock();
+// ② tryLock(timeout)：等一段时间，超时就不等了
+if (lock.tryLock(2, TimeUnit.SECONDS)) { try { ... } finally { lock.unlock(); } }
 
-    public static void main(String[] args) throws InterruptedException {
-        Thread[] threads = new Thread[10];
-        for (int i = 0; i < 10; i++) {
-            threads[i] = new Thread(() -> {
-                for (int j = 0; j < 10000; j++) {
-                    lock.lock();
-                    try {
-                        count++;
-                    } finally {
-                        lock.unlock();
-                    }
-                }
-            });
-            threads[i].start();
-        }
-        for (Thread t : threads) t.join();
-        System.out.println("期望 100000，实际 " + count);  // 稳定输出 100000
-    }
-}
+// ③ lockInterruptibly：别人让你停你就停
+lock.lockInterruptibly();  // 被 interrupt 时抛 InterruptedException
 ```
 
-每次运行都稳定输出 100000。这个改动引入了三个关键要素：
-
-1. `lock.lock()` — 获取锁，如果锁被其他线程持有则阻塞等待
-2. `try { ... } finally { lock.unlock() }` — 确保锁一定被释放
-3. 整个 `count++` 被包裹在 lock/unlock 之间，形成临界区（Critical Section，一次只允许一个线程执行的代码块）
-
-接下来逐层深入 `ReentrantLock` 的内部实现。
+接下来逐层深入 `ReentrantLock` 的内部实现——它如何在 AQS 框架上构建这些能力。
 
 ## 🏗️ 核心数据结构
 

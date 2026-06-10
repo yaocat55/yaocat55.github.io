@@ -1,7 +1,7 @@
 ---
 title: "CAP定理与一致性模型——从Nacos AP/CP双模理解取舍"
 date: 2023-01-02T11:30:03+00:00
-tags: ["分布式架构"]
+tags: ["分布式理论", "原理解析", "工程实践"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

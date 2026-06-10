@@ -1,7 +1,7 @@
 ---
 title: "流控算法三件套：滑动窗口、漏桶与令牌桶"
 date: 2023-01-20T11:30:03+00:00
-tags: ["分布式架构", "原理解析"]
+tags: ["服务治理", "原理解析", "分布式理论"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

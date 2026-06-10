@@ -1,7 +1,7 @@
 ---
 title: "synchronized 锁升级机制：从对象头到重量级锁的完整路径"
 date: 2022-08-20T07:53:12+00:00
-tags: ["Java并发"]
+tags: ["锁与AQS", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -27,23 +27,21 @@ cover:
 ---
 # synchronized 锁升级机制：从对象头到重量级锁的完整路径
 
-## 🔒 一、从一段代码出发：synchronized 到底对对象做了什么
+## 🔒 一、HotSpot 团队为什么要设计锁升级机制
 
-先看一段最简单的 synchronized 代码：
+在 JDK 1.0 时代，`synchronized` 直接对应操作系统的 Mutex（互斥量）。每次加锁都要陷入内核态，哪怕只有一条线程在访问、根本不存在竞争。这就像你住的小区只有一个停车位，每次出门都要跑去物业办公室办手续——哪怕车位从来没人跟你抢。
 
-```java
-Object lock = new Object();
+2004 年，随着 JDK 5 和 JSR 133 的发布，Java 并发性能成了焦点。道格·李的 JUC 提供了 `ReentrantLock`、`Semaphore` 等无锁/CAS 工具，它们的性能远超 `synchronized`。一时间，社区舆论变成了"别用 `synchronized`，它是重量级锁、太慢"。
 
-synchronized (lock) {
-    // 临界区
-}
-```
+**但 `synchronized` 有一个 JUC 工具永远比不了的优势：它是语言内置的——不需要显式 `lock()` / `unlock()`，不用怕忘了释放锁导致死锁。** 如果因为性能差就被开发者抛弃，将是 Java 语言的重大损失。
 
-这段代码在执行时，JVM 会修改 `lock` 对象的 **对象头（Object Header）** 。不是修改引用、不是修改字段——是直接修改对象头中的 **Mark Word** 。
+HotSpot JVM 团队（主要贡献者包括 David Dice 等人）在 JDK 6 中给出了答案：**锁升级（Lock Escalation）机制**。核心思路是——根据"大多数锁没有竞争"这个经验事实，让 `synchronized` 从最轻的模式开始：
 
-Mark Word 是一块 64 位（或 32 位，取决于 JVM）的内存区域。它在不同锁状态下会存储完全不同含义的数据。synchronized 关键字的所有锁升级机制，本质上就是对 Mark Word 中 **3 个比特位** （biased_lock + lock 共 3 位）的读取和修改。
+- **偏向锁**（Biased Locking）：只有一条线程用这个锁时，Mark Word 里记个线程 ID 就行，不需要 CAS，几乎零开销。
+- **轻量级锁**（Lightweight Locking）：两个线程交替使用（无实际竞争）时，在栈上分配 Lock Record，用 CAS 交换 Mark Word。
+- **重量级锁**（Heavyweight Locking）：真有竞争时，才膨胀为 OS Mutex，线程阻塞等待。
 
-下面先从对象头的完整结构开始，再逐一展开每一级锁。
+这个设计让 `synchronized` 在大多数实际场景中的性能追平甚至超过了 `ReentrantLock`。锁升级的判断依据只有 Mark Word 中的 3 个比特位。
 
 ## 📦 2️⃣ 二、对象头（Object Header）：JVM 如何表示"锁"
 

@@ -1,7 +1,7 @@
 ---
 title: "RocketMQ 消费者模式与过滤器"
 date: 2022-11-11T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["RocketMQ", "实践教程", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

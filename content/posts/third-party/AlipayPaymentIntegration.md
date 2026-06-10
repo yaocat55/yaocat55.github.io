@@ -1,7 +1,7 @@
 ---
 title: "支付宝支付接入：沙箱调试 + EasySDK + QR 码支付实战"
 date: 2023-01-14T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

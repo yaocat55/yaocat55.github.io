@@ -1,7 +1,7 @@
 ---
 title: "SpringBoot Redis 全操作指南"
 date: 2022-10-20T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["Redis", "实践教程", "SpringBoot"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "Spring Boot 日志"
 date: 2022-09-30T02:42:58+00:00
-tags: ["Spring生态"]
+tags: ["SpringBoot", "实践教程", "可观测性"]
 categories: ["SpringBoot类"]
 author: "yaomingye"
 showToc: true

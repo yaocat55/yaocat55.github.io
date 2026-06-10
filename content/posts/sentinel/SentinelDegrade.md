@@ -1,7 +1,7 @@
 ---
 title: "Sentinel 熔断降级规则"
 date: 2022-12-08T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["服务治理", "实践教程", "SpringCloud"]
 categories: ["限流熔断中间件"]
 author: "yaomingye"
 showToc: true

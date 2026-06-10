@@ -1,7 +1,7 @@
 ---
 title: "从 Docker Compose 到 Kind"
 date: 2022-10-04T02:28:51+00:00
-tags: ["运维与可观测"]
+tags: ["容器技术", "实践教程", "Kubernetes"]
 categories: ["容器技术"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "Netty"
 date: 2022-09-15T09:15:00+00:00
-tags: ["基础技术"]
+tags: ["网络编程", "实践教程", "Java并发"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "谁说了算——Raft选举、心跳与故障检测在Nacos/Dubbo中的应用"
 date: 2023-01-03T11:30:03+00:00
-tags: ["分布式架构"]
+tags: ["分布式理论", "实践教程", "服务治理"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

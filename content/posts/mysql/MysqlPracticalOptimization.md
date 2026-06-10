@@ -1,7 +1,7 @@
 ---
 title: "MySQL 实战优化：从 EXPLAIN 到 NULL 陷阱"
 date: 2022-12-31T11:30:03+00:00
-tags: ["数据存储"]
+tags: ["MySQL", "实践教程", "故障排查"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

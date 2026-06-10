@@ -1,7 +1,7 @@
 ---
 title: "CopyOnWriteArrayList 源码深度解析"
 date: 2022-08-27T08:29:29+00:00
-tags: ["Java并发"]
+tags: ["并发集合", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,80 +28,15 @@ cover:
 
 # CopyOnWriteArrayList 源码深度解析：从线程安全列表到写时复制的实现原理
 
-## 一、问题切入：一个会抛出 ConcurrentModificationException 的场景
+## 一、道格·李为什么需要"写时复制"的列表
 
-### ❓ 1.1 普通 ArrayList 在并发下的问题
+Java 1.0 的 `Vector` 用 `synchronized` 保证线程安全——所有方法加锁，读写都互斥。`Collections.synchronizedList` 同理。这在读多写少的场景中有一个严重的浪费：<strong>多个线程同时读取不应该互相阻塞，因为读取不修改数据</strong>。
 
-写一段看似正常的代码：遍历一个 `ArrayList` 的同时往里面添加元素。
+但去掉锁也不行——`ArrayList` 的迭代器有 fail-fast 机制，遍历时如果有其他线程写入，直接抛 `ConcurrentModificationException`。而且多线程同时 `add()` 还会导致数据丢失（elementData 数组和 size 计数器都没有同步保护）。
 
-```java
-public class ArrayListConcurrencyDemo {
-    public static void main(String[] args) {
-        List<String> list = new ArrayList<>();
-        list.add("A");
-        list.add("B");
-        list.add("C");
+道格·李在 JSR 166 中为这个场景设计了一个完全不同的策略：<strong>写时复制（Copy-On-Write）</strong>。每次写入（add、set、remove）不直接修改原数组，而是复制一份新数组，在新数组上操作，最后用 volatile 写把引用指向新数组。<strong>读操作完全无锁</strong>——直接读当前的数组引用，不需要任何同步。
 
-        // 线程1：遍历
-        new Thread(() -> {
-            for (String s : list) {
-                System.out.println(s);
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-
-        // 主线程：写入
-        new Thread(() -> {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            list.add("D");
-        }).start();
-    }
-}
-```
-
-这段代码运行时大概率抛出 `ConcurrentModificationException`。这是 `ArrayList` 的 **fail-fast** 机制（快速失败）：迭代器在遍历时检测到集合结构被修改，立即抛出异常。
-
-另一种更隐蔽的场景：多个线程同时对同一个 `ArrayList` 调用 `add()` 方法。由于 `ArrayList` 内部的 `elementData` 数组和 `size` 计数器都没有做同步保护，可能出现：
-
-- 两个线程同时 add，一个元素丢失（线程 A 刚把元素放进数组 slot，还没更新 size，线程 B 又放进了同一个 slot）
-- `size` 变量因竞态条件出现错误值
-- 数组扩容时 IndexOutOfBoundsException
-
-<span style="color:red">ArrayList 不是线程安全的，且没有自行处理并发保护</span>——直接用于多线程环境会导致数据错乱或异常。
-
-### 📌 1.2 传统方案：Vector 或 Collections.synchronizedList
-
-常规解决方式有两种：
-
-```java
-// 方案一：Vector
-List<String> vector = new Vector<>();
-vector.add("A");
-
-// 方案二：同步包装器
-List<String> syncList = Collections.synchronizedList(new ArrayList<>());
-syncList.add("A");
-```
-
-但这两个方案有一个共同的缺陷：**复合操作仍不安全**。一个线程调用 `size()` 获取大小 3，另一个线程紧跟调用 `remove(0)`，此时第一个线程再用 size=3 去 get 最后一个元素就会越界。复合操作必须额外加锁：
-
-```java
-synchronized (syncList) {
-    for (int i = 0; i < syncList.size(); i++) {
-        System.out.println(syncList.get(i));
-    }
-}
-```
-
-这种额外的 `synchronized` 在并发量高时带来严重的锁竞争开销。于是 `CopyOnWriteArrayList` 提出了一种完全不同的并发安全策略——**写时复制**。
+这个设计的取舍非常明确：<strong>写操作很贵（要复制整个数组），但读操作极其便宜（无锁 + volatile 读）</strong>。因此 `CopyOnWriteArrayList` 仅适用于读多写极少（比如读:写 > 100:1）的场景——配置信息、监听器列表、白名单等写入很少但频繁遍历的数据结构。
 
 ## 📐 二、设计理念：Copy-On-Write
 
@@ -118,14 +53,19 @@ CopyOnWriteArrayList 的并发安全由"一锁一数组"两个组件配合完成
 ```mermaid
 flowchart TD
     COW[CopyOnWriteArrayList]
-    COW --> ARRAY[array: volatile Object[]]
-    COW --> LOCK[lock: ReentrantLock]
-    ARRAY --> A0[元素0]
-    ARRAY --> A1[元素1]
-    ARRAY --> A2[元素2]
-    ARRAY --> AN[元素N]
-    LOCK -->|写操作加锁| W[写线程]
-    ARRAY -->|volatile读无锁| R[读线程]
+    COW --> ARRAY["array: volatile Object[]"]
+    COW --> LOCK["lock: ReentrantLock"]
+
+    ARRAY --> A0["元素0"]
+    ARRAY --> A1["元素1"]
+    ARRAY --> A2["元素2"]
+    ARRAY --> AN["元素N"]
+
+    LOCK --> W["写线程"]
+    ARRAY --> R["读线程"]
+
+    W --> |写操作加锁| LOCK
+    R --> |volatile读无锁| ARRAY
 ```
 
 | 组件 | 类型 | 作用 |

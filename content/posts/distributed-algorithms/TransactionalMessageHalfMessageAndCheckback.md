@@ -1,7 +1,7 @@
 ---
 title: "事务消息：半消息与回查"
 date: 2023-01-22T11:30:03+00:00
-tags: ["分布式架构", "原理解析"]
+tags: ["分布式事务", "原理解析", "消息队列"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

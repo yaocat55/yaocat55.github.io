@@ -1,7 +1,7 @@
 ---
 title: "Spring Security + JWT 企业级鉴权实战"
 date: 2022-09-18T07:00:19+00:00
-tags: ["Spring生态"]
+tags: ["安全认证", "实践教程", "SpringBoot"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

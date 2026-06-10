@@ -1,7 +1,7 @@
 ---
 title: "Spring Cloud Gateway 核心概念与快速上手"
 date: 2022-12-02T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["服务治理", "入门指南", "SpringCloud"]
 categories: ["微服务网关"]
 author: "yaomingye"
 showToc: true

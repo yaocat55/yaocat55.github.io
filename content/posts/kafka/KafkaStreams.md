@@ -1,7 +1,7 @@
 ---
 title: "Kafka Streams 与高级特性"
 date: 2022-11-17T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["Kafka", "实践教程", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

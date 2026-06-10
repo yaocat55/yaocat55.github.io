@@ -1,7 +1,7 @@
 ---
 title: "Kafka 核心架构与日志存储模型"
 date: 2022-11-13T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["Kafka", "入门指南", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

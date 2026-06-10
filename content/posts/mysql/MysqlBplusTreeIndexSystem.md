@@ -1,7 +1,7 @@
 ---
 title: "MySQL B+树索引体系"
 date: 2022-12-27T11:30:03+00:00
-tags: ["数据存储"]
+tags: ["MySQL", "原理解析", "源码分析"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

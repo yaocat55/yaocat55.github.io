@@ -1,7 +1,7 @@
 ---
 title: "ConcurrentLinkedQueue"
 date: 2022-08-28T11:30:03+00:00
-tags: ["Java并发"]
+tags: ["并发集合", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,83 +28,18 @@ cover:
 
 # ConcurrentLinkedQueue：无锁并发队列、Michael-Scott 算法与 HOPS 延迟更新机制全解析
 
-## 🚀 从一个具体问题开始
+## 🚀 道格·李为什么需要一个无锁队列
 
-假设你需要一个多生产者-多消费者的消息管道：多个线程向队列投递任务，多个工作线程从队列中取任务执行。用 `LinkedList` 配合 `synchronized` 行不行？
+生产环境中大量使用多生产者-多消费者的队列模型：多个线程投递任务，多个线程取出执行。传统的做法是用 `LinkedList` 加 `synchronized`——任意时刻只有一个线程能操作队列，其他线程排队等锁。在高并发下，锁争用（Lock Contention）迅速成为吞吐量瓶颈：CPU 时间大量消耗在线程的阻塞-唤醒切换上，而非实际的消息处理。
 
-```java
-public class SynchronizedQueue {
-    private final LinkedList<String> list = new LinkedList<>();
+道格·李在设计 JSR 166 时为这个场景引入了一个完全不同的方案：<strong>无锁并发队列</strong>。`ConcurrentLinkedQueue` 使用 CAS（Compare-And-Swap，比较并交换）原子操作替代锁，基于 Michael-Scott 算法（1996 年由 Maged Michael 和 Michael Scott 提出的无锁队列算法）实现多线程并发入队和出队。
 
-    public synchronized void put(String task) { list.addLast(task); }
-    public synchronized String take() { return list.isEmpty() ? null : list.removeFirst(); }
+核心设计思想：
+- <strong>入队和出队操作各自独立</strong>——生产者在队尾 CAS 插入，消费者在队头 CAS 移除，彼此不阻塞
+- <strong>没有锁，就不会有线程被操作系统挂起</strong>——CAS 失败意味着有其他线程抢先了一步，重试即可，没有上下文切换开销
+- <strong>HOPS 延迟更新策略</strong>——`tail` 指针不必每次都更新到最后一个节点，允许滞后 1 ~ 2 个位置，用额外的 CAS 判断换来更少的 volatile 写操作
 
-    public static void main(String[] args) {
-        SynchronizedQueue queue = new SynchronizedQueue();
-        // 10 个生产者并发 offer
-        for (int i = 0; i < 10; i++) {
-            final int id = i;
-            new Thread(() -> {
-                for (int j = 0; j < 10000; j++) queue.put("task-" + id + "-" + j);
-            }).start();
-        }
-        // 10 个消费者并发 poll
-        for (int i = 0; i < 10; i++) {
-            new Thread(() -> {
-                String task;
-                while (true) {
-                    task = queue.take();
-                    if (task != null) process(task);
-                }
-            }).start();
-        }
-    }
-}
-```
-
-这段代码可以工作，但所有生产者和消费者竞争同一把锁——任意时刻只有一个线程能操作队列。**在高并发场景下，锁的争用会迅速成为吞吐量瓶颈**。
-
-`ConcurrentLinkedQueue`（基于链接节点的无界线程安全队列）正是为解决这个问题而设计：它完全不用锁，所有操作通过 `volatile` + `CAS`（Compare-And-Swap，比较并交换，一种无锁原子操作）实现，允许多个线程并发入队和出队：
-
-```java
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-public class ConcurrentQueueDemo {
-    public static void main(String[] args) {
-        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
-
-        // 生产者
-        for (int i = 0; i < 10; i++) {
-            final int id = i;
-            new Thread(() -> {
-                for (int j = 0; j < 10000; j++) {
-                    queue.offer("task-" + id + "-" + j);  // 无锁入队
-                }
-            }).start();
-        }
-
-        // 消费者
-        for (int i = 0; i < 10; i++) {
-            new Thread(() -> {
-                while (true) {
-                    String task = queue.poll();   // 无锁出队
-                    if (task != null) process(task);
-                }
-            }).start();
-        }
-    }
-
-    static void process(String task) { /* 处理任务 */ }
-}
-```
-
-三个核心特点：
-
-1. **非阻塞**：`poll()` 在队列为空时直接返回 `null`，不等待
-2. **无界**：队列容量理论上是无限的（受内存限制），`offer()` 永不阻塞
-3. **无锁**：全部用 CAS 实现并发控制，没有 `synchronized` 或 `Lock`
-
-接下来从底层数据结构开始，逐步拆解它的无锁并发实现。
+`ConcurrentLinkedQueue` 是 JUC 无锁数据结构的基础模型——理解了它的 CAS 操作模式和 HOPS 策略，再看 `ConcurrentHashMap`、`LinkedTransferQueue` 等无锁结构会轻松很多。
 
 ## 🏗️ 核心数据结构
 

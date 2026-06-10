@@ -1,7 +1,7 @@
 ---
 title: "高并发企业自营电商小程序系统架构设计"
 date: 2022-10-13T09:06:46+00:00
-tags: ["分布式架构"]
+tags: ["DDD与架构", "原理解析", "工程实践"]
 categories: ["业务类"]
 author: "yaomingye"
 showToc: true

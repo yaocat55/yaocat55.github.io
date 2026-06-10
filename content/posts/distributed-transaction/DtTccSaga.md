@@ -1,7 +1,7 @@
 ---
 title: "TCC + Saga——补偿型分布式事务"
 date: 2022-12-29T08:00:00+00:00
-tags: ["分布式架构"]
+tags: ["分布式事务", "实践教程", "SpringCloud"]
 categories: ["分布式事务中间件"]
 author: "yaomingye"
 showToc: true

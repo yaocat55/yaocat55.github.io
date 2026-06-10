@@ -1,7 +1,7 @@
 ---
 title: "Elasticsearch 生产调优与索引设计"
 date: 2022-10-25T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["Elasticsearch", "实践教程", "数据存储"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

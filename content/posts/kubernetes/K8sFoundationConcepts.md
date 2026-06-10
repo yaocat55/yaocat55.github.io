@@ -1,7 +1,7 @@
 ---
 title: "第0步：Docker 是什么，K8s 为什么要存在"
 date: 2023-01-05T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["容器技术", "入门指南", "Kubernetes"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

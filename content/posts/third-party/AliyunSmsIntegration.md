@@ -1,7 +1,7 @@
 ---
 title: "阿里云短信接入：双 Provider + Mock 验证码实战"
 date: 2023-01-13T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

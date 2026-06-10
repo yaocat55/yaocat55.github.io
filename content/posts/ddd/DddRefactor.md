@@ -1,7 +1,7 @@
 ---
 title: "DDD 重构实战——什么时候该用 DDD？什么时候 MVC 就够了？"
 date: 2022-12-23T08:00:00+00:00
-tags: ["分布式架构"]
+tags: ["DDD与架构", "实践教程", "工程实践"]
 categories: ["架构设计"]
 author: "yaomingye"
 showToc: true

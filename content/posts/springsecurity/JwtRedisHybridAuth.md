@@ -1,7 +1,7 @@
 ---
 title: "JWT + Redis 双令牌鉴权实战"
 date: 2022-09-19T08:42:45+00:00
-tags: ["Spring生态"]
+tags: ["安全认证", "实践教程", "SpringBoot"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

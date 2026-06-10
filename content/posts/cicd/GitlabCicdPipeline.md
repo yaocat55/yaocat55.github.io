@@ -1,7 +1,7 @@
 ---
 title: "GitLab CI/CD 流水线实战——编译、扫描、构建镜像、推送仓库"
 date: 2022-12-25T08:00:00+00:00
-tags: ["运维与可观测"]
+tags: ["CI/CD", "实践教程", "容器技术"]
 categories: ["CICD类"]
 author: "yaomingye"
 showToc: true

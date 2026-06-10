@@ -1,7 +1,7 @@
 ---
 title: "流控三板斧——Sentinel滑动窗口、令牌桶与Dubbo负载均衡"
 date: 2023-01-04T11:30:03+00:00
-tags: ["分布式架构"]
+tags: ["服务治理", "原理解析", "分布式理论"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

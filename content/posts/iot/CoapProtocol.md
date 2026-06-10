@@ -1,7 +1,7 @@
 ---
 title: "CoAP 受限应用协议"
 date: 2022-10-05T03:01:01+00:00
-tags: ["基础技术"]
+tags: ["网络编程", "原理解析", "工程实践"]
 categories: ["IoT协议"]
 author: "yaomingye"
 showToc: true

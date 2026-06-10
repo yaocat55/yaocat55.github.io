@@ -1,7 +1,7 @@
 ---
 title: "RabbitMQ 核心概念与 AMQP 协议"
 date: 2022-11-01T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["RabbitMQ", "入门指南", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

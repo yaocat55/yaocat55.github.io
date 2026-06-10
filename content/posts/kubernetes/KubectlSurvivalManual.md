@@ -1,7 +1,7 @@
 ---
 title: "第3步：kubectl 生存手册 —— 开发者每天必敲的命令"
 date: 2023-01-08T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["容器技术", "实践教程", "Kubernetes"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

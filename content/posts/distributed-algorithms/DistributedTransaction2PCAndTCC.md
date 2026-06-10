@@ -1,7 +1,7 @@
 ---
 title: "分布式事务：两阶段提交与 TCC"
 date: 2023-01-21T11:30:03+00:00
-tags: ["分布式架构", "原理解析"]
+tags: ["分布式事务", "原理解析", "分布式理论"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

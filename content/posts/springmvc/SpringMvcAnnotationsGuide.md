@@ -1,7 +1,7 @@
 ---
 title: "Spring MVC 常用注解"
 date: 2022-09-24T11:30:03+00:00
-tags: ["Spring生态"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["SpringBoot类"]
 author: "yaomingye"
 showToc: true

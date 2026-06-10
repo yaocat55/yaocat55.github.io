@@ -1,7 +1,7 @@
 ---
 title: "Semaphore 源码解析"
 date: 2022-08-26T11:30:03+00:00
-tags: ["Java并发"]
+tags: ["并发工具", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,67 +28,15 @@ cover:
 
 # Semaphore 源码解析：AQS 共享模式、许可传播机制与公平策略实现
 
-## 🚀 从一个具体问题开始
+## 🚀 道格·李为什么需要一个信号量
 
-假设你维护一个数据库连接池，最多允许 5 个并发连接。如果没有并发控制，当 20 个请求同时到达时，会出现"连接池耗尽→新建连接→数据库压力过大→超时雪崩"的连锁故障。
+信号量（Semaphore）是操作系统教科书里最古老的并发原语之一，由 Edsger Dijkstra 在 1960 年代提出。但在 Java 1.0 ~ 1.4 时代，JDK 里并没有信号量——开发者只能用 `synchronized` 加一个计数器模拟，代码又长又容易出错。
 
-下面模拟这个场景：10 个线程竞争 3 个"资源槽"，每次处理需要 1 秒。不加控制时，10 个线程同时开工：
+道格·李在设计 JSR 166 时，需要将信号量引入 Java，原因很简单：<strong>`synchronized` 是互斥的（同一时刻只能一个线程进入），而很多并发控制场景需要的是"限制并发数量"而不是"限制到只有 1 个"</strong>。比如数据库连接池最多 10 个并发连接、文件读取最多 3 个线程同时打开、API 限流每秒 100 个请求——这些场景用 `synchronized` 无法表达。
 
-```java
-public class NoSemaphoreDemo {
-    private static final int MAX_CONCURRENT = 3;
+`Semaphore` 的思路是<strong>许可计数</strong>：构造时定义 N 个"许可证"，线程调用 `acquire()` 拿走一个许可（不够就阻塞），用完调用 `release()` 归还。许可与线程没有绑定关系——线程 A 获取的许可可以由线程 B 释放。这个设计很关键：它让 Semaphore 不仅可以用作"限流器"，还可以用作"对象池管理器"或"同步器"。
 
-    public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
-            final int id = i;
-            new Thread(() -> {
-                System.out.println("线程" + id + " 开始访问资源 @" + System.currentTimeMillis() % 100000);
-                try { Thread.sleep(1000); } catch (InterruptedException e) {}
-                System.out.println("线程" + id + " 结束");
-            }).start();
-        }
-    }
-}
-```
-
-输出：10 个线程几乎同时开始——毫无限制，资源被超额使用。
-
-用 `Semaphore`（信号量，控制同时访问资源的线程数量的并发工具）限制并发数：
-
-```java
-import java.util.concurrent.Semaphore;
-
-public class SemaphoreDemo {
-    private static final Semaphore semaphore = new Semaphore(3);  // 最多 3 个并发
-
-    public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
-            final int id = i;
-            new Thread(() -> {
-                try {
-                    semaphore.acquire();  // 获取许可证，不足则阻塞
-                    System.out.println("线程" + id + " 开始访问资源 @" + System.currentTimeMillis() % 100000);
-                    Thread.sleep(1000);
-                    System.out.println("线程" + id + " 结束");
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    semaphore.release();  // 归还许可证
-                }
-            }).start();
-        }
-    }
-}
-```
-
-运行结果：任意时刻最多只有 3 个线程在访问资源，其余线程排队等待。核心机制：
-
-1. `Semaphore(3)` 初始化 3 个许可证（permits）
-2. `acquire()` 获取 1 个许可，如果当前无可用许可则阻塞
-3. `release()` 归还 1 个许可，可能唤醒一个等待线程
-4. 每个线程都可以获取和释放许可——**许可没有持有者概念**，线程 A 获取的许可可以由线程 B 释放
-
-接下来逐层深入 `Semaphore` 的内部实现。
+在 AQS 框架中，`Semaphore` 使用的是<strong>共享模式</strong>（Shared Mode）——多个线程可以同时获取许可，不像 `ReentrantLock` 的独占模式那样一次只唤醒一个线程。
 
 ## 🏗️ 核心数据结构
 

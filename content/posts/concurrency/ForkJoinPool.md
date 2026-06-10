@@ -1,7 +1,7 @@
 ---
 title: "ForkJoinPool 源码深度解析"
 date: 2022-09-02T08:29:29+00:00
-tags: ["Java并发"]
+tags: ["线程池", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,79 +28,18 @@ cover:
 
 # ForkJoinPool 源码深度解析：从分治思想到工作窃取的完整实现
 
-## 🤔 一、问题切入：一段串行累加的代码
+## 🤔 一、道格·李为什么需要一个"能偷工作"的线程池
 
-### ❓ 1.1 一个简单但耗时的问题
+Java 5 的 `ThreadPoolExecutor` 解决了线程复用的问题，但它有一个结构性的局限：<strong>所有线程共享一个任务队列</strong>。当一个线程提交了子任务后阻塞等待子任务结果，而子任务又在同一个队列里等待被执行时，就会发生线程饥饿——等待的线程占着一个槽位但不干活，队列里的子任务没人执行，形成死锁。
 
-对 1 到 1 亿求和，单线程串行计算：
+这个问题在递归分治算法（把大问题拆成小问题递归求解）中尤为致命。分治算法天然适合并行——子问题之间互不依赖，可以同时计算。但如果每个线程都把子任务扔到共享队列然后等结果，队列很快就会堆满等待被执行的任务而所有线程都在等。
 
-```java
-public class SerialSum {
-    public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-        long sum = 0;
-        for (long i = 1; i <= 100_000_000L; i++) {
-            sum += i;
-        }
-        long elapsed = System.currentTimeMillis() - start;
-        System.out.println("结果: " + sum + ", 耗时: " + elapsed + "ms");
-    }
-}
-```
+道格·李在 Java 7 中引入 `ForkJoinPool` 时，核心创新是<strong>工作窃取</strong>（Work-Stealing）：
+- 每个工作线程有自己的<strong>双端队列</strong>（Deque），线程从自己的队列头部取任务
+- 当一个线程 fork 子任务时，子任务被 push 到该线程自己的队列
+- 当线程自己的队列空了，它会从其他线程的队列<strong>尾部窃取</strong>任务来执行
 
-这段代码只用了一个 CPU 核心，其余 7 个核心（假设 8 核机器）处于空闲状态。如果要利用全部核心，需要手动把问题切分成多个子任务分配给不同线程，然后汇总结果。这涉及三个棘手的问题：
-
-1. **任务切分**：把大问题拆成多少个小任务？每个小任务多大合适？
-2. **负载均衡**：如何保证每个线程都有活干，不让快的线程空等慢的线程？
-3. **结果汇总**：如何正确汇总所有子任务的计算结果？
-
-Fork/Join 框架（ForkJoinPool）正是 JDK 7 为解决这三个问题引入的线程池实现。它提供了一套完整的"任务拆分（fork）→ 并行执行 → 结果合并（join）"机制。
-
-### ❓ 1.2 用 ForkJoinPool 解决同一个问题
-
-```java
-public class ForkJoinSum {
-    static class SumTask extends RecursiveTask<Long> {
-        private final long start, end;
-        static final long THRESHOLD = 10_000L;  // 阈值：小于此值直接计算
-
-        SumTask(long start, long end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        @Override
-        protected Long compute() {
-            if (end - start <= THRESHOLD) {
-                long sum = 0;
-                for (long i = start; i <= end; i++) sum += i;
-                return sum;
-            }
-            long mid = (start + end) >>> 1;
-            SumTask left = new SumTask(start, mid);
-            SumTask right = new SumTask(mid + 1, end);
-            left.fork();                          // 左子任务异步执行
-            long rightResult = right.compute();   // 右子任务当前线程执行
-            long leftResult = left.join();        // 等待左子任务结果
-            return leftResult + rightResult;
-        }
-    }
-
-    public static void main(String[] args) {
-        ForkJoinPool pool = new ForkJoinPool();
-        long result = pool.invoke(new SumTask(1, 100_000_000L));
-        System.out.println("结果: " + result);
-    }
-}
-```
-
-这段代码展示了 Fork/Join 框架的核心模式：
-- **RecursiveTask**（有返回值的递归任务）定义 `compute()` 方法，任务小于阈值直接计算，超过阈值拆分成两个子任务
-- **fork()** 将子任务提交到当前工作线程的本地队列
-- **join()** 阻塞等待子任务结果
-- **ForkJoinPool.invoke()** 提交根任务并阻塞等待最终结果
-
-接下来逐步深入这个框架的内部实现。
+这个设计解决了两个问题：① 递归 fork 的子任务不会堵塞共享队列；② 快线程不会空等——它会偷慢线程的活来干。`ForkJoinPool` 也是 Java 8 并行流（`parallelStream()`）的底层引擎。
 
 ## 二、设计思想：分治算法 + 工作窃取
 

@@ -1,7 +1,7 @@
 ---
 title: "JMM 如何借鉴 MESI：Java 内存模型的概念引入"
 date: 2022-08-18T06:26:41+00:00
-tags: ["Java并发"]
+tags: ["内存模型", "原理解析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,26 +28,17 @@ cover:
 
 # JMM 如何借鉴 MESI：Java 内存模型的概念引入
 
-## 🏗️ 一、问题定位：MESI 的覆盖范围与盲区
+## 🏗️ 一、JSR 133 专家组为什么需要定义 JMM
 
-上一篇在 MESI 的末尾留了一个结论：<span style="color:red">MESI 保证了缓存级别的数据一致性，但管不了三件事——Store Buffer 导致的写入延迟、Invalidate Queue 导致的失效延迟、以及编译器和 CPU 的指令重排序。</span>
+上一篇文章讲完了 MESI 协议。它让所有核心看到一致的数据，但有一个前提：只管理 L1 Cache 之间的总线通信。Store Buffer、Invalidate Queue、编译器和 CPU 的指令重排序——这三样东西 MESI 完全不管。
 
-用一张简图回顾 MESI 的覆盖边界：
+CPU 架构师不管是有意为之：关掉 Store Buffer 和 Invalidate Queue 的代价是几十倍的性能损失，没有哪个芯片厂会做这种亏本买卖。但 Java 程序员不能不管——如果写了一个 `stopped = true`，另一个线程永远看不到，这就是线上事故。
 
-```mermaid
-flowchart TD
-    MEM[主内存RAM] --- BUS[总线/互联]
-    BUS --- L1A[Core A L1]
-    BUS --- L1B[Core B L1]
-    SB_A[Store Buffer<br/>Core A私有] -.-> L1A
-    IQ_B[Invalidate Queue<br/>Core B私有] -.-> L1B
-```
+2004 年，JSR 133 专家组（道格·李是核心成员之一）面临的问题很明确：**不同的 CPU 架构有不同的内存模型（x86 是 TSO，ARM/PowerPC 更弱），Java 不能为每种 CPU 写一套并发程序。** Java 的"一次编写，到处运行"在并发领域受到了硬件差异的致命挑战。
 
-MESI 管的是实线部分——L1 Cache 之间通过总线/互联交换数据和失效消息。虚线部分的 Store Buffer 和 Invalidate Queue 是 MESI 的"盲区"：Store Buffer 让写操作在进入缓存之前就有了本地可见性，Invalidate Queue 让失效消息在真正生效之前就已经回了 ACK。
+专家组的选择是：在 Java 语言规范中定义一套**软件层的内存可见性契约**——JMM（Java Memory Model）。JMM 不规定 JVM 怎么实现（不管你是插 `lock` 指令还是 `dmb` 屏障），只管规则：如果你写了 `volatile`，那么 `volatile` 写之前的操作对 `volatile` 读之后的操作可见。
 
-这两个盲区加上编译器和 CPU 的指令重排序，共同造成了多线程编程中的可见性问题。硬件不去修复这些问题，因为修复意味着关闭 Store Buffer 和 Invalidate Queue——这是用几十倍的性能代价换正确性，不划算。
-
-软件层需要在这三个盲区之上定义一套 **开发者可见的契约**：在什么条件下、通过什么关键字、一个线程的写入保证对另一个线程可见。Java 的答案就是 JMM（Java Memory Model）。
+JMM 的核心参考模型就是 MESI。它将 MESI 的硬件概念映射为语言层的抽象：
 
 ## 🧠 二、JMM 的定位：一层"软件级缓存一致性"
 

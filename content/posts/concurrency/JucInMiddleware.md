@@ -1,7 +1,7 @@
 ---
 title: "JUC 在中间件中的应用"
 date: 2022-10-02T10:09:51+00:00
-tags: ["Java并发"]
+tags: ["Java并发", "实践教程", "工程实践"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,13 +28,15 @@ cover:
 
 # JUC 在中间件中的应用：线程池与并发集合实战全景
 
-## 问题切入：学完 JUC 之后呢？
+## 问题切入：道格·李的组件在中间件里是如何落地的
 
-你花了两周把 `ThreadPoolExecutor` 的七个参数背得滚瓜烂熟，知道 `ConcurrentHashMap` 用分段锁替代了 `Hashtable` 的全局锁，也明白 `BlockingQueue` 的生产者-消费者模式。但当你翻开 Tomcat、Netty、Dubbo 这些中间件的源码时，你会发现一个问题：
+道格·李设计的每一个 JUC 组件都有明确的定位：`ThreadPoolExecutor` 管理线程资源、`ConcurrentHashMap` 提供高并发下的安全容器、`BlockingQueue` 协调生产者与消费者。但这些组件本身只是"积木"——积木搭成什么，看用的人。
 
-**这些 JUC 组件到底用在了哪里？怎么用的？**
+Tomcat、Netty、Dubbo、RocketMQ 这些中间件的作者，就是最高水平的积木搭手。他们在道格·李提供的基础上做了大量二次定制：继承 `ThreadPoolExecutor` 改写拒绝策略、用 `ConcurrentHashMap` 存储单例对象、用 `BlockingQueue` 实现异步日志缓冲。
 
-本篇从源码层面逐一回答这个问题。覆盖的中间件和对应的 JUC 组件如下：
+翻开这些中间件的源码，你会发现：标准 JUC 组件很少被直接使用，几乎都被继承或组合包装。这不是因为标准组件不够好，而是因为每个中间件的场景都有自己的约束——Tomcat 的线程池需要在队列满时反过来创建线程（而不是拒绝），Netty 用 `NioEventLoopGroup` 把线程池拆成了事件循环。
+
+本篇从源码层面逐一拆解**道格·李的 JUC 积木如何在中间件中被定制、组合和落地**。覆盖的中间件和对应的 JUC 组件如下：
 
 ```mermaid
 flowchart LR

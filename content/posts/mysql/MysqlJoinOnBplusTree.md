@@ -1,7 +1,7 @@
 ---
 title: "MySQL Join 原理：B+树上的表连接"
 date: 2022-12-28T11:30:03+00:00
-tags: ["数据存储"]
+tags: ["MySQL", "原理解析", "源码分析"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

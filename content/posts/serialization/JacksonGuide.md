@@ -1,7 +1,7 @@
 ---
 title: "序列化本质与 Jackson 全操作指南"
 date: 2022-11-25T08:00:00+00:00
-tags: ["基础技术"]
+tags: ["序列化", "实践教程", "SpringBoot"]
 categories: ["序列化"]
 author: "yaomingye"
 showToc: true

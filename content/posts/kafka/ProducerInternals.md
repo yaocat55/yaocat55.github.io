@@ -1,7 +1,7 @@
 ---
 title: "Kafka Producer 深入：分区、ACK 与幂等"
 date: 2022-11-15T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["Kafka", "源码分析", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

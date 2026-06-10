@@ -1,7 +1,7 @@
 ---
 title: "OpenFeign 核心概念与快速上手"
 date: 2022-12-10T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["RPC框架", "入门指南", "SpringCloud"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

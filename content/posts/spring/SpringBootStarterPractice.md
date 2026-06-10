@@ -1,7 +1,7 @@
 ---
 title: "Spring Boot Starter 封装实践报告"
 date: 2022-10-14T13:24:34+00:00
-tags: ["Spring生态"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["SpringBoot类"]
 author: "yaomingye"
 showToc: true

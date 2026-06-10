@@ -1,7 +1,7 @@
 ---
 title: "OpenFeign 生产实战——Nacos + Sentinel + 性能调优"
 date: 2022-12-12T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["RPC框架", "实践教程", "SpringCloud"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "MongoDB 聚合管道深入"
 date: 2022-10-28T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["MongoDB", "实践教程", "数据存储"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "SkyWalking 中间件集成与链路分析实战"
 date: 2022-12-20T08:00:00+00:00
-tags: ["运维与可观测"]
+tags: ["可观测性", "实践教程", "SpringCloud"]
 categories: ["日志分析工具"]
 author: "yaomingye"
 showToc: true

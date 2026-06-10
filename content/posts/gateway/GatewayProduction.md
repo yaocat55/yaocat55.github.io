@@ -1,7 +1,7 @@
 ---
 title: "Gateway 生产实战——鉴权、限流、熔断与部署"
 date: 2022-12-05T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["服务治理", "实践教程", "SpringCloud"]
 categories: ["微服务网关"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "ConcurrentHashMap 深度解析：数据结构、线程安全与扩容机制"
 date: 2022-08-27T14:18:39+00:00
-tags: ["Java并发"]
+tags: ["并发集合", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,45 +28,15 @@ cover:
 
 # ConcurrentHashMap 深度解析：从数据结构到线程安全的底层实现
 
-## 一、从 HashMap 的线程不安全性切入
+## 一、道格·李为什么需要重新设计一个并发哈希表
 
-先看一段具体的代码：
+Java 1.0 提供了 `Hashtable`——一个线程安全的 Map 实现。它的线程安全策略很简单：在所有 public 方法上加 `synchronized`。这个策略正确但不实用——任何时候只有一个线程能操作整个表，即使两个线程操作的是不同的键。在 1.0 时代并发不常见时还凑合，到了 Java 5 时代，服务器端的多线程访问同一个缓存 Map 已经是常规操作，`Hashtable` 的全局锁成了吞吐量的天花板。
 
-```java
-public class HashMapThreadSafetyIssue {
-    public static void main(String[] args) throws InterruptedException {
-        Map<String, Integer> map = new HashMap<>();
-        CountDownLatch latch = new CountDownLatch(10);
+`HashMap` 是 `Hashtable` 的非线程安全替代，性能好得多，但一旦多线程并发 put，就会出现数据丢失、size 计数错误，甚至在 JDK 7 扩容时出现链表成环导致 CPU 100%。
 
-        for (int t = 0; t < 10; t++) {
-            final int threadId = t;
-            new Thread(() -> {
-                for (int i = 0; i < 1000; i++) {
-                    map.put(threadId + "-" + i, i);
-                }
-                latch.countDown();
-            }).start();
-        }
-        latch.await();
-        // 期望 10000，实际经常少于 10000
-        System.out.println("期望 size = 10000，实际 size = " + map.size());
-    }
-}
-```
+道格·李在设计 `ConcurrentHashMap` 时面临的问题是：<strong>既要保证线程安全（不能丢数据），又要提供接近 HashMap 的并发吞吐量（不能全局锁）</strong>。这是两个互相矛盾的目标，传统的 `synchronized` 方案只能取其一。
 
-运行结果可能是：
-
-```
-期望 size = 10000，实际 size = 9837
-```
-
-甚至在 **JDK 7** 环境下，并发 `put` 配合扩容时的头插法可能导致链表成环，使 CPU 飙到 100%。
-
-HashMap 线程不安全的核心原因： **`put` 不是原子操作** 。它涉及计算 hash、定位槽位、遍历链表、插入节点、检查扩容等多个步骤，多线程交错执行时会出现数据覆盖。扩容时一个线程正在迁移数据，另一个线程 `put` 操作的是已经过期或半迁移状态的数组引用，导致节点丢失或链表闭环。
-
-<span style="color:red">结论：在多线程环境下，不能使用 HashMap。需要用线程安全的替代方案。</span>
-
-最简单的替代是 HashTable——它对所有方法加 `synchronized`，但锁粒度是整个 Hash 表，同一时刻只有一个线程能操作，并发性能极低。ConcurrentHashMap 的设计目标就是：在不牺牲正确性的前提下， **将锁的粒度缩小到尽可能小的范围** ，让多个线程可以同时操作不同的数据区域。
+道格·李的解决方案是<strong>把锁的粒度从"整张表"缩小到"单个桶"</strong>。JDK 5 ~ 7 中用了 Segment 分段锁（16 个段，每段独立加锁），JDK 8 进一步细化为<strong>桶级别 CAS + synchronized</strong>——对空桶用 CAS 无锁插入，对非空桶只锁链表/红黑树的头节点。这种设计让 16 个线程同时操作 16 个不同桶时完全无竞争，并发度从 `Hashtable` 的 1 提升到桶的数量级。
 
 ## 🗺️ 二、ConcurrentHashMap 的数据结构
 

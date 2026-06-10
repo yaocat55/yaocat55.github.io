@@ -1,7 +1,7 @@
 ---
 title: "MySQL 锁与日志系统：从并发控制到崩溃恢复"
 date: 2022-12-30T11:30:03+00:00
-tags: ["数据存储"]
+tags: ["MySQL", "原理解析", "源码分析"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

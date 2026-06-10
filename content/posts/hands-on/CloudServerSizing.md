@@ -1,7 +1,7 @@
 ---
 title: "云服务器选型实战"
 date: 2022-09-29T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["工程实践", "实践教程", "容器技术"]
 categories: ["业务类"]
 author: "yaomingye"
 showToc: true

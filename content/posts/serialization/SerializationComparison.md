@@ -1,7 +1,7 @@
 ---
 title: "Jackson vs Fastjson2 终极对比"
 date: 2022-11-27T08:00:00+00:00
-tags: ["基础技术"]
+tags: ["序列化", "对比分析", "SpringBoot"]
 categories: ["序列化"]
 author: "yaomingye"
 showToc: true

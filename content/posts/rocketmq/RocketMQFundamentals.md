@@ -1,7 +1,7 @@
 ---
 title: "RocketMQ 核心架构与消息模型"
 date: 2022-11-07T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["RocketMQ", "入门指南", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

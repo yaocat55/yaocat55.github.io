@@ -1,7 +1,7 @@
 ---
 title: "Sentinel 流控规则全解"
 date: 2022-12-07T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["服务治理", "实践教程", "SpringCloud"]
 categories: ["限流熔断中间件"]
 author: "yaomingye"
 showToc: true

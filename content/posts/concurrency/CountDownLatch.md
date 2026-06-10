@@ -1,7 +1,7 @@
 ---
 title: "CountDownLatch 设计思想解析：一次性的共享门闩为什么这样设计"
 date: 2022-08-26T08:47:41+00:00
-tags: ["Java并发"]
+tags: ["并发工具", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,54 +28,22 @@ cover:
 
 # CountDownLatch 设计思想解析：一次性的共享门闩为什么这样设计
 
-## 🤔 问题切入：等待多个异步任务完成的困境
+## 🤔 道格·李为什么需要一个倒计时门闩
 
-以下是一个常见的业务场景——主线程需要等待 3 个子任务全部完成后才能继续：
+多线程编程里有一个反复出现的问题：主线程需要等待若干个子任务全部完成，然后汇总结果继续执行。在 JUC 出现之前，Java 只有两种方式应对：
 
-```java
-public class NaiveParallel {
-    static volatile int finished = 0;
+<strong>`Thread.join()`</strong>——但 `join()` 等的是线程终止，不是任务完成。如果线程来自线程池（被复用，不会终止），`join()` 完全不适用。它是"等人死了"而不是"等人把活干完"。
 
-    public static void main(String[] args) throws InterruptedException {
-        for (int i = 0; i < 3; i++) {
-            new Thread(() -> {
-                doWork();
-                finished++;  // 自增不是原子的
-            }).start();
-        }
+<strong>自己写自旋等待</strong>——用一个 `volatile` 计数器，主线程循环检查。但自旋空转浪费 CPU，加 `sleep` 又会引入延迟，而且 `count++` 本身不是原子操作。
 
-        while (finished < 3) {  // 自旋等待，浪费 CPU
-            Thread.sleep(100);
-        }
-        System.out.println("所有任务完成");
-    }
-}
-```
+道格·李在设计 JSR 166 时看到了这个空缺：<strong>需要一个轻量级的同步辅助工具，让一个（或多个）线程能够等待其他线程完成一组操作，不依赖线程终止，不浪费 CPU，而且足够简单</strong>。
 
-这段代码有三个问题：① `finished++` 不是原子操作；② 主线程自旋空转浪费 CPU；③ `sleep(100)` 导致最多 100ms 的延迟响应。
+这就是 `CountDownLatch` 的诞生背景。它用 AQS 的共享模式实现了一个一次性的倒计时器：计数器从 N 开始，每个子任务完成时减 1（`countDown()`），主线程在 `await()` 上阻塞直到计数器归零。
 
-用 `Thread.join()` 可以解决部分问题，但 `join()` 等待的是线程终止，而不是"任务完成"。如果线程是复用的（线程池）， `join()` 完全不适用。
-
-**CountDownLatch** ⏳ 就是为这个场景设计的——它提供了一个轻量级的"倒计时门闩"：主线程在 `await()` 上阻塞，子任务完成后调用 `countDown()`，计数器归零时主线程自动唤醒。
-
-```java
-public class CountDownLatchDemo {
-    public static void main(String[] args) throws InterruptedException {
-        int n = 3;
-        CountDownLatch latch = new CountDownLatch(n);
-
-        for (int i = 0; i < n; i++) {
-            new Thread(() -> {
-                doWork();
-                latch.countDown();  // 原子减 1
-            }).start();
-        }
-
-        latch.await();  // 阻塞直到计数器 = 0
-        System.out.println("所有任务完成");
-    }
-}
-```
+道格·李给它设计了几个刻意的约束：
+- <strong>一次性</strong>——计数器归零后无法重置。这个约束简化了实现（不需要考虑"重置时正在等待的线程怎么办"），也迫使使用者为可重复场景选用 CyclicBarrier
+- <strong>只减不增</strong>——`countDown()` 只能减少计数，无法增加。这也简化了状态机——计数器状态只有 N→0 这一个方向
+- <strong>基于 AQS 共享模式</strong>——让多个等待线程可以同时被唤醒（当计数器归零时），而不是排他锁那样只唤醒一个
 
 ## 设计理念 1：一次性的约束
 

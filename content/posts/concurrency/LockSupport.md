@@ -1,7 +1,7 @@
 ---
 title: "LockSupport 深度解析：从 wait/notify 的痛点到底层 park/unpark 实现"
 date: 2022-08-22T08:47:41+00:00
-tags: ["Java并发"]
+tags: ["锁与AQS", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,41 +28,17 @@ cover:
 
 # LockSupport 深度解析：从 wait/notify 的痛点到底层 park/unpark 实现
 
-## 🤔 问题切入：wait/notify 的困境
+## 🤔 道格·李为什么需要一个比 wait/notify 更可靠的阻塞原语
 
-以下是一段使用 `wait()` / `notify()` 的典型代码，它存在一个隐蔽的 bug：
+在 `java.util.concurrent` 诞生之前，Java 线程阻塞/唤醒的唯一手段是 `Object.wait()` 和 `Object.notify()`。每个 Java 程序员都知道这两件事：第一，必须在 `synchronized` 块里调用；第二，`notify()` 如果在 `wait()` 之前调用，信号就丢了，线程永远醒不过来。
 
-```java
-public class WaitNotifyProblem {
-    static final Object lock = new Object();
+道格·李在构建 AQS 时遇到了一个棘手的问题：AQS 的 `acquire()` 是先尝试获取锁，失败了再 `park()`。但线程可能在 `tryAcquire` 失败和 `park()` 之间被 `unpark()`——如果 `park()` 没有"许可证记忆"能力，这个 `unpark()` 就白调了，线程永久阻塞。这和 `wait/notify` 的丢信号问题是同源的。
 
-    public static void main(String[] args) {
-        Thread t1 = new Thread(() -> {
-            // 模拟初始化耗时操作
-            sleep(200);
-            synchronized (lock) {
-                lock.notify();  // 先于 wait 执行！
-            }
-        });
+更麻烦的是，`wait/notify` 必须配合 `synchronized` 使用，而 AQS 内部用的是 CAS——如果为了调 `wait()` 还要加一层 `synchronized`，性能和设计都会变成灾难。
 
-        Thread t2 = new Thread(() -> {
-            sleep(300);
-            synchronized (lock) {
-                try {
-                    lock.wait(); // 永远等不到 notify
-                } catch (InterruptedException e) { }
-            }
-        });
+道格·李需要一个**更底层的线程阻塞原语**，满足三个条件：`unpark()` 可以先于 `park()` 调用（许可证语义，不像 `notify` 必须后于 `wait`）、不需要配合 `synchronized` 监视器锁、直接调用操作系统的线程挂起/恢复能力。
 
-        t1.start();
-        t2.start();
-    }
-}
-```
-
-`notify()` 在 `wait()` 之前被调用，导致 `wait()` **永远阻塞** （死锁）。这是因为 `wait/notify` 要求严格的操作顺序，并且必须在 `synchronized` 块内使用。
-
-`LockSupport`（JDK 1.5 引入的线程阻塞工具类）解决了这个痛点：`unpark()` 可以先于 `park()` 调用，线程不会被永久阻塞。
+这就是 `LockSupport` 的诞生背景。它基于二值信号量（permit）——每个线程有且仅有一个 permit（0 或 1），`park()` 消费 permit（没有则阻塞），`unpark()` 生产 permit（最多为 1）。这一设计让 AQS 的 `acquire()` / `release()` 有了可靠的线程调度基础。
 
 ## 🅿️ LockSupport 是什么
 

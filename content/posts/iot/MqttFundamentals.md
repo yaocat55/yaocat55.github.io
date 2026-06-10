@@ -1,7 +1,7 @@
 ---
 title: "MQTT 协议"
 date: 2022-10-01T03:55:15+00:00
-tags: ["基础技术"]
+tags: ["消息队列", "原理解析", "工程实践"]
 categories: ["IoT协议"]
 author: "yaomingye"
 showToc: true

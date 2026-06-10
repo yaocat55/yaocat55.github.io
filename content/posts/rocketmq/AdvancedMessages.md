@@ -1,7 +1,7 @@
 ---
 title: "RocketMQ 顺序消息、延迟消息与事务消息"
 date: 2022-11-09T08:00:00+00:00
-tags: ["消息队列"]
+tags: ["RocketMQ", "原理解析", "消息队列"]
 categories: ["消息队列中间件"]
 author: "yaomingye"
 showToc: true

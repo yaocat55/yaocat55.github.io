@@ -1,7 +1,7 @@
 ---
 title: "Dapper 模型：TraceId 与 SpanId 的传播之道"
 date: 2023-01-24T11:30:03+00:00
-tags: ["分布式架构", "原理解析"]
+tags: ["可观测性", "原理解析", "分布式理论"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

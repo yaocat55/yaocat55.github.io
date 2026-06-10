@@ -1,7 +1,7 @@
 ---
 title: "从单体到微服务"
 date: 2022-10-03T01:08:09+00:00
-tags: ["分布式架构"]
+tags: ["DDD与架构", "原理解析", "工程实践"]
 categories: ["架构设计"]
 author: "yaomingye"
 showToc: true

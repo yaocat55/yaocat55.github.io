@@ -1,7 +1,7 @@
 ---
 title: "JWT 与双令牌机制详解"
 date: 2022-09-20T09:42:16+00:00
-tags: ["Spring生态"]
+tags: ["安全认证", "实践教程", "SpringBoot"]
 categories: ["SpringSecurity类"]
 author: "yaomingye"
 showToc: true

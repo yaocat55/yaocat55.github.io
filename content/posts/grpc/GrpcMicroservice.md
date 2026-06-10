@@ -1,7 +1,7 @@
 ---
 title: "微服务拆分实战：以 proto 为契约"
 date: 2022-11-30T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["RPC框架", "实践教程", "gRPC"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

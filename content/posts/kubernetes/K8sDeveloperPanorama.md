@@ -1,7 +1,7 @@
 ---
 title: "第4步：开发者 K8s 全景图 —— Ingress、Helm 和你的职责边界"
 date: 2023-01-09T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["容器技术", "入门指南", "Kubernetes"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

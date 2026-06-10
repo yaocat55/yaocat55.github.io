@@ -1,7 +1,7 @@
 ---
 title: "Dubbo 生产环境部署与调优"
 date: 2022-11-24T08:00:00+00:00
-tags: ["微服务中间件"]
+tags: ["RPC框架", "实践教程", "Dubbo"]
 categories: ["RPC框架"]
 author: "yaomingye"
 showToc: true

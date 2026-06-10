@@ -1,7 +1,7 @@
 ---
 title: "GitLab CI/CD 多环境部署与生产实践"
 date: 2022-12-26T08:00:00+00:00
-tags: ["运维与可观测"]
+tags: ["CI/CD", "实践教程", "容器技术"]
 categories: ["CICD类"]
 author: "yaomingye"
 showToc: true

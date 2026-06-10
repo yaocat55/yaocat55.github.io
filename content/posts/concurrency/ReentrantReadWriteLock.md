@@ -1,7 +1,7 @@
 ---
 title: "ReentrantReadWriteLock 深度解析：从读多写少场景到底层 state 拆分与锁降级"
 date: 2022-08-25T08:47:41+00:00
-tags: ["Java并发"]
+tags: ["锁与AQS", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,65 +28,17 @@ cover:
 
 # ReentrantReadWriteLock 深度解析：从读多写少场景到底层 state 拆分与锁降级
 
-## 🤔 问题切入：ReentrantLock 在缓存场景下的性能瓶颈
+## 🤔 道格·李为什么要区分读锁和写锁
 
-以下是一个用 `ReentrantLock` 实现的线程安全缓存：
+`ReentrantLock` 是可重入的互斥锁——无论什么操作，同一时刻只有一个线程能持有锁。这在写多读少的场景里不是问题，但在<strong>读多写少</strong>的场景（缓存查询、配置读取、字典加载）中，`ReentrantLock` 带来了不必要的串行化：100 个线程同时读，它们不应该互相阻塞，因为读取不修改数据。
 
-```java
-public class CacheWithReentrantLock {
-    private final Map<String, Object> cache = new HashMap<>();
-    private final ReentrantLock lock = new ReentrantLock();
+道格·李在设计 JSR 166 时专门为此引入了读写锁。`ReentrantReadWriteLock` 把锁拆成两把：
+- <strong>读锁（readLock）</strong>——共享锁，多个读线程可以同时持有，读与读不互斥
+- <strong>写锁（writeLock）</strong>——独占锁，写线程独占，写与写、写与读互斥
 
-    public Object get(String key) {
-        lock.lock();
-        try {
-            return cache.get(key);
-        } finally {
-            lock.unlock();
-        }
-    }
+这个设计基于一个观察：大多数并发访问的数据结构是"读多写少"的。如果 90% 的操作都是读取，那么互斥锁让这 90% 的操作全部串行化——白白浪费了并发能力。读写锁让读操作完全并行，只在写操作发生时短暂阻塞。
 
-    public void put(String key, Object value) {
-        lock.lock();
-        try {
-            cache.put(key, value);
-        } finally {
-            lock.unlock();
-        }
-    }
-}
-```
-
-这个实现在功能上是正确的，但存在严重的性能问题：`get()` 只是读操作，并不修改数据，却也要独占锁。当 10 个线程同时读缓存时，它们被串行化为一个一个执行。在高并发读多写少的场景（如配置中心、本地缓存、字典查询）中，<span style="color:red">ReentrantLock 的互斥特性导致不必要的线程阻塞</span>。
-
-**ReentrantReadWriteLock** 📖 解决了这个问题：允许多个读线程同时持有锁（共享模式），写线程独占锁（互斥模式）。读和读之间不互斥，只有写和读、写和写之间才互斥。
-
-```java
-public class CacheWithReadWriteLock {
-    private final Map<String, Object> cache = new HashMap<>();
-    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private final Lock readLock = rwLock.readLock();
-    private final Lock writeLock = rwLock.writeLock();
-
-    public Object get(String key) {
-        readLock.lock();
-        try {
-            return cache.get(key);  // 多个线程可同时执行
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public void put(String key, Object value) {
-        writeLock.lock();
-        try {
-            cache.put(key, value);  // 只有一个线程能执行
-        } finally {
-            writeLock.unlock();
-        }
-    }
-}
-```
+内部实现上，`ReentrantReadWriteLock` 把 AQS 的 32 位 `state` 字段拆成高 16 位（记录共享的读锁持有次数）和低 16 位（记录独占的写锁重入次数），用一个 `int` 同时跟踪两种模式的持有状态。这也是为什么读写锁在同一时刻要么被读线程共享、要么被写线程独占——两种模式共享同一个 `state`，状态机决定了它们互斥。
 
 ## 📋 基本用法：readLock 和 writeLock
 

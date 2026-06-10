@@ -1,7 +1,7 @@
 ---
 title: "开发常用 100 条 Linux 指令全解析"
 date: 2022-10-14T08:16:55+00:00
-tags: ["运维与可观测"]
+tags: ["工程实践", "实践教程", "故障排查"]
 categories: ["运维实操"]
 author: "yaomingye"
 showToc: true

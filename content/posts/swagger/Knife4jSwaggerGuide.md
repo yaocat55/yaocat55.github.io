@@ -1,7 +1,7 @@
 ---
 title: "Knife4j 接口文档从配置到上线"
 date: 2023-01-11T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

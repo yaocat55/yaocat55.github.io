@@ -1,7 +1,7 @@
 ---
 title: "FutureTask 源码深度解析"
 date: 2022-08-31T08:29:29+00:00
-tags: ["Java并发"]
+tags: ["并发工具", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,100 +28,19 @@ cover:
 
 # FutureTask 源码深度解析：从 Runnable 的局限到异步结果获取的完整实现
 
-## 🤔 一、问题切入：一段"拿不到结果"的代码
+## 🤔 一、道格·李为什么需要一个"身兼两职"的任务对象
 
-### ⚠️ 1.1 Runnable 的局限
+Java 的 `Thread` 构造函数接受 `Runnable`，但 `Runnable.run()` 返回值是 `void`——执行完就完了，拿不到结果。在 Java 1.0 ~ 1.4 时代，想在主线程拿到子线程的计算结果，只能靠共享变量（比如把结果写进一个 `final int[] result = new int[1]`），这种写法没有类型安全，也无法向调用方传递异常。
 
-用多线程执行一个计算密集型任务，主线程需要拿到计算结果做后续处理。最直接的想法是用 `Runnable`：
+道格·李在 Java 5 的 JSR 166 中为这个问题设计了三个层次：
 
-```java
-public class RunnableLimitation {
-    public static void main(String[] args) throws Exception {
-        // 希望计算 1 到 100 的和，并在主线程拿到结果
-        Thread thread = new Thread(() -> {
-            int sum = 0;
-            for (int i = 1; i <= 100; i++) {
-                sum += i;
-            }
-            // 问题：这个 sum 怎么传回主线程？
-        });
-        thread.start();
-        thread.join();
-        // 拿不到 sum，因为 Runnable.run() 的返回值是 void
-    }
-}
-```
+<strong>第一层：`Callable<V>`</strong>——任务接口。和 `Runnable` 功能等价，但 `call()` 有返回值且可抛异常。解决了"任务有结果"的问题。
 
-问题很清楚：`Runnable` 接口的 `run()` 方法签名为 `void run()`，它不返回计算结果，也不能抛出受检异常（checked exception）。要在主线程获取子线程的计算结果，只能用共享变量、回调等间接手段，代码变得分散且难以阅读。
+<strong>第二层：`Future<V>`</strong>——结果句柄。提供 `get()`（阻塞获取结果）、`cancel()`（取消任务）、`isDone()`（判断完成）等方法。解决了"怎么拿到异步结果"的问题。但它只是一个接口，不知道任务在哪执行、怎么执行。
 
-<details>
-<summary>传统绕行方式——共享变量</summary>
+<strong>第三层：`FutureTask`</strong>——把两者粘在一起。它同时实现了 `RunnableFuture<V>` 接口（该接口同时继承 `Runnable` 和 `Future`），所以一个 `FutureTask` 对象既是可执行的任务（可以传给 `Thread` 或提交给 `Executor`），又是可查询的结果句柄（可以 `get()` 拿结果、`cancel()` 取消）。
 
-```java
-final int[] result = new int[1];
-Thread t = new Thread(() -> {
-    int sum = 0;
-    for (int i = 1; i <= 100; i++) sum += i;
-    result[0] = sum;  // 写入共享数组
-});
-t.start();
-t.join();
-System.out.println(result[0]);  // 读取结果
-```
-这种方式没有类型安全，也不能处理异常。
-</details>
-
-### 📌 1.2 Callable 和 Future 的出现
-
-JDK 1.5 引入了 `Callable<V>` 和 `Future<V>`：
-
-```java
-@FunctionalInterface
-public interface Callable<V> {
-    V call() throws Exception;   // 有返回值，可抛异常
-}
-
-public interface Future<V> {
-    boolean cancel(boolean mayInterruptIfRunning);
-    boolean isCancelled();
-    boolean isDone();
-    V get() throws InterruptedException, ExecutionException;
-    V get(long timeout, TimeUnit unit)
-        throws InterruptedException, ExecutionException, TimeoutException;
-}
-```
-
-- **Callable**：与 Runnable 功能等价，但 `call()` 有返回值且可抛异常，解决了"任务有结果"的问题。
-- **Future** 🔮：表示异步计算的结果句柄（handle），提供获取结果、取消任务、判断完成等操作。
-
-但 Callable 和 Future 本身是分离的——Callable 只定义了任务，Future 只提供结果查询接口，它们需要被组合在一起才能使用。谁来做这个组合？<span style="color:red">FutureTask 就是 JDK 给出的答案，它同时实现了 Runnable 和 Future，一个对象身兼两职</span>。
-
-### ❓ 1.3 用 FutureTask 解决同一个问题
-
-```java
-public class FutureTaskSolution {
-    public static void main(String[] args) throws Exception {
-        // 定义可返回结果的任务
-        Callable<Integer> task = () -> {
-            int sum = 0;
-            for (int i = 1; i <= 100; i++) {
-                sum += i;
-            }
-            return sum;   // 有返回值
-        };
-
-        FutureTask<Integer> futureTask = new FutureTask<>(task);
-        Thread thread = new Thread(futureTask);  // 作为 Runnable 传给 Thread
-        thread.start();
-
-        // 作为 Future 获取结果——阻塞等待
-        Integer result = futureTask.get();
-        System.out.println("结果: " + result);  // 5050
-    }
-}
-```
-
-这段代码展示了 FutureTask 的核心能力：<span style="color:red">它既是一个 Runnable（可被 Thread 执行），又是一个 Future（可获取异步结果）</span>。
+道格·李这个设计的精巧之处在于：通过 `FutureTask` 这个"桥梁"，`ExecutorService.submit(Callable)` 可以把任意 `Callable` 包装成 `FutureTask`，提交到线程池执行后立即返回 `Future` 句柄——调用方拿到了一个"未来的结果承诺"，可以继续干别的事，需要结果时再 `get()`。
 
 ## 🔮 二、类继承体系：RunnableFuture 的双重身份
 

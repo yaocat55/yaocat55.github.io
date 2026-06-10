@@ -1,7 +1,7 @@
 ---
 title: "Redis + Caffeine 双层缓存：降级与容错"
 date: 2022-10-31T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["Redis", "实践教程", "SpringBoot"]
 categories: ["缓存框架"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "负载均衡三剑客：加权随机、最少活跃与一致性哈希"
 date: 2023-01-23T11:30:03+00:00
-tags: ["分布式架构", "原理解析"]
+tags: ["分布式理论", "原理解析", "服务治理"]
 categories: ["分布式算法"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "七牛云 OSS + SMTP 邮件：两个轻量级第三方接入实战"
 date: 2023-01-15T11:30:03+00:00
-tags: ["运维与可观测"]
+tags: ["SpringBoot", "实践教程", "工程实践"]
 categories: ["技术类"]
 author: "yaomingye"
 showToc: true

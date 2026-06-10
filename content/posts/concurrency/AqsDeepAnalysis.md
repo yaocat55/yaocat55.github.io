@@ -1,7 +1,7 @@
 ---
 title: "AQS 深度解析：同步队列、条件队列与 state 的底层运作机制"
 date: 2022-08-23T08:47:41+00:00
-tags: ["Java并发"]
+tags: ["锁与AQS", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,35 +28,19 @@ cover:
 
 # AQS 深度解析：同步队列、条件队列与 state 的底层运作机制
 
-## 🤔 问题切入：没有 AQS 时，如何实现一个锁？
+## 🤔 道格·李为什么需要一个抽象的队列同步器框架
 
-以下是一个用 `synchronized` + `wait/notify` 实现的简单互斥锁：
+在 JSR 166 之前，Java 世界里只有一种等待机制：`synchronized` + `wait/notify`。想实现一个锁，思路无非是用 `synchronized` 包住一个布尔标志位，`wait()` 等、`notify()` 醒。
 
-```java
-public class SimpleLock {
-    private boolean locked = false;
+道格·李（Doug Lea）在设计 JUC 时面临的问题是：**每个同步组件都要从零手写一套等待队列吗？**
 
-    public synchronized void lock() throws InterruptedException {
-        while (locked) {
-            wait();  // 释放监视器，进入等待队列
-        }
-        locked = true;
-    }
+ReentrantLock 需要等待队列、Semaphore 需要等待队列、CountDownLatch 需要等待队列、ReentrantReadWriteLock 需要等待队列……如果每个组件都自己维护一套 CLH 链表、自己处理 `park/unpark`、自己实现取消和超时逻辑，JUC 将变成一坨互相复制粘贴、难以维护的代码。
 
-    public synchronized void unlock() {
-        locked = false;
-        notify();  // 随机唤醒一个等待线程
-    }
-}
-```
+更重要的是，`wait/notify` 有三个固有限制：无法区分公平/非公平（`notify()` 随机唤醒）、无法在等待期间响应中断后干净取消排队、无法支持共享模式（一次允许多个线程同时获取）。
 
-这段代码有三个问题：
+道格·李的做法是 **提取共性，抽象成框架**。他把所有同步器的等待队列、状态管理、获取/释放模板方法抽成一个类——**AQS**（AbstractQueuedSynchronizer，抽象队列同步器）。
 
-1. **无法区分公平/非公平** ：`notify()` 随机唤醒一个线程，所有等待者公平竞争，无法实现"先到先得"
-2. **无法超时** ：`wait()` 只能无限等或指定毫秒，但无法在等待期间响应中断后干净地取消排队
-3. **无法共享模式** ：只支持互斥（一次一个线程），无法实现 Semaphore（多个线程同时访问）
-
-**AQS** 🏛️ （AbstractQueuedSynchronizer，抽象队列同步器）是 JUC（`java.util.concurrent`）包的 **基础设施** ，它把这些需求抽象成一个统一的框架。ReentrantLock、Semaphore、CountDownLatch、ReentrantReadWriteLock 等所有 JUC 同步组件，内部都有一个继承自 AQS 的 `Sync` 内部类。
+AQS 的核心契约只有一条：子类只需实现 `tryAcquire` / `tryRelease`（独占）或 `tryAcquireShared` / `tryReleaseShared`（共享），控制 state 字段的语义；AQS 替你搞定入队、阻塞、唤醒、取消、超时。ReentrantLock、Semaphore、CountDownLatch、ReentrantReadWriteLock 等所有 JUC 同步组件，内部都有一个继承自 AQS 的 `Sync` 内部类——这就是框架复用的力量。
 
 ```mermaid
 flowchart LR

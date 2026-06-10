@@ -1,7 +1,7 @@
 ---
 title: "ThreadPoolExecutor 源码解析"
 date: 2022-09-02T11:30:03+00:00
-tags: ["Java并发"]
+tags: ["线程池", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,45 +28,19 @@ cover:
 
 # ThreadPoolExecutor 源码解析：Worker 机制、生命周期、拒绝策略与动态线程池实践
 
-## 🚀 从一个具体问题开始
+## 🚀 道格·李为什么需要一个线程池
 
-一个 Web 服务收到请求后，需要发送一封邮件通知。最简单的写法是每个请求创建一个新线程执行发送：
+Java 1.0 就支持多线程，但管理线程生命周期这件事一直缺少标准方案。开发者每次需要异步执行时，要么 `new Thread().start()`，要么自己维护一个线程管理队列——前者浪费资源，后者极易出错。
 
-```java
-@GetMapping("/order")
-public String createOrder() {
-    orderService.createOrder();  // 核心业务
-    new Thread(() -> mailService.sendNotification()).start();  // 异步通知
-    return "success";
-}
-```
+一个线程的创建和销毁是有成本的。JVM 要为每个线程分配栈内存（默认约 1MB），操作系统要为每个线程维护内核线程表项和调度上下文。当并发请求量上来后，频繁创建/销毁线程会导致：
 
-当 QPS（每秒请求数，Queries Per Second）达到 500 时，每秒创建 500 个线程。每个 Java 线程默认栈大小约 1MB，500 个线程光栈内存就要消耗 500MB，再加上线程创建/销毁的上下文切换开销，系统会迅速不可用。
+1. <strong>内存压力</strong>——大量线程的栈内存吃掉堆外空间
+2. <strong>CPU 浪费在上下文切换</strong>——线程数远超 CPU 核心数时，CPU 的时间片都消耗在"换人"而不是"干活"上
+3. <strong>线程数不可控</strong>——请求峰值时线程数无上限增长，最终 OOM 或系统不可用
 
-换用 `ThreadPoolExecutor`（线程池执行器，管理一组可复用的工作线程来异步执行任务）：
+道格·李在设计 JSR 166 时面对的核心问题是：<strong>如何让开发者既能享受多线程的并发收益，又不用直接管理线程的创建和销毁？</strong> 答案是把线程抽象为一种可复用的资源——线程池。
 
-```java
-public class OrderController {
-    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
-        10,                        // 核心线程数
-        50,                        // 最大线程数
-        60L, TimeUnit.SECONDS,     // 空闲线程存活时间
-        new ArrayBlockingQueue<>(200),  // 有界任务队列
-        new ThreadPoolExecutor.CallerRunsPolicy()  // 拒绝策略
-    );
-
-    @GetMapping("/order")
-    public String createOrder() {
-        orderService.createOrder();
-        executor.execute(() -> mailService.sendNotification());
-        return "success";
-    }
-}
-```
-
-效果：线程数最多 50 个，多余的任务在队列排队或触发拒绝策略。线程创建/销毁的开销被消除，内存占用被上限控制。
-
-接下来从参数开始，逐层深入 `ThreadPoolExecutor` 的内部实现。
+线程池的本质是一个"线程 + 任务队列"的组合：<strong>核心线程常驻</strong>，任务多时创建临时线程分担，任务少时回收空闲线程，任务太多时由拒绝策略兜底。从设计上看，`ThreadPoolExecutor` 把线程的创建策略（core/max）、存活策略（keepAliveTime）、排队策略（workQueue）和过载策略（rejectedExecutionHandler）全部暴露为可配置参数——这正是道格·李的设计风格：<strong>不替开发者做决定，而是把决策权交给调用方</strong>。
 
 ## 📐 七大核心参数
 

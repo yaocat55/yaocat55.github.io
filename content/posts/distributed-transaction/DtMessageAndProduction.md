@@ -1,7 +1,7 @@
 ---
 title: "事务消息 + 本地消息表 + 生产踩坑"
 date: 2022-12-30T08:00:00+00:00
-tags: ["分布式架构"]
+tags: ["分布式事务", "实践教程", "故障排查"]
 categories: ["分布式事务中间件"]
 author: "yaomingye"
 showToc: true

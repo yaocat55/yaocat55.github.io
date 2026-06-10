@@ -1,7 +1,7 @@
 ---
 title: "Redis 高可用架构：主从、哨兵、集群与分片"
 date: 2023-01-17T11:30:03+00:00
-tags: ["Redis", "原理解析"]
+tags: ["Redis", "原理解析", "实践教程"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

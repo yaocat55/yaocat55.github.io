@@ -1,7 +1,7 @@
 ---
 title: "Java IO 进阶"
 date: 2022-09-09T14:50:18+00:00
-tags: ["基础技术"]
+tags: ["网络编程", "实践教程", "序列化"]
 categories: ["IO操作类"]
 author: "yaomingye"
 showToc: true

@@ -1,7 +1,7 @@
 ---
 title: "MongoDB 核心概念"
 date: 2022-10-26T08:00:00+00:00
-tags: ["数据存储"]
+tags: ["MongoDB", "入门指南", "数据存储"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

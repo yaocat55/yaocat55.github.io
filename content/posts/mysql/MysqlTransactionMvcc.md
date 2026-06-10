@@ -1,7 +1,7 @@
 ---
 title: "MySQL 事务与 MVCC：多版本并发控制的完整原理"
 date: 2022-12-29T11:30:03+00:00
-tags: ["数据存储"]
+tags: ["MySQL", "原理解析", "源码分析"]
 categories: ["数据库类"]
 author: "yaomingye"
 showToc: true

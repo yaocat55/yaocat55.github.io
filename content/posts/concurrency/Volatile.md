@@ -1,7 +1,7 @@
 ---
 title: "volatile 如何填补 MESI 的两个缺口：Store Buffer 与 Invalidate Queue"
 date: 2022-08-19T07:09:33+00:00
-tags: ["Java并发"]
+tags: ["内存模型", "原理解析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,26 +28,17 @@ cover:
 
 # volatile 如何填补 MESI 的两个缺口：Store Buffer 与 Invalidate Queue
 
-## 🤔 一、问题起点：一段会"卡死"的代码
+## 🤔 一、JSR 133 专家组为什么需要重新定义 volatile
 
-在了解 volatile 之前，先看一段代码。它的行为是等待线程 B 发出"停止"信号后，线程 A 退出循环：
+在 JDK 1.4 及以前，Java 的 `volatile` 语义是模糊的。规范只说"对 volatile 变量的读写会直接在主内存进行"，但什么叫"直接在主内存"、写入后多久另一个线程能看到、volatile 变量之间的指令能不能重排——这些问题都没有答案。不同 JVM 实现的行为不一致：有的插了内存屏障，有的什么都没做。
 
-```java
-// 线程 A 和线程 B 同时运行
-boolean stopped = false;  // 普通变量，不用 volatile
+这直接导致了著名的**双重检查锁定（DCL）单例在 Java 中不可靠**的问题——即使 `instance` 声明为 `volatile`，在早期的 JMM 下仍然可能读到未初始化完成的对象。这个问题在当时被广泛讨论，甚至让不少开发者对 Java 并发编程失去了信心。
 
-// 线程 A
-while (!stopped) {
-    doWork();
-}
+2004 年，JSR 133 专家组（道格·李是核心成员）重新定义了 volatile 的语义。新的 volatile 不再是一个模糊的"直接读写主内存"，而是精确指定了四种内存屏障（LoadLoad、StoreStore、LoadStore、StoreLoad）在 volatile 读写前后的插入位置。
 
-// 线程 B
-stopped = true;
-```
+这个重新定义的本质是：**用软件契约填补硬件盲区**。Store Buffer 延迟写可见性 → volatile 写之后插 StoreLoad 屏障强制刷新。Invalidate Queue 延迟失效 → volatile 读之后插 LoadLoad 屏障强制缓存失效。指令重排序可能把 volatile 写后的普通写提到前面 → volatile 写之前插 StoreStore 屏障禁止。
 
-预期：线程 B 把 `stopped` 设为 `true` 后，线程 A 的循环结束。实际：线程 A 可能永远不会退出。
-
-原因不在 Java 代码，而在 CPU 缓存的设计。要理解这个现象，必须从多核 CPU 的完整缓存结构入手。
+volatile 不是用来做"原子操作"的（那是 CAS 的活），它的唯一职责是：保证一个线程对 volatile 变量的写入，对后续读取该 volatile 变量的其他线程**立即可见**。这就是 JSR 133 专家组对它的最终定义。
 
 ## 🔍 二、根因：Store Buffer 与 Invalidate Queue
 

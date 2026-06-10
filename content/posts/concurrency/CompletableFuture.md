@@ -1,7 +1,7 @@
 ---
 title: "CompletableFuture 异步编排"
 date: 2022-09-03T08:52:40+00:00
-tags: ["Java并发"]
+tags: ["并发工具", "源码分析", "Java并发"]
 categories: ["并发编程类"]
 author: "yaomingye"
 showToc: true
@@ -28,50 +28,24 @@ cover:
 
 # CompletableFuture 异步编排：Completion 链表与多中间件应用全解析
 
-## 🤔 一、问题切入：Future 的痛点
+## 🤔 一、道格·李为什么需要比 Future 更强大的异步工具
 
-假设你在做订单查询接口，需要同时查订单表、用户表、优惠券表，然后把三个结果拼起来返回。用传统 `Future`（Java 5 引入的异步结果持有对象，通过 `get()` 阻塞获取结果）写出来是这样：
+Java 5 引入了 `Future` 接口和 `FutureTask` 实现，解决了"异步执行、获取返回值"的基础需求。到 Java 7 时代，`Future` 的局限已经非常明显：它只是一个结果的容器，<strong>没有回调机制</strong>——你不能在结果就绪时自动触发下一步操作，只能调用 `get()` 阻塞等待。
 
-```java
-ExecutorService pool = Executors.newFixedThreadPool(3);
-Future<Order> orderFut = pool.submit(() -> queryOrder(id));
-Future<User> userFut = pool.submit(() -> queryUser(id));
-Future<Coupon> couponFut = pool.submit(() -> queryCoupon(id));
+这在简单的"提交任务→等待结果"场景中够用，但面对以下需求时完全无力：
+1. <strong>链式编排</strong>：A 的结果作为 B 的输入，B 完成后触发 C。用 `Future` 只能嵌套 `get()`，代码缩进越来越深
+2. <strong>多结果组合</strong>：等 A、B、C 三个结果全部就绪后做汇总。用 `Future` 只能逐个 `get()`，最慢的那个决定了总耗时
+3. <strong>异常传播</strong>：`Future.get()` 把异常包装成 `ExecutionException`，调用方需要捕获后 `getCause()`——异常处理散落在各处
 
-Order order = orderFut.get();   // 阻塞
-User user = userFut.get();      // 阻塞
-Coupon coupon = couponFut.get(); // 阻塞
-
-return assemble(order, user, coupon);
-```
-
-三个异步任务并行执行没有错，但 `get()` 是阻塞调用（Blocking Call，调用线程在 `get()` 处暂停，直到结果就绪）。如果订单查询 50ms 返回，但优惠券查询要 2s，那线程在第一个 `get()` 上干了 50ms 的活，剩下的时间全在等。
-
-> ⚠️ 新手提示：`Future.get()` 阻塞的是调用线程，不是执行任务的那个线程。上面代码在主线程里三次 `get()`，主线程会被卡住三次。有人说"那我把第三个放前面不就好了"——这只解决了顺序问题，本质还是白白占着一个线程在等。
-
-更崩溃的是：**三个结果都回来之后要做什么？** `Future` 没有回调机制（Callback，任务完成后的自动通知）。你想"订单和用户回来了先拼一下，等优惠券也回来了再拼完整"，用 `Future` 就得写一堆 `while (!future.isDone())` 轮询（Polling，循环检查是否完成），既丑又费 CPU。
-
-Java 8 推出的 `CompletableFuture`（可完成的异步计算结果容器，以下简称 CF）就是为了解决这两个问题：
-1. **非阻塞编排**：结果回来了自动触发下一步，不用 `get()` 死等
-2. **链式组合**：两个 CF 的结果可以合并、级联、选最快，声明式编排
-
-下面用 CF 重写上面的查询：
+道格·李在设计 `CompletableFuture`（Java 8 引入）时参考了 JavaScript 的 Promise 模式和函数式编程中的 monad 概念。核心思路是：<strong>把异步计算的结果建模为一条流水线</strong>——每个阶段接受上一个阶段的输出，产生下一个阶段的输入，阶段之间通过回调串联。这样开发者不需要手动管理线程和等待，只需要"声明"各个步骤之间的关系：
 
 ```java
-CompletableFuture<Order> orderCF = CompletableFuture.supplyAsync(() -> queryOrder(id));
-CompletableFuture<User> userCF = CompletableFuture.supplyAsync(() -> queryUser(id));
-CompletableFuture<Coupon> couponCF = CompletableFuture.supplyAsync(() -> queryCoupon(id));
-
-CompletableFuture<Result> resultCF = orderCF
-    .thenCombine(userCF, (o, u) -> new Partial(o, u))  // 订单+用户先拼
-    .thenCombine(couponCF, (p, c) -> assemble(p, c));   // 再拼优惠券
-
-Result result = resultCF.join(); // 等待最终结果（非受检异常）
+// 声明式：订单+用户拼好，再拼优惠券
+orderFuture.thenCombine(userFuture, this::mergeOrderUser)
+           .thenCombine(couponFuture, this::assembleFinal);
 ```
 
-每个任务完成时自动触发下一个回调，主线程全程不阻塞（除了最后 `join` 处），等待期间可以做别的事。
-
----
+`CompletableFuture` 的革新在于把异步编程从"命令式等结果"推到了"声明式编排"——关心的不是什么时候拿到结果，而是结果拿到之后要做什么。
 
 ## 🔮 二、数据结构：CompletableFuture 内部长什么样
 
