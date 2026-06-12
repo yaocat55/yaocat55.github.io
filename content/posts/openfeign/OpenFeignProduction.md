@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# OpenFeign 生产实战——Nacos + Sentinel + 性能调优
+# 生产实战：Nacos + Sentinel + 性能调优
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 OpenFeign 的配置和容错机制。如果还不熟悉，建议先阅读 [<strong>OpenFeign 核心概念与快速上手</strong>]({{< relref "OpenFeignFundamentals.md" >}}) 和 [<strong>进阶——配置、拦截器与容错</strong>]({{< relref "OpenFeignAdvanced.md" >}})。
 

@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Prometheus + Grafana 环境搭建与指标采集
+# Prometheus + Grafana 环境搭建
 
 ## 一、⚡ 微服务上线了——但你知道它现在是死是活吗？
 

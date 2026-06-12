@@ -26,6 +26,8 @@ cover:
     hidden: false
 ---
 
+# Go 是怎么来的？
+
 第一次打开 `.go` 文件的 Java 程序员，通常会愣住。
 
 ```go

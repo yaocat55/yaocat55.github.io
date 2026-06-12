@@ -25,7 +25,7 @@ cover:
     relative: false
     hidden: true
 ---
-# synchronized 锁升级机制：从对象头到重量级锁的完整路径
+# synchronized 的锁是怎么升级的？
 
 ## 🔒 一、HotSpot 团队为什么要设计锁升级机制
 

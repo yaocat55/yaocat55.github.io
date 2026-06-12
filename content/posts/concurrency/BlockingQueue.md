@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# BlockingQueue 设计解析：四组方法语义、锁机制分化与生产者-消费者模型的工程实践
+# BlockingQueue 设计解析
 
 ## 🤔 道格·李为什么需要一个阻塞队列接口
 

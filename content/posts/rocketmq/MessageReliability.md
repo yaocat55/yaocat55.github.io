@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RocketMQ 消息可靠性与容错
+# RocketMQ 消息可靠性
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot RocketMQ 的发送和消费操作。如果还不熟悉，建议先阅读 [<strong>SpringBoot RocketMQ 全操作指南</strong>]({{< relref "SpringBootRocketMQ.md" >}})。
 

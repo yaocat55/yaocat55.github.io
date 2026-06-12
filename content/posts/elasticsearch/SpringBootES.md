@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# SpringBoot Elasticsearch 全操作指南
+# SpringBoot Elasticsearch
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已了解 ES 的倒排索引、分词器、Mapping 和 REST API 基础操作。如果还不熟悉，建议先阅读 [<strong>Elasticsearch 核心概念：倒排索引、分词器与 REST API 全解析</strong>]({{< relref "ESFundamentals.md" >}})。
 

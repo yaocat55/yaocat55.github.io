@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# Knife4j 接口文档从配置到上线
+# Knife4j 接口文档
 
 ## 第1步：目标说明 — 打造可交互的 API 文档
 

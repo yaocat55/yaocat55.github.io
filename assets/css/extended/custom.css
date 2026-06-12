@@ -2,52 +2,59 @@
    PaperMod 精简版 v1.0
    ============================================ */
 
-/* 1. 全局变量 */
+/* 1. 全局变量 - Material Design 3 字体系统（可用版） */
 :root {
-    --font-base: "Inter", system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Noto Sans CJK SC", sans-serif;
-    --font-code: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
-    --duration-fast: 0.15s ease;
-    --duration-normal: 0.25s ease;
-    --duration-slow: 0.4s ease;
+    /* 推荐：Inter + 系统字体，MD3 官方推荐组合 */
+    --font-base: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+
+    --font-code: "JetBrains Mono", "Fira Code", "Cascadia Code", "SF Mono", Monaco, monospace;
+
+    --duration-fast: 0.15s cubic-bezier(0.2, 0, 0, 1);
+    --duration-normal: 0.25s cubic-bezier(0.2, 0, 0, 1);
+    --duration-slow: 0.4s cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* 浅色模式变量 */
+
+/* 浅色模式变量 - 真·护眼柔和版 */
 html:not([data-theme="dark"]) {
-    --theme: #dadfce;
-    --background: #dadfce;
-    --code-bg: #e2e8d6;
-    --entry: #f2efdf;
-    --card-bg: #f2efdf;
-    --border: #c5cdb5;
-    --tertiary: #d0d9c2;
-    --primary: #2a4a20;
-    --primary-dark: #1e3a15;
-    --secondary: #5a6e50;
-    --content: #2c3825;
-    --link: #3d6b35;
-    --link-hover: #2a5522;
-    --hljs-bg: #e2e8d6;
-    --hljs-color: #2c3825;
-    --body-bg: #e8f0e6;
+    --theme: #c8d0b4;
+    --background: #c8d0b4;
+    --code-bg: #dce4cc;
+    --entry: #f0ecd8;
+    --card-bg: #f0ecd8;
+    --border: #a8b490;
+    --tertiary: #d4deb8;
+    --primary: #3a6b28;
+    --primary-dark: #2c5520;
+    --secondary: #5a6e48;
+    --content: #1e2a16;
+    --link: #3a6b28;
+    --link-hover: #2c5520;
+    --hljs-bg: #dce4cc;
+    --hljs-color: #1e2a16;
+    --body-bg: #c0c8a8;
+}
+/* 深色模式变量 - Material Design 3 风格 */
+html[data-theme="dark"] {
+    --theme: #1c1e1c;
+    --background: #1c1e1c;
+    --code-bg: #252725;
+    --entry: #2c2f2c;
+    --card-bg: #2c2f2c;
+    --border: #3d423d;
+    --tertiary: #282b28;
+    --primary: #c9b86a;
+    --primary-dark: #b8a85a;
+    --secondary: #9aa89a;
+    --content: #e0e3da;
+    --link: #c9b86a;
+    --link-hover: #b8a85a;
+    --hljs-bg: #252725;
+    --hljs-color: #e0e3da;
+    --body-bg: #1c1e1c;
 }
 
-/* 深色模式变量 */
-html[data-theme="dark"] {
-    --theme: #2b2b2b;
-    --background: #2b2b2b;
-    --code-bg: #2b2b2b;
-    --entry: #323232;
-    --card-bg: #323232;
-    --border: #4a4a4a;
-    --tertiary: #3c3f41;
-    --primary: #ffc66d;
-    --primary-dark: #e6b85c;
-    --secondary: #a9b7c6;
-    --content: #a9b7c6;
-    --link: #ffc66d;
-    --link-hover: #e6b85c;
-    --body-bg: #2b2b2b;
-}
+
 
 /* 基础样式 */
 body {
@@ -107,15 +114,29 @@ html[data-theme="dark"] .main .post {
 
 .post-entry {
     background: var(--entry);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    transition: transform var(--duration-normal), box-shadow var(--duration-normal), background-color var(--duration-normal);
+    border-radius: 16px;
+    border: none;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    position: relative;
+}
+
+/* MD3 风格的柔和阴影代替边框 */
+.post-entry {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .post-entry:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    background: var(--card-bg);
 }
+
+/* 可选：添加一个高亮边框效果（更 MD3） */
+.post-entry:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
 
 /* 内容区 */
 .post-content {
@@ -139,20 +160,71 @@ html[data-theme="dark"] .main .post {
     }
 }
 
-/* 标题系统 */
+/* 标题系统 - 浅色模式 */
+html:not([data-theme="dark"]) .post-content h1 {
+    color: #1a3a12;
+}
+
+html:not([data-theme="dark"]) .post-content h2 {
+    color: #1e4015;
+}
+
+html:not([data-theme="dark"]) .post-content h3 {
+    color: #2a5520;
+}
+
+html:not([data-theme="dark"]) .post-content h4 {
+    color: #3a6030;
+}
+
+
+
+/* 标题系统 - 深色模式（丰富多彩） */
+html[data-theme="dark"] .post-content h1 {
+    color: #ffc66d;
+    /* 橙黄 - 最醒目 */
+}
+
+html[data-theme="dark"] .post-content h2 {
+    color: #88c0d0;
+    /* 冰蓝 - 冷静次级标题 */
+    border-bottom-color: rgba(136, 192, 208, 0.3);
+}
+
+html[data-theme="dark"] .post-content h3 {
+    color: #b48ead;
+    /* 淡紫 - 三级标题 */
+}
+
+html[data-theme="dark"] .post-content h4 {
+    color: #a3be8c;
+    /* 草绿 - 四级标题 */
+}
+
+/* 深色模式标题 hover 效果 */
+html[data-theme="dark"] .post-content h2:hover {
+    border-bottom-color: #88c0d0;
+}
+
+html[data-theme="dark"] .post-content h3:hover {
+    transform: translateX(4px);
+    color: #d08770;
+    /* hover 变成暖橙色 */
+}
+
+/* 通用标题样式 */
 .post-content h1,
 .post-content h2,
 .post-content h3,
 .post-content h4 {
     font-weight: 600;
-    transition: transform var(--duration-fast);
+    transition: transform var(--duration-fast), color var(--duration-fast), border-bottom-color var(--duration-fast);
 }
 
 .post-content h1 {
     font-size: 2.25rem;
     margin: 3rem 0 1.5rem;
     font-weight: 700;
-    color: var(--primary);
 }
 
 .post-content h2 {
@@ -178,7 +250,6 @@ html[data-theme="dark"] .main .post {
 .post-content h4 {
     font-size: 1.25rem;
     margin: 2rem 0 1rem;
-    color: var(--primary-dark);
 }
 
 @media (max-width: 767px) {
@@ -228,8 +299,8 @@ a {
 }
 
 html:not([data-theme="dark"]) .post-content code:not(pre code) {
-    color: #1e6f5c;
-    background-color: rgba(30, 111, 92, 0.12);
+    color: #2b6b4c;
+    background-color: rgba(43, 107, 76, 0.1);
 }
 
 html[data-theme="dark"] .post-content code:not(pre code) {
@@ -431,68 +502,144 @@ html[data-theme="dark"] .highlight:is(.language-ts, .language-tsx, .language-js,
     color: #89b4fa;
 }
 
-/* 表格 */
+/* 表格 - Material Design 3 风格（带边框） */
 .post-content table {
     width: 100%;
     margin: 2rem 0;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 16px;
+    overflow-x: auto;
+    display: block;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+}
+
+/* 确保表格内部填满 */
+.post-content table {
+    display: table;
+    overflow-x: auto;
 }
 
 .post-content th {
     font-weight: 600;
     background-color: var(--tertiary);
-    border: 1px solid var(--border);
-    padding: 10px 16px;
+    padding: 14px 16px;
     text-align: left;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
 }
 
 .post-content td {
-    border: 1px solid var(--border);
-    padding: 10px 16px;
+    padding: 12px 16px;
     line-height: 1.6;
-    transition: background-color var(--duration-fast);
+    transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+    border-bottom: 1px solid var(--border);
 }
 
-.post-content tr:nth-child(even) {
-    background-color: rgba(128, 128, 128, 0.05);
+/* 最后一行的单元格去掉底部边框 */
+.post-content tr:last-child td {
+    border-bottom: none;
 }
 
-.post-content tr:hover td {
-    background-color: rgba(128, 128, 128, 0.1);
+/* 四角圆角 */
+.post-content tr:first-child th:first-child {
+    border-top-left-radius: 16px;
+}
+
+.post-content tr:first-child th:last-child {
+    border-top-right-radius: 16px;
+}
+
+.post-content tr:last-child td:first-child {
+    border-bottom-left-radius: 16px;
+}
+
+.post-content tr:last-child td:last-child {
+    border-bottom-right-radius: 16px;
+}
+
+/* 浅色模式表格行 */
+html:not([data-theme="dark"]) .post-content tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+html:not([data-theme="dark"]) .post-content tr:hover td {
+    background-color: rgba(42, 74, 32, 0.06);
+}
+
+/* 深色模式表格行 */
+html[data-theme="dark"] .post-content tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+html[data-theme="dark"] .post-content tr:hover td {
+    background-color: rgba(230, 184, 96, 0.08);
+}
+
+/* 让表格容器填满宽度 */
+.post-content {
+    overflow-x: auto;
 }
 
 @media (max-width: 768px) {
     .post-content table {
         display: block;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        border-radius: 12px;
+        width: 100%;
     }
 
     .post-content th,
     .post-content td {
-        padding: 8px 12px;
+        padding: 10px 12px;
         min-width: 80px;
     }
 }
 
-/* 引用块 */
+/* 引用块 - Material Design 3 风格（50%透明度版） */
 .post-content blockquote {
     margin: 2rem 0;
     padding: 1rem 1.5rem;
-    border-left: 5px solid var(--primary);
-    background: var(--tertiary);
-    border-radius: 0 12px 12px 0;
-    transition: transform var(--duration-fast), border-left-color var(--duration-fast);
+    border-radius: 16px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    position: relative;
+    backdrop-filter: blur(8px);
+}
+
+/* MD3 风格：左侧彩色条 */
+.post-content blockquote::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    bottom: 16px;
+    width: 4px;
+    border-radius: 4px;
+    background: var(--primary);
 }
 
 .post-content blockquote:hover {
-    transform: translateX(5px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* 浅色模式引用块 - 半透明毛玻璃 */
 html:not([data-theme="dark"]) .post-content blockquote {
-    background: #f0f5ed;
+    background: rgba(248, 245, 232, 0.5);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(188, 196, 170, 0.2);
 }
 
-/* 列表 */
+/* 深色模式引用块 - 半透明毛玻璃 */
+html[data-theme="dark"] .post-content blockquote {
+    background: rgba(42, 45, 47, 0.5);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(62, 66, 69, 0.3);
+}
+
+/* 列表 - Material Design 3 风格 */
 .post-content ul,
 .post-content ol {
     margin-bottom: 1.5rem;
@@ -501,7 +648,9 @@ html:not([data-theme="dark"]) .post-content blockquote {
 
 .post-content li {
     margin-bottom: 0.6rem;
-    transition: transform var(--duration-fast);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    padding: 4px 0;
+    border-radius: 8px;
 }
 
 .post-content li:hover {
@@ -512,90 +661,320 @@ html:not([data-theme="dark"]) .post-content blockquote {
     color: var(--primary);
 }
 
-/* 图片 */
+/* 浅色模式列表 */
+html:not([data-theme="dark"]) .post-content li:hover {
+    background-color: rgba(42, 74, 32, 0.04);
+}
+
+/* 深色模式列表 */
+html[data-theme="dark"] .post-content li:hover {
+    background-color: rgba(230, 184, 96, 0.06);
+}
+
+/* 嵌套列表样式 - MD3 多层缩进 */
+.post-content ul ul,
+.post-content ol ul,
+.post-content ul ol,
+.post-content ol ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* 列表项之间增加微妙分隔线（可选，更MD3） */
+.post-content li:not(:last-child) {
+    border-bottom: 1px solid transparent;
+}
+
+html:not([data-theme="dark"]) .post-content li:not(:last-child) {
+    border-bottom-color: rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="dark"] .post-content li:not(:last-child) {
+    border-bottom-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (max-width: 768px) {
+
+    .post-content ul,
+    .post-content ol {
+        padding-left: 1.5rem;
+    }
+
+    .post-content li {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* 图片 - Material Design 3 风格 */
 .post-content img,
 .post-content figure img {
     display: block;
     max-width: 100%;
-    border-radius: 12px;
+    border-radius: 16px;
     margin: 2.5rem auto;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform var(--duration-normal), box-shadow var(--duration-normal);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .post-content img:hover,
 .post-content figure img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    transform: scale(1.01);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .post-content figcaption {
-    font-size: 0.9em;
+    font-size: 0.875rem;
+    font-weight: 400;
     color: var(--secondary);
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     text-align: center;
+    letter-spacing: 0.3px;
 }
 
-/* 脚注 */
+/* 图片容器（如果有 figure） */
+.post-content figure {
+    margin: 2.5rem 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 16px;
+}
+
+/* 浅色模式图片微调 */
+html:not([data-theme="dark"]) .post-content img,
+html:not([data-theme="dark"]) .post-content figure img {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* 深色模式图片微调 */
+html[data-theme="dark"] .post-content img,
+html[data-theme="dark"] .post-content figure img {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+
+    .post-content img,
+    .post-content figure img {
+        border-radius: 12px;
+        margin: 1.5rem auto;
+    }
+
+    .post-content figcaption {
+        font-size: 0.8rem;
+    }
+}
+
+
+
+/* 脚注 - Material Design 3 风格 */
 .footnotes {
     margin-top: 4rem;
     padding-top: 2rem;
-    border-top: 2px solid var(--border);
-    font-size: 0.9em;
+    border-top: none;
+    position: relative;
+    font-size: 0.875rem;
+}
+
+/* MD3 风格：用渐变线代替实线边框 */
+.footnotes::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border) 0%, var(--border) 70%, transparent 100%);
+}
+
+.footnotes ol {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.footnotes li {
+    margin-bottom: 0.75rem;
+    color: var(--secondary);
+    transition: color 0.2s cubic-bezier(0.2, 0, 0, 1);
+    padding: 2px 0;
+}
+
+.footnotes li:hover {
+    color: var(--content);
+}
+
+.footnotes li:last-child {
+    margin-bottom: 0;
 }
 
 .footnote-ref {
     font-family: var(--font-code);
-    font-size: 0.85em;
+    font-size: 0.8em;
+    background-color: var(--tertiary);
+    padding: 0 6px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    text-decoration: none;
 }
 
-/* 目录 TOC */
+/* 浅色模式脚注引用 */
+html:not([data-theme="dark"]) .footnote-ref {
+    background-color: rgba(42, 74, 32, 0.08);
+    color: var(--primary);
+}
+
+html:not([data-theme="dark"]) .footnote-ref:hover {
+    background-color: rgba(42, 74, 32, 0.15);
+    transform: translateY(-1px);
+}
+
+/* 深色模式脚注引用 */
+html[data-theme="dark"] .footnote-ref {
+    background-color: rgba(230, 184, 96, 0.12);
+    color: var(--primary);
+}
+
+html[data-theme="dark"] .footnote-ref:hover {
+    background-color: rgba(230, 184, 96, 0.2);
+    transform: translateY(-1px);
+}
+
+/* 脚注返回链接 */
+.footnotes .reversefootnote {
+    text-decoration: none;
+    margin-left: 0.25rem;
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.footnotes .reversefootnote:hover {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .footnotes {
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        font-size: 0.8rem;
+    }
+
+    .footnotes li {
+        margin-bottom: 0.6rem;
+    }
+}
+
+
+
+
+
+/* 目录 TOC - Material Design 3 风格（50%透明度版） */
 .toc {
-    background: var(--entry);
-    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.toc:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .toc a {
     color: var(--secondary);
     text-decoration: none;
-    transition: transform 0.2s ease, color 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     display: inline-block;
+    position: relative;
+    padding: 2px 0;
+    border-radius: 8px;
 }
 
 .toc a:hover {
     color: var(--primary);
-    transform: translateX(4px);
+    transform: translateX(6px);
+}
+
+/* 选中/激活的目录项 - MD3 高亮 */
+.toc .active {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.toc .active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 4px;
 }
 
 .toc summary {
     cursor: pointer;
     color: var(--primary);
     font-weight: 600;
+    font-size: 1rem;
+    padding: 4px 0;
+    border-radius: 12px;
+    transition: background 0.2s ease;
+}
+
+.toc summary:hover {
+    background: rgba(128, 128, 128, 0.05);
+}
+
+/* 浅色模式 - 50%透明度 */
+html:not([data-theme="dark"]) .toc {
+    background: rgba(240, 236, 216, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+html:not([data-theme="dark"]) .toc a:hover {
+    background: rgba(42, 74, 32, 0.06);
+}
+
+/* 深色模式 - 50%透明度 */
+html[data-theme="dark"] .toc {
+    background: rgba(42, 45, 47, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+html[data-theme="dark"] .toc a:hover {
+    background: rgba(230, 184, 96, 0.08);
 }
 
 @media (min-width: 1280px) {
     .toc {
-        font-size: 16px;
-        line-height: 1.6;
+        font-size: 15px;
+        line-height: 1.65;
         padding: 20px !important;
-        border-radius: 12px;
+        border-radius: 20px;
     }
 
     .toc summary {
-        font-size: 18px;
-        margin-bottom: 15px;
+        font-size: 16px;
+        margin-bottom: 16px;
+        font-weight: 600;
     }
 
     .toc ul {
-        margin-inline-start: 15px;
+        margin-inline-start: 18px;
     }
 
     .toc li {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
     .toc::-webkit-scrollbar {
         width: 4px;
+    }
+
+    .toc::-webkit-scrollbar-track {
+        background: transparent;
     }
 
     .toc::-webkit-scrollbar-thumb {
@@ -606,15 +985,15 @@ html:not([data-theme="dark"]) .post-content blockquote {
 
 @media (min-width: 769px) and (max-width: 1279px) {
     .toc {
-        font-size: 16px;
-        border-radius: 12px;
+        font-size: 14px;
+        border-radius: 18px;
         padding: 16px !important;
     }
 }
 
 @media (max-width: 768px) {
     .toc {
-        border-radius: 12px;
+        border-radius: 16px;
         margin: 1rem 0;
         padding: 12px !important;
         max-height: 300px;
@@ -627,80 +1006,139 @@ html:not([data-theme="dark"]) .post-content blockquote {
         top: 0;
         background: inherit;
         z-index: 1;
+        backdrop-filter: blur(8px);
     }
 }
 
-/* 标签云 */
+
+
+
+/* 标签云 - Material Design 3 风格 */
 .tags a,
 .post-tags a {
     display: inline-flex;
-    padding: 4px 12px;
-    margin: 0 6px 6px 0;
-    border-radius: 20px;
+    padding: 6px 14px;
+    margin: 0 8px 8px 0;
+    border-radius: 32px;
     font-size: 0.85rem;
+    font-weight: 500;
     text-decoration: none;
-    transition: all var(--duration-fast);
-    border: 1px solid;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    border: none;
+    letter-spacing: 0.3px;
 }
 
+/* 浅色模式标签 */
 html:not([data-theme="dark"]) .tags a,
 html:not([data-theme="dark"]) .post-tags a {
-    background: #d4e2cc;
-    color: #2d5a2c;
-    border-color: #c0d4b5;
+    background: rgba(42, 74, 32, 0.08);
+    color: #3a6b28;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
 }
 
+html:not([data-theme="dark"]) .tags a:hover,
+html:not([data-theme="dark"]) .post-tags a:hover {
+    background: rgba(42, 74, 32, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* 深色模式标签 */
 html[data-theme="dark"] .tags a,
 html[data-theme="dark"] .post-tags a {
-    background: #3c3f41;
-    color: #a9b7c6;
-    border-color: #4a4a4a;
+    background: rgba(230, 184, 96, 0.12);
+    color: #e6b860;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
-.tags a:hover,
-.post-tags a:hover {
+html[data-theme="dark"] .tags a:hover,
+html[data-theme="dark"] .post-tags a:hover {
+    background: rgba(230, 184, 96, 0.2);
     transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-/* 复制按钮 */
+/* 标签容器 - MD3 芯片组布局 */
+.tags,
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+
+
+
+/* 复制按钮 - Material Design 3 风格 */
 .highlight {
     position: relative;
 }
 
 .copy-code-button {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 12px;
+    right: 12px;
     border: none;
-    border-radius: 6px;
-    padding: 4px 10px;
+    border-radius: 24px;
+    padding: 6px 14px;
     font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity var(--duration-normal), background var(--duration-fast);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+/* 浅色模式复制按钮 */
 html:not([data-theme="dark"]) .copy-code-button {
-    background: #d4e2cc;
-    color: #2d5a2c;
+    background: rgba(42, 74, 32, 0.85);
+    color: #ffffff;
 }
 
+html:not([data-theme="dark"]) .copy-code-button:hover {
+    background: #3a6b28;
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* 深色模式复制按钮 */
 html[data-theme="dark"] .copy-code-button {
-    background: #3c3f41;
-    color: #a9b7c6;
+    background: rgba(230, 184, 96, 0.9);
+    color: #1e2123;
 }
 
-.copy-code-button:hover {
-    background: var(--primary);
-    color: white;
-    transform: scale(1.05);
+html[data-theme="dark"] .copy-code-button:hover {
+    background: #e6b860;
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.copy-code-button:active {
+    transform: scale(0.98);
 }
 
 .highlight:hover .copy-code-button {
     opacity: 1;
 }
 
-/* 个人资料头像 */
+/* 复制成功状态 */
+.copy-code-button.copied {
+    background: #4caf50;
+    color: white;
+}
+
+html[data-theme="dark"] .copy-code-button.copied {
+    background: #4caf50;
+    color: white;
+}
+
+
+
+
+
+/* 个人资料头像 - Material Design 3 风格 */
 .profile img,
 .profile video {
     min-width: 30px !important;
@@ -708,89 +1146,333 @@ html[data-theme="dark"] .copy-code-button {
     width: 150px !important;
     height: 150px !important;
     object-fit: cover;
-    transition: transform var(--duration-normal), box-shadow var(--duration-normal);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
     border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }
 
 .profile video {
     object-fit: cover;
 }
 
-.profile img:hover,
-.profile video:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+/* 浅色模式头像 */
+html:not([data-theme="dark"]) .profile img,
+html:not([data-theme="dark"]) .profile video {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03);
+    outline-color: rgba(42, 74, 32, 0.2);
 }
 
-/* 交互元素 */
+/* 深色模式头像 */
+html[data-theme="dark"] .profile img,
+html[data-theme="dark"] .profile video {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    outline-color: rgba(230, 184, 96, 0.3);
+}
+
+.profile img:hover,
+.profile video:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 浅色模式悬停 */
+html:not([data-theme="dark"]) .profile img:hover,
+html:not([data-theme="dark"]) .profile video:hover {
+    outline-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(42, 74, 32, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 深色模式悬停 */
+html[data-theme="dark"] .profile img:hover,
+html[data-theme="dark"] .profile video:hover {
+    outline-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(230, 184, 96, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 交互元素 - Material Design 3 风格 */
 button,
 .button {
-    transition: transform var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     cursor: pointer;
+    border-radius: 24px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 button:hover,
 .button:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
+/* 排除主题切换按钮 */
+button:not(.theme-toggle),
+.button:not(.theme-toggle) {
+    /* 样式保持不变 */
+}
+
+/* 浅色模式按钮 - 排除主题切换按钮 */
+html:not([data-theme="dark"]) button:not(.theme-toggle),
+html:not([data-theme="dark"]) .button:not(.theme-toggle) {
+    background: rgba(42, 74, 32, 0.08);
+    color: #3a6b28;
+    border: none;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+}
+
+html:not([data-theme="dark"]) button:not(.theme-toggle):hover,
+html:not([data-theme="dark"]) .button:not(.theme-toggle):hover {
+    background: rgba(42, 74, 32, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+html:not([data-theme="dark"]) button:not(.theme-toggle):active,
+html:not([data-theme="dark"]) .button:not(.theme-toggle):active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* 深色模式按钮 - 排除主题切换按钮 */
+html[data-theme="dark"] button:not(.theme-toggle),
+html[data-theme="dark"] .button:not(.theme-toggle) {
+    background: rgba(230, 184, 96, 0.12);
+    color: #e6b860;
+    border: none;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] button:not(.theme-toggle):hover,
+html[data-theme="dark"] .button:not(.theme-toggle):hover {
+    background: rgba(230, 184, 96, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+html[data-theme="dark"] button:not(.theme-toggle):active,
+html[data-theme="dark"] .button:not(.theme-toggle):active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* 主要按钮样式 - 排除主题切换按钮 */
+button.primary:not(.theme-toggle),
+.button.primary:not(.theme-toggle) {
+    background: var(--primary);
+    color: white;
+    padding: 8px 20px;
+}
+
+html:not([data-theme="dark"]) button.primary:not(.theme-toggle),
+html:not([data-theme="dark"]) .button.primary:not(.theme-toggle) {
+    background: #3a6b28;
+    color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+html:not([data-theme="dark"]) button.primary:not(.theme-toggle):hover,
+html:not([data-theme="dark"]) .button.primary:not(.theme-toggle):hover {
+    background: #2e5520;
+    box-shadow: 0 2px 8px rgba(42, 74, 32, 0.3);
+}
+
+html[data-theme="dark"] button.primary:not(.theme-toggle),
+html[data-theme="dark"] .button.primary:not(.theme-toggle) {
+    background: #e6b860;
+    color: #1e2123;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] button.primary:not(.theme-toggle):hover,
+html[data-theme="dark"] .button.primary:not(.theme-toggle):hover {
+    background: #d4a652;
+    box-shadow: 0 2px 8px rgba(230, 184, 96, 0.3);
+}
+
+/* 焦点样式 - MD3 外发光 */
 a:focus-visible,
-button:focus-visible,
+button:focus-visible:not(.theme-toggle),
 .toc a:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-    border-radius: 4px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42, 74, 32, 0.3);
+    border-radius: 8px;
+}
+
+html[data-theme="dark"] a:focus-visible,
+html[data-theme="dark"] button:focus-visible:not(.theme-toggle),
+html[data-theme="dark"] .toc a:focus-visible {
+    box-shadow: 0 0 0 3px rgba(230, 184, 96, 0.4);
+}
+
+/* 按下反馈 - 排除主题切换按钮 */
+button:active:not(.theme-toggle),
+.button:active:not(.theme-toggle) {
+    transform: translateY(0);
 }
 
 html {
     scroll-behavior: smooth;
 }
 
+/* 主题切换按钮单独样式 - 保持原始外观 */
+.theme-toggle {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 50% !important;
+    padding: 8px;
+}
+
+.theme-toggle:hover {
+    background: rgba(128, 128, 128, 0.1) !important;
+    transform: scale(1.05) !important;
+}
+
+.theme-toggle:active {
+    transform: scale(0.95) !important;
+}
+
+
+
+
+
+
 /* 页脚 */
 .footer .copyright {
     display: none !important;
 }
 
-/* 搜索框 */
+/* 搜索框 - Material Design 3 风格（50%透明度版） */
 .search-wrapper .search {
-    background: var(--entry);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
+.search-wrapper .search:focus-within {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.search-wrapper .search input {
+    border-radius: 28px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+/* 浅色模式搜索框 - 半透明 */
 html:not([data-theme="dark"]) .search-wrapper .search {
-    background: #f5f9f2;
+    background: rgba(240, 236, 216, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+html:not([data-theme="dark"]) .search-wrapper .search input {
+    background: transparent;
+    color: #2e3d28;
+}
+
+html:not([data-theme="dark"]) .search-wrapper .search input::placeholder {
+    color: rgba(46, 61, 40, 0.4);
+}
+
+/* 深色模式搜索框 - 半透明 */
+html[data-theme="dark"] .search-wrapper .search {
+    background: rgba(42, 45, 47, 0.5);
+    backdrop-filter: blur(8px);
 }
 
 html[data-theme="dark"] .search-wrapper .search input {
-    background: #323232;
-    color: #a9b7c6;
+    background: transparent;
+    color: #e0e3da;
 }
 
-/* 深色模式补充 */
+html[data-theme="dark"] .search-wrapper .search input::placeholder {
+    color: rgba(224, 227, 218, 0.4);
+}
+
+/* 列表项 - MD3 卡片风格 */
 html[data-theme="dark"] .list .post-entry,
 html[data-theme="dark"] .first-entry {
-    background: #323232;
+    background: var(--card-bg);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
+html[data-theme="dark"] .list .post-entry:hover,
+html[data-theme="dark"] .first-entry:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+/* 分页 - MD3 风格 */
 html[data-theme="dark"] .pagination a {
-    background: #323232;
-    border-color: #4a4a4a;
-    color: #a9b7c6;
+    background: var(--card-bg);
+    border: none;
+    border-radius: 28px;
+    color: #e0e3da;
+    padding: 8px 18px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 html[data-theme="dark"] .pagination a:hover {
-    background: #3c3f41;
-    color: #ffc66d;
+    background: var(--primary);
+    color: #1e2123;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(230, 184, 96, 0.3);
 }
 
+/* 归档年份 - MD3 强调色 */
 html[data-theme="dark"] .archive-year {
-    color: #ffc66d;
+    color: var(--primary);
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
+/* 文章元数据 - MD3 辅助文字 */
 html[data-theme="dark"] .post-meta,
 html[data-theme="dark"] .post-meta time {
-    color: #808080;
+    color: var(--secondary);
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+}
+
+/* 浅色模式补充 - 保持一致性 */
+html:not([data-theme="dark"]) .list .post-entry,
+html:not([data-theme="dark"]) .first-entry {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+html:not([data-theme="dark"]) .list .post-entry:hover,
+html:not([data-theme="dark"]) .first-entry:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+html:not([data-theme="dark"]) .pagination a {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 28px;
+    color: var(--content);
+    padding: 8px 18px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+html:not([data-theme="dark"]) .pagination a:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(42, 74, 32, 0.25);
 }
 
 /* 打印样式 */
@@ -847,3 +1529,72 @@ html[data-theme="dark"] .post-meta time {
         scroll-behavior: auto !important;
     }
 }
+
+
+
+/* 标签云页面 - Material Design 3 风格（50%透明度版） */
+.terms-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+.terms-tags li {
+    margin: 0;
+}
+
+.terms-tags a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 32px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    border: none;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+}
+
+.terms-tags a sup {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* 浅色模式标签云 - 50%透明度 */
+html:not([data-theme="dark"]) .terms-tags a {
+    background: rgba(42, 74, 32, 0.08);
+    color: #3a6b28;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+}
+
+html:not([data-theme="dark"]) .terms-tags a:hover {
+    background: rgba(42, 74, 32, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 深色模式标签云 - 50%透明度 */
+html[data-theme="dark"] .terms-tags a {
+    background: rgba(230, 184, 96, 0.08);
+    color: #e6b860;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .terms-tags a:hover {
+    background: rgba(230, 184, 96, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* 标签数字计数样式 */
+.terms-tags a sup strong {
+    font-weight: 600;
+}
+

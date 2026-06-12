@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Gateway 生产实战——鉴权、限流、熔断与部署
+# Gateway 生产实战
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Gateway 的 Route/Predicate/Filter 全操作。如果还不熟悉，建议先阅读前三篇：[<strong>核心概念</strong>]({{< relref "GatewayFundamentals.md" >}})、[<strong>Predicate 全解</strong>]({{< relref "GatewayPredicate.md" >}})、[<strong>Filter 全操作</strong>]({{< relref "GatewayFilterGuide.md" >}})。
 

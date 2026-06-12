@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Dubbo 集群容错、负载均衡与异步调用
+# Dubbo 集群容错
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot Dubbo 的基本 RPC 操作（`@DubboService` / `@DubboReference`）。如果还不熟悉，建议先阅读 [<strong>SpringBoot Dubbo 全操作指南</strong>]({{< relref "SpringBootDubbo.md" >}})。
 

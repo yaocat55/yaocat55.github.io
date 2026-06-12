@@ -26,6 +26,8 @@ cover:
     hidden: false
 ---
 
+# Go 并发编程
+
 写了 5 年 Java 并发，你手上的工具大概是这样的：
 
 ```java

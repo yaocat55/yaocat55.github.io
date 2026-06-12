@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Sentinel 系统规则与生产部署
+# Sentinel 生产部署
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Sentinel 流控和熔断规则。如果还不熟悉，建议先阅读前三篇：[<strong>核心概念</strong>]({{< relref "SentinelFundamentals.md" >}})、[<strong>流控规则</strong>]({{< relref "SentinelFlowControl.md" >}})、[<strong>熔断降级</strong>]({{< relref "SentinelDegrade.md" >}})。
 

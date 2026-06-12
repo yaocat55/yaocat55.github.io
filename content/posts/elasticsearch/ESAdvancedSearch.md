@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# ES 高级搜索与聚合分析
+# ES 高级搜索
 
 > 📖 <strong>前置阅读</strong>：本文是 ES 系列的<strong>进阶篇</strong>，假设读者已经掌握了 ES 核心概念（倒排索引、分词器、Mapping）和 SpringBoot 的基本操作。如果还没有，建议先阅读前两篇：
 > - [<strong>Elasticsearch 核心概念：倒排索引、分词器与 REST API 全解析</strong>]({{< relref "ESFundamentals.md" >}}) —— 介绍篇

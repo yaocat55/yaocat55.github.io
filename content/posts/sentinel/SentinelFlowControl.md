@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Sentinel 流控规则全解
+# Sentinel 流控规则
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Sentinel 的核心概念——资源/规则/Entry 类型。如果还不熟悉，建议先阅读 [<strong>Sentinel 核心概念与快速上手</strong>]({{< relref "SentinelFundamentals.md" >}})。
 

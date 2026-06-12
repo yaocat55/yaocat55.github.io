@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# SpringBoot gRPC 全操作指南
+# SpringBoot gRPC 实战
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Protobuf 语法和 gRPC 四种调用模式的概念。如果还不熟悉，建议先阅读 [<strong>Protobuf 语法精讲与 gRPC 概念</strong>]({{< relref "ProtobufGuide.md" >}})。
 

@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RocketMQ 顺序消息、延迟消息与事务消息
+# 顺序消息、延迟消息与事务消息
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot RocketMQ 的基本操作（`RocketMQTemplate`、`@RocketMQMessageListener`）。如果还不熟悉，建议先阅读 [<strong>SpringBoot RocketMQ 全操作指南</strong>]({{< relref "SpringBootRocketMQ.md" >}})。
 

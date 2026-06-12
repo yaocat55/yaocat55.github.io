@@ -1,0 +1,219 @@
+<audio id="cat-player" preload="metadata"></audio>
+<div id="cat-radio">
+    <div id="cat-btn">🐱</div>
+    <div id="cat-info">Cat Radio</div>
+</div>
+
+<style>
+    #cat-radio {
+        position: fixed;
+        right: 90px;
+        bottom: 20px;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(20px);
+        border-radius: 60px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 4px;
+        padding-right: 16px;
+    }
+
+    #cat-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5d9e5a, #3d6b35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: none;
+        transition: all .3s ease;
+        color: white;
+        margin: 0;
+    }
+
+    #cat-btn:hover {
+        transform: scale(1.05) rotate(8deg);
+        background: linear-gradient(135deg, #4a8a47, #2a5522);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    #cat-info {
+        max-width: 220px;
+        padding: 0 8px 0 12px;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+        font-size: 14px;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', monospace;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        box-shadow: none;
+        border: none;
+        transition: all 0.2s ease;
+        color: #2c3e2a;
+        letter-spacing: 0.5px;
+    }
+
+    /* 深色模式 */
+    html[data-theme="dark"] #cat-radio {
+        background: rgba(30, 33, 35, 0.5);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    html[data-theme="dark"] #cat-btn {
+        background: linear-gradient(135deg, #e6b860, #d4a652);
+        color: #1e2123;
+    }
+
+    html[data-theme="dark"] #cat-btn:hover {
+        background: linear-gradient(135deg, #d4a652, #c49a48);
+    }
+
+    html[data-theme="dark"] #cat-info {
+        color: #e8dcc8;
+    }
+
+    @media (max-width: 768px) {
+        #cat-radio {
+            right: 20px;
+            bottom: 20px;
+            padding: 4px;
+            padding-right: 0;
+        }
+
+        #cat-info {
+            display: none;
+        }
+
+        #cat-btn {
+            width: 48px;
+            height: 48px;
+            font-size: 22px;
+        }
+    }
+</style>
+
+<script>
+    (function () {
+        // 防止重复初始化
+        if (window._musicPlayerInitialized) return;
+        window._musicPlayerInitialized = true;
+
+        const playlist = [
+            { name: "oddloop", file: "/music/oddloop.mp3" },
+            { name: "night dancer", file: "/music/night dancer.mp3" },
+            { name: "夜に駆ける", file: "/music/夜に駆ける.mp3" },
+            { name: "brain rot", file: "/music/brain rot.mp3" },
+            { name: "dehors", file: "/music/dehors.mp3" },
+            { name: "I love you so", file: "/music/I love you so.mp3" },
+            { name: "odoriko", file: "/music/odoriko.mp3" },
+            { name: "tek it", file: "/music/tek it.mp3" }
+        ];
+
+        const audio = document.getElementById("cat-player");
+        const btn = document.getElementById("cat-btn");
+        const info = document.getElementById("cat-info");
+        let current = parseInt(localStorage.getItem("cat-radio-index") || "0");
+
+        function load(index) {
+            current = index;
+            audio.src = playlist[index].file;
+            info.innerHTML = "🎵 " + playlist[index].name;
+            localStorage.setItem("cat-radio-index", index);
+        }
+
+        function nextSong() {
+            let next = current + 1;
+            if (next >= playlist.length) {
+                next = 0;
+            }
+            load(next);
+            audio.play();
+            btn.innerHTML = "🎵";
+        }
+
+        // 保存播放进度（每3秒）
+        setInterval(() => {
+            if (!audio.paused && !isNaN(audio.currentTime)) {
+                localStorage.setItem('cat-radio-time', audio.currentTime);
+                localStorage.setItem('cat-radio-playing', 'true');
+            }
+        }, 3000);
+
+        // 页面加载时恢复播放
+        const savedTime = localStorage.getItem('cat-radio-time');
+        const wasPlaying = localStorage.getItem('cat-radio-playing') === 'true';
+
+        load(current);
+
+        if (savedTime && !isNaN(parseFloat(savedTime))) {
+            audio.currentTime = parseFloat(savedTime);
+        }
+
+        // 尝试自动播放
+        if (wasPlaying) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    btn.innerHTML = "🎵";
+                }).catch(() => {
+                    btn.innerHTML = "🐱";
+                    console.log('自动播放被阻止，需要用户点击页面');
+                });
+            }
+        }
+
+        // 监听页面可见性变化
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && wasPlaying && audio.paused) {
+                audio.play().catch(() => { });
+            }
+        });
+
+        // 绑定事件
+        btn.addEventListener("click", () => {
+            if (audio.paused) {
+                audio.play();
+                btn.innerHTML = "🎵";
+            } else {
+                audio.pause();
+                btn.innerHTML = "🐱";
+            }
+        });
+
+        btn.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            nextSong();
+        });
+
+        audio.addEventListener("ended", nextSong);
+        audio.addEventListener("error", () => {
+            console.warn("音频加载失败，尝试下一首");
+            nextSong();
+        });
+
+        // 页面关闭前保存状态
+        window.addEventListener('beforeunload', () => {
+            if (!audio.paused && !isNaN(audio.currentTime)) {
+                localStorage.setItem('cat-radio-time', audio.currentTime);
+                localStorage.setItem('cat-radio-playing', 'true');
+            } else {
+                localStorage.setItem('cat-radio-playing', 'false');
+            }
+        });
+
+        console.log("🎵 Cat Radio 已启动（断点续播）");
+    })();
+</script>

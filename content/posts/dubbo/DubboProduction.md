@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Dubbo 生产环境部署与调优
+# Dubbo 生产部署
 
 > 📖 <strong>前置阅读</strong>：本文是 Dubbo 系列的终篇，假设读者已经掌握前五篇的全部内容（核心架构、SpringBoot 集成、集群容错与负载均衡、注册中心、Dubbo 3.x 新特性）。
 

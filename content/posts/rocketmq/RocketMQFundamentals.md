@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RocketMQ 核心架构与消息模型
+# 核心架构与消息模型
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解消息队列的基本价值（异步、解耦、削峰填谷），以及 RabbitMQ 的核心概念。如果还不熟悉消息队列，建议先阅读 [<strong>RabbitMQ 核心概念与 AMQP 协议</strong>]({{< relref "../rabbitmq/RabbitMQFundamentals.md" >}})。
 

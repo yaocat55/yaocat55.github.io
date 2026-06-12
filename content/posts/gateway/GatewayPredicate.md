@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Predicate 与路由规则全解
+# Predicate 与路由规则
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 Route/Predicate/Filter 三要素和 Gateway 的基本用法。如果还不熟悉，建议先阅读 [<strong>Spring Cloud Gateway 核心概念与快速上手</strong>]({{< relref "GatewayFundamentals.md" >}})。
 

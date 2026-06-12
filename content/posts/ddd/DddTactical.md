@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# DDD 战术落地——代码怎么写
+# DDD 代码怎么写？
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解实体、值对象、聚合根、限界上下文、领域事件的核心概念。如果还不熟悉，建议先阅读 [<strong>DDD 本质——领域驱动设计的核心概念</strong>]({{< relref "DddFundamentals.md" >}})。
 

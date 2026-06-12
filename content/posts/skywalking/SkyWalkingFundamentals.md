@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# SkyWalking 分布式链路追踪——从零搭建 APM 平台
+# SkyWalking 分布式链路追踪
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已了解微服务基本概念和 Docker。如果已搭建 Prometheus + Grafana，理解本文会更快——两者互补。建议先阅读 [<strong>Prometheus + Grafana 环境搭建与指标采集</strong>]({{< relref "PrometheusGrafanaFundamentals.md" >}})。
 

@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# MESI 缓存一致性协议
+# MESI 协议：CPU 是怎么保证缓存一致的？
 
 ## 🤔 一、CPU 架构师为什么需要 MESI 协议
 

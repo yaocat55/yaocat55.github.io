@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# DDD 重构实战——什么时候该用 DDD？什么时候 MVC 就够了？
+# DDD vs MVC：如何选择？
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 DDD 的核心概念（实体/值对象/聚合根/限界上下文）和战术代码模板（四层架构/Repository/Domain Service）。如果还不熟悉，建议先阅读 [<strong>DDD 本质</strong>]({{< relref "DddFundamentals.md" >}}) 和 [<strong>DDD 战术落地</strong>]({{< relref "DddTactical.md" >}})。
 

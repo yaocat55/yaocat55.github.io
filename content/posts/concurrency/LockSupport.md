@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# LockSupport 深度解析：从 wait/notify 的痛点到底层 park/unpark 实现
+# LockSupport 深度解析
 
 ## 🤔 道格·李为什么需要一个比 wait/notify 更可靠的阻塞原语
 

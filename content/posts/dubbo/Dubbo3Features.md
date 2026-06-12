@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Dubbo 3.x 新特性：Triple 协议与应用级服务发现
+# Dubbo 3.x 新特性
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Dubbo 的基本 RPC 开发、注册中心使用（Nacos）和 dubbo 协议。如果还不熟悉，建议先阅读 [<strong>Dubbo 核心架构与 RPC 模型</strong>]({{< relref "DubboFundamentals.md" >}}) 和 [<strong>注册中心：Nacos 与 Zookeeper</strong>]({{< relref "DubboRegistry.md" >}})。
 

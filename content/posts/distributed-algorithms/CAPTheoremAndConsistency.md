@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# CAP定理与一致性模型——从Nacos AP/CP双模理解取舍
+# CAP 定理与一致性模型
 
 [上篇]({{< relref "DistributedUncertainty.md" >}})讲了两件事：网络不可靠、时钟不可信。结尾留了一句话——<strong>这两个不确定性叠加——迫使你在"等精确答案"和"快速给大致答案"之间选边站。</strong>
 

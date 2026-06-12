@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Kafka 核心架构与日志存储模型
+# Kafka：分布式提交日志，不是消息队列
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解消息队列的基本价值（异步、解耦、削峰填谷），最好读过 RabbitMQ 或 RocketMQ 的任意一篇基础文章。有了 MQ 概念再学 Kafka 事半功倍。
 

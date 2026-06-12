@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Kafka 生产环境部署与调优
+# Kafka 生产环境实战
 
 > 📖 <strong>前置阅读</strong>：本文是 Kafka 系列的终篇，假设读者已经掌握前五篇的全部内容（核心架构、SpringBoot 集成、Producer 深入、Consumer 深入、Kafka Streams）。
 

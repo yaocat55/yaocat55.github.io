@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# SpringBoot Kafka 全操作指南
+# SpringBoot Kafka 实战
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 Kafka 的核心概念（Broker、Topic、Partition、ConsumerGroup、Offset）。如果还不熟悉，建议先阅读 [<strong>Kafka 核心架构与日志存储模型</strong>]({{< relref "KafkaFundamentals.md" >}})。
 

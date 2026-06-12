@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# gRPC Gateway 与生产环境部署
+# gRPC-Gateway：让前端也能调 gRPC
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已完成 gRPC 服务的开发和微服务拆分。如果还不熟悉，建议先阅读 [<strong>SpringBoot gRPC 全操作指南</strong>]({{< relref "SpringBootGrpc.md" >}}) 和 [<strong>微服务拆分实战：以 proto 为契约</strong>]({{< relref "GrpcMicroservice.md" >}})。
 

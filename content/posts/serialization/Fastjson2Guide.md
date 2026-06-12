@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Fastjson 进化史：从 1.x 漏洞到 Fastjson2
+# Fastjson 进化史
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解序列化的基本概念和 JSON 序列化工具的用法。如果还不熟悉，建议先阅读 [<strong>序列化本质与 Jackson 全操作指南</strong>]({{< relref "JacksonGuide.md" >}})。
 

@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RabbitMQ 消息可靠性保障
+# 消息可靠性保障：三道防线全覆盖
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot RabbitMQ 的基本操作（`RabbitTemplate` 发送、`@RabbitListener` 消费、手动 ACK）。如果还不熟悉，建议先阅读 [<strong>SpringBoot RabbitMQ 全操作指南</strong>]({{< relref "SpringBootRabbitMQ.md" >}})。
 

@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# SpringBoot RabbitMQ 全操作指南
+# SpringBoot 集成 RabbitMQ：从发送到消费
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 RabbitMQ 的核心概念（Exchange、Queue、Binding、RoutingKey）和四种交换机类型。如果还不熟悉，建议先阅读前两篇：
 > - [<strong>RabbitMQ 核心概念与 AMQP 协议</strong>]({{< relref "RabbitMQFundamentals.md" >}})

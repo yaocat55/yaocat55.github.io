@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Seata AT 模式——undo_log 与二阶段原理
+# Seata AT 模式
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解分布式事务的核心问题（多数据库操作一致性）和 BASE 最终一致性概念。如果还不熟悉，建议先阅读 [<strong>分布式事务本质——CAP、BASE 与四大方案</strong>]({{< relref "DtFundamentals.md" >}})。
 

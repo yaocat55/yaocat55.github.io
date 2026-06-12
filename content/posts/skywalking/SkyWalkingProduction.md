@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# SkyWalking 中间件集成与链路分析实战
+# SkyWalking 中间件集成
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已搭建 SkyWalking 并了解 Trace/Span/Segment 概念。如果还不熟悉，建议先阅读 [<strong>SkyWalking 分布式链路追踪——从零搭建 APM 平台</strong>]({{< relref "SkyWalkingFundamentals.md" >}})。
 

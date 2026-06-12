@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 所有中间件指标接入 Prometheus——统一仪表盘实战
+# 所有中间件指标接入 Prometheus
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Prometheus + Grafana 的基础搭建和 PromQL 语法。如果还不熟悉，建议先阅读 [<strong>Prometheus + Grafana 环境搭建与指标采集</strong>]({{< relref "PrometheusGrafanaFundamentals.md" >}})。
 

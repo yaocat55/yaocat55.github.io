@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RocketMQ 消费者模式与过滤器
+# RocketMQ 消费者模式
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot RocketMQ 的基本消费操作。如果还不熟悉，建议先阅读 [<strong>SpringBoot RocketMQ 全操作指南</strong>]({{< relref "SpringBootRocketMQ.md" >}})。
 

@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# GitLab CI/CD 流水线实战——编译、扫描、构建镜像、推送仓库
+# 代码 push 之后——五道关卡自动跑完
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已搭建 GitLab + Runner 并理解 `.gitlab-ci.yml` 基础语法（stages/jobs/artifacts/cache/rules）。如果还不熟悉，建议先阅读 [<strong>GitLab CI/CD 搭建与 Pipeline 语法精讲</strong>]({{< relref "GitlabCicdFundamentals.md" >}})。
 

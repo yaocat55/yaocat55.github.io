@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Nacos 服务发现深度解析
+# 服务发现深度解析
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Nacos 的核心概念——命名空间/分组/服务/实例。如果还不熟悉，建议先阅读 [<strong>Nacos 核心概念与快速上手</strong>]({{< relref "NacosFundamentals.md" >}})。
 

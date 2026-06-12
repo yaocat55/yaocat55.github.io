@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 序列化本质与 Jackson 全操作指南
+# 序列化本质与 Jackson
 
 ## 一、⚡ 序列化是什么：Java 对象和 JSON 之间的翻译官
 

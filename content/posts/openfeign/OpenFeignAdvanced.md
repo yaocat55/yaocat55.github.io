@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# OpenFeign 进阶——配置、拦截器与容错
+# 进阶指南：配置、拦截器与容错
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 OpenFeign 的基本用法——@FeignClient、注解映射。如果还不熟悉，建议先阅读 [<strong>OpenFeign 核心概念与快速上手</strong>]({{< relref "OpenFeignFundamentals.md" >}})。
 

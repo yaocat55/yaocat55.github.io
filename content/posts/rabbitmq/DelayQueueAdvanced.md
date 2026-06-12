@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RabbitMQ 延迟队列与高级特性
+# 延迟队列与高级特性
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 RabbitMQ 的基础操作（Exchange/Queue/Binding/手动ACK）和 SpringBoot 集成。如果还不熟悉，建议先阅读前三篇。
 

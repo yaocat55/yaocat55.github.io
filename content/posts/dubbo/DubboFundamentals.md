@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Dubbo 核心架构与 RPC 模型
+# Dubbo 核心架构
 
 > 📖 <strong>前置阅读</strong>：本文假设读者理解基本的网络通信概念（TCP/IP、HTTP、序列化）。不需要预先了解 RPC——本文从零讲起。
 

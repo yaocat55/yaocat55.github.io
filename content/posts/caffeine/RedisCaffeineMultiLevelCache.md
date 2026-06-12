@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Redis + Caffeine 双层缓存：降级与容错
+# Redis + Caffeine 双层缓存
 
 > 📖 <strong>前置阅读</strong>：本文是缓存架构的进阶级文章，假设读者已经掌握了 Redis 的基础操作和 Caffeine 本地缓存的 API。如果还不熟悉，建议先阅读：
 > - [<strong>SpringBoot Redis 全操作指南</strong>]({{< relref "../redis/SpringBootRedis.md" >}}) —— Redis 实战篇

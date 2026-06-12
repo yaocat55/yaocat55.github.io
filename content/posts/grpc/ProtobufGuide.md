@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Protobuf 语法精讲与 gRPC 概念
+# Protobuf 语法与 gRPC 概念
 
 ## 一、⚡ Protobuf 是什么：为什么非要学一门"新语言"？
 

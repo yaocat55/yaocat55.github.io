@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RabbitMQ 交换机类型完全指南
+# 四种交换机：路由机制完全解析
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解上一篇中 Exchange、Queue、Binding、RoutingKey 的概念。如果还不清楚，建议先阅读 [<strong>RabbitMQ 核心概念与 AMQP 协议</strong>]({{< relref "RabbitMQFundamentals.md" >}})。
 

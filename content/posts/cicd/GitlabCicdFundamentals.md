@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# GitLab CI/CD 搭建与 Pipeline 语法精讲
+# 把 15 步手动操作变成一次 git push
 
 ## 一、⚡ 周五下午 5 点上线——你手动执行了 15 步操作——到第 12 步出错了
 

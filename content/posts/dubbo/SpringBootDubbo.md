@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# SpringBoot Dubbo 全操作指南
+# SpringBoot Dubbo
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 Dubbo 的核心概念（Registry、Provider、Consumer、RPC 调用链路）。如果还不熟悉，建议先阅读 [<strong>Dubbo 核心架构与 RPC 模型</strong>]({{< relref "DubboFundamentals.md" >}})。
 

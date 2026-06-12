@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 事务消息 + 本地消息表 + 生产踩坑
+# 事务消息 + 本地消息表
 
 > 📖 <strong>前置阅读</strong>：本文是分布式事务系列的第四篇——假设你已经理解了 CAP/BASE 理论、Seata AT 的 undo_log 机制、TCC 的 Try/Confirm/Cancel 三阶段和 Saga 的补偿链。如果这些概念还陌生——先读 [分布式事务本质——CAP、BASE 与四大方案]({{< relref "DtFundamentals.md" >}})、[Seata AT 模式——undo_log 与二阶段原理]({{< relref "DtSeataAT.md" >}}) 和 [TCC + Saga——补偿型分布式事务]({{< relref "DtTccSaga.md" >}})。
 

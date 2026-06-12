@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# GitLab CI/CD 多环境部署与生产实践
+# 从 dev 一路跑到 prod——点个按钮就上线
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已搭建 GitLab CI/CD 流水线（编译 → 测试 → 扫描 → 构建镜像 → 推送 Harbor），并已将微服务部署在 Kubernetes 上。如果还不熟悉，建议先阅读 [<strong>搭建与 Pipeline 语法精讲</strong>]({{< relref "GitlabCicdFundamentals.md" >}}) 和 [<strong>流水线实战</strong>]({{< relref "GitlabCicdPipeline.md" >}})。
 

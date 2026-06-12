@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Nacos 集群与生产部署——中间件整合总览
+# 集群与生产部署——中间件整合总览
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Nacos 的服务发现和配置中心机制。如果还不熟悉，建议先阅读前三篇：[<strong>核心概念</strong>]({{< relref "NacosFundamentals.md" >}})、[<strong>服务发现</strong>]({{< relref "NacosServiceDiscovery.md" >}})、[<strong>配置中心</strong>]({{< relref "NacosConfigCenter.md" >}})。
 

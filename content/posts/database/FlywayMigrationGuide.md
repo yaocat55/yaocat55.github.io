@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# Flyway 数据库迁移：告别手工执行 SQL 脚本
+# Flyway 数据库迁移
 
 ## 第1步：目标说明 — 从 38 个手工 SQL 脚本说起
 

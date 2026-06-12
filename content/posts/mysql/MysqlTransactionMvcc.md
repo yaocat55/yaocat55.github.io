@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# MySQL 事务与 MVCC：多版本并发控制的完整原理
+# 事务与 MVCC：多版本并发控制原理拆解
 
 > 📌 <strong>前置知识</strong>：这篇需要理解前两篇的 B+树结构和聚簇索引。核心概念——隐藏列、Undo Log、ReadView——都是在 B+树的聚簇索引叶子页上工作的。建议读到这里时回想前文 InnoDB 页结构中 User Records 的记录头信息。
 

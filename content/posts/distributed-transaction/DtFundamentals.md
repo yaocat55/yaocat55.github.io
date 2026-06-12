@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 分布式事务本质——CAP、BASE 与四大方案
+# 分布式事务本质
 
 ## 一、⚡ @Transactional 在生产中失效——不是代码写错了——是底层就不是一回事
 

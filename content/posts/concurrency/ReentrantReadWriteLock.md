@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# ReentrantReadWriteLock 深度解析：从读多写少场景到底层 state 拆分与锁降级
+# ReentrantReadWriteLock 深度解析
 
 ## 🤔 道格·李为什么要区分读锁和写锁
 

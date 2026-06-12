@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 微服务拆分实战：以 proto 为契约
+# 微服务拆分实战
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Protobuf 语法和 SpringBoot gRPC 的基本用法。如果还不熟悉，建议先阅读 [<strong>Protobuf 语法精讲与 gRPC 概念</strong>]({{< relref "ProtobufGuide.md" >}}) 和 [<strong>SpringBoot gRPC 全操作指南</strong>]({{< relref "SpringBootGrpc.md" >}})。
 

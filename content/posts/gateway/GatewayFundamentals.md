@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Spring Cloud Gateway 核心概念与快速上手
+# 搞懂网关三要素：Route、Predicate、Filter
 
 ## 一、⚡ 微服务上线后——前端疯了
 

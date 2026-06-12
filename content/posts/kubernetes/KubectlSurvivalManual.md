@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# 第3步：kubectl 生存手册 —— 开发者每天必敲的命令
+# kubectl 生存手册
 
 ## 一、目标说明
 

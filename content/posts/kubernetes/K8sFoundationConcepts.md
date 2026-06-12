@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# 第0步：Docker 是什么，K8s 为什么要存在
+# Docker 与 K8s：从困惑到搞懂
 
 ## 一、目标说明
 

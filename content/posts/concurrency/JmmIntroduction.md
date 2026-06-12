@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# JMM 如何借鉴 MESI：Java 内存模型的概念引入
+# JMM 如何借鉴 MESI？
 
 ## 🏗️ 一、JSR 133 专家组为什么需要定义 JMM
 

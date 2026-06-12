@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# SpringBoot RocketMQ 全操作指南
+# SpringBoot 集成 RocketMQ：从发送到消费
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 RocketMQ 的核心概念（NameServer、Broker、Topic、Queue、ConsumerGroup）。如果还不熟悉，建议先阅读 [<strong>RocketMQ 核心架构与消息模型</strong>]({{< relref "RocketMQFundamentals.md" >}})。
 

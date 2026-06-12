@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Kafka Consumer 深入：位移管理与 Rebalance
+# Kafka Consumer 深入
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot Kafka 的基本消费操作（`@KafkaListener`）。如果还不熟悉，建议先阅读 [<strong>SpringBoot Kafka 全操作指南</strong>]({{< relref "SpringBootKafka.md" >}})。
 

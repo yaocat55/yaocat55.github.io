@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# MongoDB 聚合管道深入
+# 聚合管道实战：从入门到精通
 
 > 📖 <strong>前置阅读</strong>：本文是 MongoDB 系列的<strong>进阶篇</strong>，假设读者已经掌握了 MongoDB 文档模型和 SpringBoot 基本操作。如果还没有，建议先阅读前两篇：
 > - [<strong>MongoDB 核心概念：文档模型、BSON 与查询操作符全解析</strong>]({{< relref "MongoDBFundamentals.md" >}}) —— 介绍篇

@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RabbitMQ 核心概念与 AMQP 协议
+# 核心概念与 AMQP 协议
 
 ## 一、⚡ 问题切入：同步处理为什么不行？
 

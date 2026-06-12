@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# CountDownLatch 设计思想解析：一次性的共享门闩为什么这样设计
+# CountDownLatch：一次性的共享门闩
 
 ## 🤔 道格·李为什么需要一个倒计时门闩
 

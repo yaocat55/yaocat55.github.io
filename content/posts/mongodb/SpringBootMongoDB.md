@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# SpringBoot MongoDB 全操作指南
+# SpringBoot 集成 MongoDB：CRUD 到聚合全操作
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已了解 MongoDB 的文档模型、BSON 数据类型和 mongosh 基础操作。如果还不熟悉，建议先阅读 [<strong>MongoDB 核心概念：文档模型、BSON 与查询操作符全解析</strong>]({{< relref "MongoDBFundamentals.md" >}})。
 

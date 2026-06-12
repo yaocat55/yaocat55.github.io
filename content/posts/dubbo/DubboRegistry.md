@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Dubbo 注册中心：Nacos 与 Zookeeper
+# Dubbo 注册中心
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Dubbo 的基本 RPC 开发和集群容错配置。如果还不熟悉，建议先阅读 [<strong>SpringBoot Dubbo 全操作指南</strong>]({{< relref "SpringBootDubbo.md" >}}) 和 [<strong>集群容错与负载均衡</strong>]({{< relref "DubboAdvanced.md" >}})。
 

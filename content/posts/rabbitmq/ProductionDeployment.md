@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RabbitMQ 生产环境部署与调优
+# 生产环境部署与调优
 
 > 📖 <strong>前置阅读</strong>：本文是 RabbitMQ 系列的终篇，假设读者已经掌握前五篇的全部内容（核心概念、交换机类型、SpringBoot 集成、消息可靠性、高级特性）。
 

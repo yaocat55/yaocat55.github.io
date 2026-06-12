@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 流控三板斧——Sentinel滑动窗口、令牌桶与Dubbo负载均衡
+# 流控三板斧
 
 前三篇讲了一个核心矛盾：分布式系统里——网络和时钟不可靠——所以你必须在一致性和可用性之间做取舍——Raft 用 majority 保证 CP——Nacos Distro 用最终一致性取 AP。
 

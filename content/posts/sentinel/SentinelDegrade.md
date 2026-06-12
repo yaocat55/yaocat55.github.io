@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Sentinel 熔断降级规则
+# Sentinel 熔断降级
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Sentinel 流控规则和 blockHandler/fallback 的基本用法。如果还不熟悉，建议先阅读 [<strong>Sentinel 核心概念与快速上手</strong>]({{< relref "SentinelFundamentals.md" >}}) 和 [<strong>Sentinel 流控规则全解</strong>]({{< relref "SentinelFlowControl.md" >}})。
 

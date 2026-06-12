@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Nacos 配置中心全操作
+# 配置中心：从接入到动态刷新
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Nacos 的基本概念和 `@RefreshScope`。如果还不熟悉，建议先阅读 [<strong>Nacos 核心概念与快速上手</strong>]({{< relref "NacosFundamentals.md" >}})。
 

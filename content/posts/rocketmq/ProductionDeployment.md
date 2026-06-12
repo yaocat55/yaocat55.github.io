@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# RocketMQ 生产环境部署与调优
+# RocketMQ 生产部署
 
 > 📖 <strong>前置阅读</strong>：本文是 RocketMQ 系列的终篇，假设读者已经掌握前五篇的全部内容（核心架构、SpringBoot 集成、高级消息类型、可靠性、消费者模式）。
 

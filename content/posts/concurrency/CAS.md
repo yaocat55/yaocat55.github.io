@@ -25,7 +25,7 @@ cover:
     relative: false
     hidden: true
 ---
-# CAS 从硬件到 Java：MESI 视角下的原子操作与 12 个原子类
+# CAS 从硬件到 Java
 
 ## 🤔 一、Intel 的工程师为什么要给 CPU 加一条 `lock cmpxchg` 指令
 

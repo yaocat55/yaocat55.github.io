@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Kafka Producer 深入：分区、ACK 与幂等
+# Kafka Producer 深入
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 SpringBoot Kafka 的基本发送操作（`KafkaTemplate.send`）。如果还不熟悉，建议先阅读 [<strong>SpringBoot Kafka 全操作指南</strong>]({{< relref "SpringBootKafka.md" >}})。
 

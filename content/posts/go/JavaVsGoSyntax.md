@@ -26,6 +26,8 @@ cover:
     hidden: false
 ---
 
+# Java vs Go：语法对比
+
 打开 `.go` 文件，第一眼看到这些，脑子直接宕机：
 
 ```go

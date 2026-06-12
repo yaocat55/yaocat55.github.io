@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# MySQL 实战优化：从 EXPLAIN 到 NULL 陷阱
+# 从 EXPLAIN 到 NULL 陷阱——优化其实有章可循
 
 > 📌 <strong>前置知识</strong>：这篇是系列最后一篇，面向日常开发的实战视角。前四篇的理论基础——B+树、索引结构、MVCC、锁机制——这篇会直接引用而不重复展开。建议至少读过第一篇 B+树索引体系再看这篇。
 

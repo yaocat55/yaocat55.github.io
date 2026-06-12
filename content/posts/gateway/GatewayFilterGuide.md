@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# GatewayFilter 与 GlobalFilter 全操作
+# GatewayFilter 与 GlobalFilter
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Route 和 Predicate 的配置方式。如果还不熟悉，建议先阅读 [<strong>Spring Cloud Gateway 核心概念与快速上手</strong>]({{< relref "GatewayFundamentals.md" >}}) 和 [<strong>Predicate 与路由规则全解</strong>]({{< relref "GatewayPredicate.md" >}})。
 

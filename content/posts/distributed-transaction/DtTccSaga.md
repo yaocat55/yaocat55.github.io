@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# TCC + Saga——补偿型分布式事务
+# TCC + Saga
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已理解 Seata AT 模式的原理和局限。如果还不熟悉，建议先阅读 [<strong>Seata AT 模式——undo_log 与二阶段原理</strong>]({{< relref "DtSeataAT.md" >}})。
 

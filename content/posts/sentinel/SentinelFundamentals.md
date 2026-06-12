@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Sentinel 核心概念与快速上手
+# Sentinel 核心概念
 
 ## 一、⚡ 流量控制——三个让你睡不着的问题
 

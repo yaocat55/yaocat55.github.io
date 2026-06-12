@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Jackson vs Fastjson2 终极对比
+# Jackson vs Fastjson2
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已经阅读过前两篇——如果还不熟悉 Jackson 或 Fastjson2，建议先阅读 [<strong>序列化本质与 Jackson 全操作指南</strong>]({{< relref "JacksonGuide.md" >}}) 和 [<strong>Fastjson 进化史：从 1.x 漏洞到 Fastjson2</strong>]({{< relref "Fastjson2Guide.md" >}})。
 

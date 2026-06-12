@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# Kafka Streams 与高级特性
+# Kafka Streams 流处理实战
 
 > 📖 <strong>前置阅读</strong>：本文假设读者已掌握 Kafka Consumer/Producer 的使用和 Offset/Partition 概念。如果还不熟悉，建议先阅读 [<strong>Consumer 深入：位移管理与 Rebalance</strong>]({{< relref "ConsumerInternals.md" >}})。
 

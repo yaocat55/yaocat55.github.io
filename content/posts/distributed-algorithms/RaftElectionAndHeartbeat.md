@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# 谁说了算——Raft选举、心跳与故障检测在Nacos/Dubbo中的应用
+# 谁说了算
 
 前两篇讲了一个道理：网络和时钟不可靠 → 必须做取舍 → CAP 把取舍定了性。那<strong>具体怎么做取舍呢？</strong>
 

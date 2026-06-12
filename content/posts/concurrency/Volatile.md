@@ -26,7 +26,7 @@ cover:
     hidden: true
 ---
 
-# volatile 如何填补 MESI 的两个缺口：Store Buffer 与 Invalidate Queue
+# volatile 如何填补 MESI 的缺口？
 
 ## 🤔 一、JSR 133 专家组为什么需要重新定义 volatile
 

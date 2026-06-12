@@ -26,7 +26,7 @@ cover:
     hidden: false
 ---
 
-# Dapper 模型：TraceId 与 SpanId 的传播之道
+# Dapper 模型
 
 > 本文是<strong>分布式算法科普系列</strong>第七篇，也是收官之作。前面六篇从服务发现、共识、流控、事务、消息、负载均衡一路讲过来——现在整个分布式系统已经跑起来了。但最后一个问题：<strong>一个请求跨了十几个服务，慢了，到底是哪个服务慢了？</strong>
 
