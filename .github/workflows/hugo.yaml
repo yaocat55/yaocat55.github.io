@@ -52,7 +52,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # 部署到 ECS
+  # 部署到 ECS (Docker Nginx with volume mount)
   deploy-ecs:
     needs: build
     runs-on: ubuntu-latest
@@ -69,10 +69,10 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      - name: 构建 ECS 版本（覆盖 baseURL）
+      - name: 构建 ECS 版本
         run: hugo --minify --baseURL "http://yaocat.cloud"
 
-      - name: 部署到 ECS
+      - name: 部署到 ECS 宿主机目录
         env:
           ECS_HOST: ${{ secrets.ECS_HOST }}
           ECS_USERNAME: ${{ secrets.ECS_USERNAME }}
@@ -81,23 +81,45 @@ jobs:
           # 打包
           tar -czf blog-ecs.tar.gz -C public .
 
-          # 创建密钥文件
+          # 创建密钥
           echo "${{ secrets.ECS_SSH_KEY }}" > key
           chmod 600 key
 
           # 上传到服务器
           scp -o StrictHostKeyChecking=no -P ${ECS_PORT} -i key blog-ecs.tar.gz ${ECS_USERNAME}@${ECS_HOST}:/tmp/
 
-          # 远程部署
-          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST} 'bash -s' << 'EOF'
-            set -e
+          # 部署到宿主机的 /var/www/blog 目录
+          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST}} << 'EOF'
+            # 创建目录（如果不存在）
             sudo mkdir -p /var/www/blog
+
+            # 清空旧文件（保留目录结构）
+            sudo rm -rf /var/www/blog/*
+
+            # 解压新文件
             sudo tar -xzf /tmp/blog-ecs.tar.gz -C /var/www/blog/
+
+            # 设置权限（nginx 用户需要读取权限）
+            sudo chown -R nobody:nogroup /var/www/blog
             sudo chmod -R 755 /var/www/blog
-            sudo systemctl reload nginx || true
+
+            # 验证文件
+            if [ ! -f /var/www/blog/index.html ]; then
+              echo "❌ 错误: index.html 不存在"
+              ls -la /var/www/blog/
+              exit 1
+            fi
+
+            # 重新加载 Nginx（容器会自动读取挂载的文件）
+            docker exec blog-nginx nginx -s reload
+
+            # 清理临时文件
             sudo rm -f /tmp/blog-ecs.tar.gz
-            echo "✅ ECS 部署完成"
+
+            echo "✅ 部署成功"
+            echo "文件列表:"
+            ls -la /var/www/blog/ | head -10
           EOF
 
-          # 清理
+          # 清理本地文件
           rm -f key blog-ecs.tar.gz
