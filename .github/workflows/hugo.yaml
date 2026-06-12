@@ -89,34 +89,36 @@ jobs:
             if docker ps | grep -q "blog-nginx"; then
               echo "检测到 Docker Nginx 容器"
               # Docker 方式：复制配置到容器
-              cat > /tmp/default.conf << NGINXCONF
+              cat > /tmp/default.conf << 'NGINXEOF'
             server {
                 listen 80;
                 server_name ${ECS_DOMAIN};
                 root ${CURRENT_LINK};
                 index index.html;
                 location / {
-                    try_files \$uri \$uri/ =404;
+                    try_files $uri $uri/ =404;
                 }
             }
-            NGINXCONF
+            NGINXEOF
+              # 注意：NGINXEOF 必须顶格，前面不能有空格或制表符
+
               docker cp /tmp/default.conf blog-nginx:/etc/nginx/conf.d/default.conf
               docker exec blog-nginx nginx -t
               docker exec blog-nginx nginx -s reload
             else
               echo "检测到系统 Nginx"
               # 系统 Nginx 方式
-              sudo tee /etc/nginx/sites-available/blog << NGINXCONF
+              sudo tee /etc/nginx/sites-available/blog << 'NGINXEOF'
             server {
                 listen 80;
                 server_name ${ECS_DOMAIN};
                 root ${CURRENT_LINK};
                 index index.html;
                 location / {
-                    try_files \$uri \$uri/ =404;
+                    try_files $uri $uri/ =404;
                 }
             }
-            NGINXCONF
+            NGINXEOF
               sudo ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/
               sudo nginx -t
               sudo systemctl reload nginx
