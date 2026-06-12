@@ -11,17 +11,15 @@ permissions:
   id-token: write
 
 jobs:
-  # 构建
-  build:
+  # 部署到 GitHub Pages
+  deploy-github:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: 安装 Hugo
-        uses: peaceiris/actions-hugo@v3
+      - uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
@@ -29,42 +27,23 @@ jobs:
       - name: 构建 GitHub Pages 版本
         run: hugo --minify --baseURL "https://yaocat55.github.io/"
 
-      - name: 上传 GitHub Pages 产物
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
-
-      - name: 保存 public 目录供 ECS 使用
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-files
-          path: ./public
-
-  # 部署到 GitHub Pages
-  deploy-github:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: 部署到 GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          force_orphan: true
 
-  # 部署到 ECS (Docker Nginx with volume mount)
+  # 部署到 ECS
   deploy-ecs:
-    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: 下载构建产物
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: public-files
-          path: ./public
+          submodules: true
 
-      - name: 重新构建 ECS 版本
-        uses: peaceiris/actions-hugo@v3
+      - uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
@@ -72,13 +51,13 @@ jobs:
       - name: 构建 ECS 版本
         run: hugo --minify --baseURL "http://yaocat.cloud"
 
-      - name: 部署到 ECS 宿主机目录
+      - name: 打包并部署到 ECS
         env:
           ECS_HOST: ${{ secrets.ECS_HOST }}
           ECS_USERNAME: ${{ secrets.ECS_USERNAME }}
           ECS_PORT: ${{ secrets.ECS_PORT }}
         run: |
-          # 打包
+          # 打包静态文件
           tar -czf blog-ecs.tar.gz -C public .
 
           # 创建密钥
@@ -88,37 +67,34 @@ jobs:
           # 上传到服务器
           scp -o StrictHostKeyChecking=no -P ${ECS_PORT} -i key blog-ecs.tar.gz ${ECS_USERNAME}@${ECS_HOST}:/tmp/
 
-          # 部署到宿主机的 /var/www/blog 目录
-          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST}} << 'EOF'
-            # 创建目录（如果不存在）
+          # 部署到宿主机目录
+          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST} << 'EOF'
+            # 创建目录并清空
             sudo mkdir -p /var/www/blog
-
-            # 清空旧文件（保留目录结构）
             sudo rm -rf /var/www/blog/*
 
-            # 解压新文件
+            # 解压文件
             sudo tar -xzf /tmp/blog-ecs.tar.gz -C /var/www/blog/
 
-            # 设置权限（nginx 用户需要读取权限）
+            # 设置权限
             sudo chown -R nobody:nogroup /var/www/blog
             sudo chmod -R 755 /var/www/blog
 
-            # 验证文件
+            # 验证
             if [ ! -f /var/www/blog/index.html ]; then
-              echo "❌ 错误: index.html 不存在"
+              echo "❌ index.html 不存在"
               ls -la /var/www/blog/
               exit 1
             fi
 
-            # 重新加载 Nginx（容器会自动读取挂载的文件）
-            docker exec blog-nginx nginx -s reload
+            # 重载 Nginx
+            docker exec blog-nginx nginx -s reload || true
 
-            # 清理临时文件
+            # 清理
             sudo rm -f /tmp/blog-ecs.tar.gz
 
             echo "✅ 部署成功"
-            echo "文件列表:"
-            ls -la /var/www/blog/ | head -10
+            echo "访问地址: http://yaocat.cloud"
           EOF
 
           # 清理本地文件
