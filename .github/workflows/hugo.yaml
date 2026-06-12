@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -93,7 +93,7 @@ jobs:
             # 清理
             sudo rm -f /tmp/blog-ecs.tar.gz
 
-            echo "✅ 部署成功"
+            echo "✅ ECS 部署成功"
             echo "访问地址: http://yaocat.cloud"
           EOF
 
