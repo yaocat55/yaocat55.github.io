@@ -24,22 +24,29 @@ jobs:
           hugo-version: 'latest'
           extended: true
 
-      - name: 构建博客
+      - name: 构建博客（双域名）
         run: |
-          echo "::group::Hugo Build"
-          hugo --minify
+          echo "::group::Hugo Build for GitHub Pages"
+          # 为 GitHub Pages 构建（使用你的 GitHub Pages 域名）
+          hugo --baseURL "https://${{ github.repository_owner }}.github.io/" --minify --destination public-github
+
+          echo "::group::Hugo Build for ECS"
+          # 为 ECS 构建（使用你的 ECS 域名）
+          hugo --baseURL "http://yaocat.cloud" --minify --destination public-ecs
           echo "::endgroup::"
 
       - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: ./public-github
+          publish_branch: gh-pages
+          force_orphan: true
 
-      - name: 打包静态文件
+      - name: 打包 ECS 静态文件
         run: |
-          echo "::group::Packaging"
-          tar -czf blog-public.tar.gz -C public .
+          echo "::group::Packaging for ECS"
+          tar -czf blog-ecs.tar.gz -C public-ecs .
           echo "::endgroup::"
 
       - name: 设置 SSH Agent
@@ -47,13 +54,18 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ECS_SSH_KEY }}
 
-      - name: 传输并部署到 ECS
+      - name: 部署到 ECS
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_USERNAME: ${{ secrets.ECS_USERNAME }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_DOMAIN: ${{ secrets.ECS_DOMAIN }}
         run: |
           # 将打包文件推送到服务器
-          scp -o StrictHostKeyChecking=no -P ${{ secrets.ECS_PORT }} blog-public.tar.gz ${{ secrets.ECS_USERNAME }}@${{ secrets.ECS_HOST }}:/tmp/
+          scp -o StrictHostKeyChecking=no -P ${ECS_PORT} blog-ecs.tar.gz ${ECS_USERNAME}@${ECS_HOST}:/tmp/
 
           # 执行远程部署
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.ECS_PORT }} ${{ secrets.ECS_USERNAME }}@${{ secrets.ECS_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} ${ECS_USERNAME}@${ECS_HOST} << 'EOF'
             set -e
 
             TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -63,9 +75,9 @@ jobs:
             echo "::group::Deploying to ${NEW_DIR}"
 
             # 1. 准备目录
-            mkdir -p "${NEW_DIR}"
-            tar -xzf /tmp/blog-public.tar.gz -C "${NEW_DIR}/"
-            chmod -R 755 "${NEW_DIR}"
+            sudo mkdir -p "${NEW_DIR}"
+            sudo tar -xzf /tmp/blog-ecs.tar.gz -C "${NEW_DIR}/"
+            sudo chmod -R 755 "${NEW_DIR}"
 
             # 2. 检查关键文件
             if [ ! -f "${NEW_DIR}/index.html" ]; then
@@ -73,31 +85,65 @@ jobs:
               exit 1
             fi
 
-            # 3. 更新 Nginx 配置
-            cat > /tmp/default.conf << NGINXCONF
+            # 3. 检查 Nginx 运行方式并更新配置
+            if docker ps | grep -q "blog-nginx"; then
+              echo "检测到 Docker Nginx 容器"
+              # Docker 方式：复制配置到容器
+              cat > /tmp/default.conf << NGINXCONF
             server {
                 listen 80;
-                location / { root /var/www/blog-current; index index.html; }
+                server_name ${ECS_DOMAIN};
+                root ${CURRENT_LINK};
+                index index.html;
+                location / {
+                    try_files \$uri \$uri/ =404;
+                }
             }
             NGINXCONF
-            docker cp /tmp/default.conf blog-nginx:/etc/nginx/conf.d/default.conf
-
-            # 4. 测试配置并切换软链
-            if docker exec blog-nginx nginx -t >/dev/null 2>&1; then
-              ln -sfn "${NEW_DIR}" "${CURRENT_LINK}"
+              docker cp /tmp/default.conf blog-nginx:/etc/nginx/conf.d/default.conf
+              docker exec blog-nginx nginx -t
               docker exec blog-nginx nginx -s reload
-              echo "✅ 部署成功，当前版本: ${TIMESTAMP}"
             else
-              echo "❌ Nginx 配置检查失败，保持旧版本不变"
-              rm -rf "${NEW_DIR}"
-              exit 1
+              echo "检测到系统 Nginx"
+              # 系统 Nginx 方式
+              sudo tee /etc/nginx/sites-available/blog << NGINXCONF
+            server {
+                listen 80;
+                server_name ${ECS_DOMAIN};
+                root ${CURRENT_LINK};
+                index index.html;
+                location / {
+                    try_files \$uri \$uri/ =404;
+                }
+            }
+            NGINXCONF
+              sudo ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/
+              sudo nginx -t
+              sudo systemctl reload nginx
             fi
 
+            # 4. 切换软链到新版本
+            sudo ln -sfn "${NEW_DIR}" "${CURRENT_LINK}"
+            echo "✅ 部署成功，当前版本: ${TIMESTAMP}"
+            echo "访问地址: http://yaocat.cloud"
+
             # 5. 清理旧版本 (保留最近5个)
-            cd /var/www && ls -dt blog-20* | tail -n +6 | xargs -r rm -rf
-            rm -f /tmp/blog-public.tar.gz /tmp/default.conf
+            cd /var/www && sudo ls -dt blog-20* 2>/dev/null | tail -n +6 | sudo xargs -r rm -rf
+            sudo rm -f /tmp/blog-ecs.tar.gz /tmp/default.conf
             echo "::endgroup::"
           EOF
 
       - name: 清理本地环境
-        run: rm -f blog-public.tar.gz
+        run: rm -f blog-ecs.tar.gz
+        if: always()
+
+      - name: 部署状态通知
+        if: always()
+        run: |
+          echo "## 部署总结" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ GitHub Pages: https://${{ github.repository_owner }}.github.io" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ ECS: http://yaocat.cloud" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 注意事项" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Pages 使用 HTTPS" >> $GITHUB_STEP_SUMMARY
+          echo "- ECS 目前使用 HTTP，建议后续升级到 HTTPS" >> $GITHUB_STEP_SUMMARY

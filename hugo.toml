@@ -1,4 +1,3 @@
-baseURL = "https://yaocat55.github.io/"
 title = "CatBlog"
 paginate = 5
 theme = "PaperMod"
@@ -173,5 +172,3 @@ term = ["HTML"]
   endLevel = 3
   ordered = false
   startLevel = 2
-
-
