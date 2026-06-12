@@ -28,7 +28,6 @@ jobs:
         run: |
           echo "::group::Hugo Build for GitHub Pages"
           hugo --baseURL "https://${{ github.repository_owner }}.github.io/" --minify --destination public-github
-
           echo "::group::Hugo Build for ECS"
           hugo --baseURL "http://yaocat.cloud" --minify --destination public-ecs
           echo "::endgroup::"
@@ -62,58 +61,40 @@ jobs:
           # 1. 将打包文件推送到服务器
           scp -o StrictHostKeyChecking=no -P ${ECS_PORT} blog-ecs.tar.gz ${ECS_USERNAME}@${ECS_HOST}:/tmp/
 
-          # 2. 执行远程部署（移除内部所有 Here-Doc 结构，规避 VS Code 格式化带来的缩进灾难）
-          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} ${ECS_USERNAME}@${ECS_HOST} << EOF
-            set -e
-
-            TIMESTAMP=\$(date +%Y%m%d%H%M%S)
-            NEW_DIR="/var/www/blog-\${TIMESTAMP}"
-            CURRENT_LINK="/var/www/blog-current"
-
-            echo "::group::Deploying to \${NEW_DIR}"
-
-            # 准备目录并解压
-            sudo mkdir -p "\${NEW_DIR}"
-            sudo tar -xzf /tmp/blog-ecs.tar.gz -C "\${NEW_DIR}/"
-            sudo chmod -R 755 "\${NEW_DIR}"
-
-            # 检查关键文件
-            if [ ! -f "\${NEW_DIR}/index.html" ]; then
-              echo "❌ 部署失败: index.html 缺失"
-              exit 1
-            fi
-
-            # 动态生成 Nginx 配置字符串（使用单行 echo 彻底解决顶格爆红问题）
-            NGINX_CONF="server { listen 80; server_name ${ECS_DOMAIN}; root \${CURRENT_LINK}; index index.html; location / { try_files \\\$uri \\\$uri/ =404; } }"
-
-            # 检查 Nginx 运行方式并更新配置
-            if docker ps | grep -q "blog-nginx"; then
-              echo "检测到 Docker Nginx 容器"
-              echo "\${NGINX_CONF}" > /tmp/default.conf
-              docker cp /tmp/default.conf blog-nginx:/etc/nginx/conf.d/default.conf
-              docker exec blog-nginx nginx -t
-              docker exec blog-nginx nginx -s reload
-            else
-              echo "检测到系统 Nginx"
-              echo "\${NGINX_CONF}" | sudo tee /etc/nginx/sites-available/blog > /dev/null
-              sudo ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/
-              sudo nginx -t
-              sudo systemctl reload nginx
-            fi
-
-            # 切换软链到新版本
-            sudo ln -sfn "\${NEW_DIR}" "\${CURRENT_LINK}"
-            echo "✅ 部署成功，当前版本: \${TIMESTAMP}"
-
-            # 清理旧版本 (保留最近5个)
-            cd /var/www && sudo ls -dt blog-20* 2>/dev/null | tail -n +6 | sudo xargs -r rm -rf
-            sudo rm -f /tmp/blog-ecs.tar.gz /tmp/default.conf
-            echo "::endgroup::"
-EOF
+          # 2. 执行远程部署（改用单行命令拼接，彻底根除 EOF 带来的 YAML 解析和缩进问题）
+          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} ${ECS_USERNAME}@${ECS_HOST} \
+            "set -e && \
+             TIMESTAMP=\$(date +%Y%m%d%H%M%S) && \
+             NEW_DIR=\"/var/www/blog-\${TIMESTAMP}\" && \
+             CURRENT_LINK=\"/var/www/blog-current\" && \
+             echo \"::group::Deploying to \${NEW_DIR}\" && \
+             sudo mkdir -p \"\${NEW_DIR}\" && \
+             sudo tar -xzf /tmp/blog-ecs.tar.gz -C \"\${NEW_DIR}/\" && \
+             sudo chmod -R 755 \"\${NEW_DIR}\" && \
+             if [ ! -f \"\${NEW_DIR}/index.html\" ]; then echo \"❌ 部署失败: index.html 缺失\"; exit 1; fi && \
+             NGINX_CONF=\"server { listen 80; server_name ${ECS_DOMAIN}; root \${CURRENT_LINK}; index index.html; location / { try_files \\\$uri \\\$uri/ =404; } }\" && \
+             if docker ps | grep -q 'blog-nginx'; then \
+               echo \"检测到 Docker Nginx 容器\" && \
+               echo \"\${NGINX_CONF}\" > /tmp/default.conf && \
+               docker cp /tmp/default.conf blog-nginx:/etc/nginx/conf.d/default.conf && \
+               docker exec blog-nginx nginx -t && \
+               docker exec blog-nginx nginx -s reload; \
+             else \
+               echo \"检测到系统 Nginx\" && \
+               echo \"\${NGINX_CONF}\" | sudo tee /etc/nginx/sites-available/blog > /dev/null && \
+               sudo ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/ && \
+               sudo nginx -t && \
+               sudo systemctl reload nginx; \
+             fi && \
+             sudo ln -sfn \"\${NEW_DIR}\" \"\${CURRENT_LINK}\" && \
+             echo \"✅ 部署成功，当前版本: \${TIMESTAMP}\" && \
+             cd /var/www && sudo ls -dt blog-20* 2>/dev/null | tail -n +6 | sudo xargs -r rm -rf && \
+             sudo rm -f /tmp/blog-ecs.tar.gz /tmp/default.conf && \
+             echo \"::endgroup::\""
 
       - name: 清理本地环境
-        run: rm -f blog-ecs.tar.gz
         if: always()
+        run: rm -f blog-ecs.tar.gz
 
       - name: 部署状态通知
         if: always()
