@@ -1,0 +1,573 @@
+<!doctype html><html lang=zh dir=auto data-theme=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>SkyWalking 分布式链路追踪——从零搭建 APM 平台 | CatBlog</title><meta name=keywords content="可观测性,入门指南,SpringCloud"><meta name=description content="从零搭建 SkyWalking 分布式链路追踪：Trace/Span/Segment 核心概念、Agent 无侵入自动埋点原理、OAP + UI + Elasticsearch 架构、Docker Compose 一键部署、全局调用拓扑图、单条链路完整追踪、慢查询自动识别——以及 SkyWalking 与 Prometheus 的互补关系：指标告诉你'出问题了'，链路告诉你'为什么出问题'。"><meta name=author content="yaomingye"><link rel=canonical href=https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/><meta name=google-site-verification content="XYZabc"><meta name=yandex-verification content="XYZabc"><meta name=msvalidate.01 content="XYZabc"><link crossorigin=anonymous href=/assets/css/stylesheet.4231ed8c43b49b68f480ce67364acb41ef220ab5844a7ec154aee32b184404bf.css integrity rel="preload stylesheet" as=style><link rel=icon href=https://yaocat55.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://yaocat55.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://yaocat55.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://yaocat55.github.io/apple-touch-icon.png><link rel=mask-icon href=https://yaocat55.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=zh href=https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51);color-scheme:dark}.list{background:var(--theme)}.toc{background:var(--entry)}}</style></noscript><script>localStorage.getItem("pref-theme")==="dark"?document.querySelector("html").dataset.theme="dark":localStorage.getItem("pref-theme")==="light"?document.querySelector("html").dataset.theme="light":window.matchMedia("(prefers-color-scheme: dark)").matches?document.querySelector("html").dataset.theme="dark":document.querySelector("html").dataset.theme="light"</script><link rel=preconnect href=https://fonts.loli.net><link rel=preconnect href=https://fonts.loli.net crossorigin><link href="https://fonts.loli.net/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css><script defer src=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js></script><script>(function(){if(window._katexInitialized)return;window._katexInitialized=!0;function e(){var e=document.createElement("script");e.src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js",e.onload=function(){typeof renderMathInElement!="undefined"&&renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})},document.head.appendChild(e)}document.addEventListener("DOMContentLoaded",e)})()</script><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script><script>(function(){if(window._mermaidInitialized)return;window._mermaidInitialized=!0;function e(){if(document.getElementsByClassName("mermaid").length===0)return;mermaid.initialize({startOnLoad:!0,theme:"base",securityLevel:"loose",themeVariables:{background:"transparent",primaryColor:getComputedStyle(document.body).getPropertyValue("--theme").trim()||"#5c6bc0",primaryBorderColor:getComputedStyle(document.body).getPropertyValue("--secondary").trim()||"#90a4ae",primaryTextColor:getComputedStyle(document.body).getPropertyValue("--primary").trim()||"#212529",lineColor:getComputedStyle(document.body).getPropertyValue("--tertiary").trim()||"#b0bec5",secondaryColor:getComputedStyle(document.body).getPropertyValue("--code-bg").trim()||"#f5f5f5"}})}document.addEventListener("DOMContentLoaded",e)})()</script><style>.mermaid,.zoomable-img-container{background:0 0!important;display:flex;justify-content:center;align-items:center;cursor:zoom-in;position:relative;border:1px solid var(--border);border-radius:8px;margin:1.5rem 0;overflow:hidden;width:100%;max-width:100%;transition:width .45s cubic-bezier(.25,1,.5,1),margin .45s cubic-bezier(.25,1,.5,1),box-shadow .3s ease,border-color .3s ease}.zoomable-img-container img{width:auto;max-width:100%;height:auto;display:block;transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid svg{transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid.is-expanded,.zoomable-img-container.is-expanded{width:92vw!important;max-width:92vw!important;margin-left:calc(50% - 46vw)!important;margin-right:calc(50% - 46vw)!important;margin-top:2.5rem!important;margin-bottom:2.5rem!important;cursor:zoom-out;border-color:var(--theme)!important;z-index:999;display:flex!important;justify-content:flex-start!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;padding:30px 40px!important;box-sizing:border-box!important;background:var(--code-bg,#1e1e1e)!important;box-shadow:0 0 0 5e3px rgba(0,0,0,.65),0 20px 50px rgba(0,0,0,.5)!important}.mermaid.is-expanded::-webkit-scrollbar,.zoomable-img-container.is-expanded::-webkit-scrollbar{height:8px!important;display:block!important}.mermaid.is-expanded::-webkit-scrollbar-thumb,.zoomable-img-container.is-expanded::-webkit-scrollbar-thumb{background:var(--theme,#5c6bc0)!important;border-radius:4px!important}.mermaid.is-expanded::-webkit-scrollbar-track,.zoomable-img-container.is-expanded::-webkit-scrollbar-track{background:rgba(255,255,255,.1)!important;border-radius:4px!important}.zoomable-img-container.is-expanded img{width:auto!important;min-width:100%!important;max-width:none!important;height:auto!important;display:block;margin:0!important}.mermaid.is-expanded svg{width:auto!important;max-width:none!important;height:auto!important;display:block!important;margin:0!important}.mermaid:not(.is-expanded):hover,.zoomable-img-container:not(.is-expanded):hover{box-shadow:0 4px 12px rgba(0,0,0,8%);border-color:var(--theme)!important}.mermaid:not(.is-expanded)::before,.zoomable-img-container:not(.is-expanded)::before{content:"点击展开 🔍";position:absolute;top:10px;right:10px;background:var(--theme,#5c6bc0);color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;opacity:0;transition:opacity .2s ease;z-index:5;pointer-events:none}.mermaid:not(.is-expanded):hover::before,.zoomable-img-container:not(.is-expanded):hover::before{opacity:.9}.mermaid.is-expanded::before,.zoomable-img-container.is-expanded::before{display:none!important}</style><style>@media screen and (min-width:1280px){.toc{position:fixed;right:calc(50% + 400px);top:120px;width:280px;max-height:80vh;overflow-y:auto;background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:15px;font-size:14px}.toc .inner{margin:0;padding:0}.toc summary{list-style:none;cursor:default;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:5px}.toc summary::-webkit-details-marker{display:none}}@media screen and (max-width:1279px){.toc{margin-bottom:20px}}</style><script>(function(){if(window._imageZoomInitialized)return;window._imageZoomInitialized=!0;function e(e){for(var t=e.parentElement;t&&t!==document.body;){if(t.classList&&(t.classList.contains("profile")||t.classList.contains("profile-img")))return!0;if(t.classList&&t.classList.contains("avatar"))return!0;t=t.parentElement}return!!(e.classList&&(e.classList.contains("avatar")||e.classList.contains("profile-img")))||!!e.closest(".profile")}function t(){var t="article img, .post-content img, .content img, main img";document.querySelectorAll(t).forEach(function(t){if(e(t))return;if(t.closest(".toc")||t.closest("nav")||t.closest("header")||t.closest("footer"))return;if(t.complete&&t.naturalWidth>0&&t.naturalWidth<80)return;if(t.parentElement&&t.parentElement.classList&&t.parentElement.classList.contains("zoomable-img-container"))return;var n=document.createElement("div");n.className="zoomable-img-container",t.parentNode.insertBefore(n,t),n.appendChild(t)})}function n(){if(window._zoomEventsBound)return;window._zoomEventsBound=!0,document.body.addEventListener("click",function(e){var t,n,o,i,a,r,s=document.querySelector(".is-expanded");if(s){s.classList.contains("mermaid")&&(t=s.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),s.classList.remove("is-expanded");return}n=e.target.closest(".zoomable-img-container, .mermaid"),n&&(e.preventDefault(),e.stopPropagation(),n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth||(t.dataset.origWidth=t.getAttribute("width")||""),t.dataset.origStyle||(t.dataset.origStyle=t.getAttribute("style")||""),o=t.getAttribute("viewBox"),o?(i=o.split(" "),i.length===4&&(a=parseFloat(i[2]),a>800?(r=a*1.15,t.style.setProperty("width",r+"px","important"),t.style.setProperty("min-width",r+"px","important")):t.style.setProperty("width","100%","important"))):t.style.setProperty("width","1500px","important"))),n.classList.add("is-expanded"),n.scrollWidth<=n.clientWidth?n.style.setProperty("justify-content","center","important"):(n.style.setProperty("justify-content","flex-start","important"),n.scrollLeft=0))}),document.addEventListener("keydown",function(e){if(e.key==="Escape"){var t,n=document.querySelector(".is-expanded");n&&(n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),n.classList.remove("is-expanded"))}})}document.addEventListener("DOMContentLoaded",function(){t(),n()})})()</script><meta property="og:url" content="https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/"><meta property="og:site_name" content="CatBlog"><meta property="og:title" content="SkyWalking 分布式链路追踪——从零搭建 APM 平台"><meta property="og:description" content="从零搭建 SkyWalking 分布式链路追踪：Trace/Span/Segment 核心概念、Agent 无侵入自动埋点原理、OAP + UI + Elasticsearch 架构、Docker Compose 一键部署、全局调用拓扑图、单条链路完整追踪、慢查询自动识别——以及 SkyWalking 与 Prometheus 的互补关系：指标告诉你'出问题了'，链路告诉你'为什么出问题'。"><meta property="og:locale" content="zh"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2022-12-19T08:00:00+00:00"><meta property="article:modified_time" content="2022-12-19T08:00:00+00:00"><meta property="article:tag" content="可观测性"><meta property="article:tag" content="入门指南"><meta property="article:tag" content="SpringCloud"><meta property="og:image" content="https://yaocat55.github.io/images/avatar.jpg"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://yaocat55.github.io/images/avatar.jpg"><meta name=twitter:title content="SkyWalking 分布式链路追踪——从零搭建 APM 平台"><meta name=twitter:description content="从零搭建 SkyWalking 分布式链路追踪：Trace/Span/Segment 核心概念、Agent 无侵入自动埋点原理、OAP + UI + Elasticsearch 架构、Docker Compose 一键部署、全局调用拓扑图、单条链路完整追踪、慢查询自动识别——以及 SkyWalking 与 Prometheus 的互补关系：指标告诉你'出问题了'，链路告诉你'为什么出问题'。"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"文章","item":"https://yaocat55.github.io/posts/"},{"@type":"ListItem","position":2,"name":"SkyWalking 分布式链路追踪——从零搭建 APM 平台","item":"https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"SkyWalking 分布式链路追踪——从零搭建 APM 平台","name":"SkyWalking 分布式链路追踪——从零搭建 APM 平台","description":"从零搭建 SkyWalking 分布式链路追踪：Trace/Span/Segment 核心概念、Agent 无侵入自动埋点原理、OAP + UI + Elasticsearch 架构、Docker Compose 一键部署、全局调用拓扑图、单条链路完整追踪、慢查询自动识别——以及 SkyWalking 与 Prometheus 的互补关系：指标告诉你'出问题了'，链路告诉你'为什么出问题'。","keywords":["可观测性","入门指南","SpringCloud"],"articleBody":"SkyWalking 分布式链路追踪 📖 前置阅读：本文假设读者已了解微服务基本概念和 Docker。如果已搭建 Prometheus + Grafana，理解本文会更快——两者互补。建议先阅读 Prometheus + Grafana 环境搭建与指标采集。\n一、⚡ QPS 正常——但用户说\"下单很慢\"——是哪个服务慢了？ 前两篇搭好了 Prometheus + Grafana——指标面板很漂亮——QPS、RT、错误率一目了然。\n但凌晨 3 点的告警是这样的：\nPagerDuty：order-service P99 延迟从 50ms 涨到 3s——错误率 2%——还没触发告警阈值（5%） 你打开 Grafana： ✅ order-service：QPS 正常——RT 涨了但不知道原因 ✅ user-service：所有指标正常——没问题 ✅ product-service：所有指标正常——没问题 ✅ inventory-service：所有指标正常——没问题 ✅ payment-service：所有指标正常——没问题 → 你盯着仪表盘——所有服务看起来都\"还行\"——但订单就是慢了 有了 SkyWalking 链路追踪： ① 找到那条慢了 3s 的 /api/orders 请求的完整调用链路 ② 看到调用链：order-service → user-service(50ms) → product-service(45ms) → inventory-service(2800ms!!!) ← 找到了 ③ 展开 inventory-service 的 Span——MySQL SELECT 语句执行了 2.5s ④ 点开 SQL——SELECT * FROM inventory WHERE product_id = ?——没有索引——全表扫描 → 2 分钟定位——加索引——P99 回到 50ms Prometheus 告诉你\"出问题了\"——SkyWalking 告诉你\"为什么出问题\"。两者不是替代关系——是互补关系：\n维度 Prometheus + Grafana SkyWalking 数据类型 指标（Metrics）——数字、聚合 链路（Traces）——请求级详情 能看到什么 “P99 延迟是 3s” “这个请求在 inventory-service 花了 2.8s——因为这条 SQL” 数据来源 应用暴露指标——Prometheus 拉 Agent 自动埋点——OAP 收 典型问题 “QPS 突然降了” “这条链路中第几个服务慢了” 粒度 聚合——“1分钟内的平均值” 单次请求——“2022-12-19 03:15:22.331 那一次” 代码侵入 需要手动打点（Counter/Timer） 零侵入——Agent 自动拦截 二、🧩 分布式追踪核心概念——Trace / Span / Segment 2.1 从单体到微服务——为什么需要 Tracing？ 单体应用排查： Browser → Nginx → Tomcat → Service → DAO → MySQL 看日志：grep \"requestId=abc123\" app.log → 一行一行读——请求路径一目了然 微服务排查： Browser → Gateway → order-service → user-service → MySQL → product-service → Redis → inventory-service → MySQL → payment-service → MQ 看日志：去 5 个服务的 15 个实例上 grep \"requestId=abc123\" → 还要按时间排序、脑补调用图——30 分钟定位一个问题 分布式追踪解决的就是这个：一个 TraceId 贯穿所有服务——把一次请求的全过程串起来。\n2.2 三个核心概念 ┌──────────────────────────────────────────────────────────────────┐ │ Trace │ │ TraceId: t-abc123 │ │ │ │ ┌──────────────────────────────┐ ┌──────────────────────────┐ │ │ │ Segment (order-service) │ │ Segment (user-service) │ │ │ │ SegmentId: s-order-1 │ │ SegmentId: s-user-1 │ │ │ │ │ │ │ │ │ │ Span: POST /api/orders │ │ Span: GET /api/users/1 │ │ │ │ ├─ Span: SELECT order │ │ ├─ Span: SELECT user │ │ │ │ ├─ Span: Feign/user-service│───→│ │ (50ms) │ │ │ │ │ (52ms) │ ←──│ └─ 返回 user 对象 │ │ │ │ ├─ Span: Feign/product-svc │ └──────────────────────────┘ │ │ │ │ (48ms) │───→ product-service ... │ │ │ └─ Span: INSERT order │ │ │ │ (15ms) │ │ │ └──────────────────────────────┘ │ │ 总耗时: 3s │ └──────────────────────────────────────────────────────────────────┘ 概念 一句话 类比 Trace 一次完整的请求——从入口到出口 一次完整的点餐过程——从进门到出门 Segment Trace 在每个服务中的一段——一个服务一个 Segment 在点餐台前的一段过程 Span Segment 中的一个具体操作——HTTP 调用/DB 查询/缓存操作 一个具体动作——“点前菜”、“点主菜” TraceId 全局唯一——贯穿所有服务的标识 排号单上的号码 SegmentId 每个服务内部的标识——服务内唯一 在点餐台的序号 SpanId 每个操作的标识——父子关系构成调用链 每个菜品点的序号 ParentSpanId 指向父 Span——-1 表示根 Span（第一个操作） 这道菜是套餐里的——主菜是父 2.3 Trace 是怎么串起来的——跨服务传播 sequenceDiagram participant GW as Gateway participant OS as order-service participant US as user-service Note over GW: 收到请求——创建 TraceTraceId: t-123ParentSpanId: -1 GW-\u003e\u003eOS: GET /api/orders/1Header: sw8: 1-t-123-s-gw-1-... Note over GW,OS: 把 Trace 信息放在 HTTP Header 中传给下一个服务 Note over OS: 收到 Header——解出 TraceId: t-123创建自己的 Segment (s-os-1)创建 Span (ParentSpanId = gw-span-1) OS-\u003e\u003eUS: GET /api/users/1001Header: sw8: 1-t-123-s-os-1-... Note over OS,US: TraceId 不变——ParentSpanId 变成 order-service 的 SpanId Note over US: 收到 Header——解出 TraceId: t-123创建自己的 Segment (s-us-1) US--\u003e\u003eOS: user 对象 OS--\u003e\u003eGW: order 对象 关键机制——Trace 信息通过 HTTP Header 传播：\n请求从 A 服务到 B 服务时： A 在 HTTP Header 中加上： sw8: 1-{TraceId}-{SegmentId}-{SpanId}-{ServiceName}-{ServiceInstance}-{Endpoint}-{Peer} ↑ 这就是 SkyWalking 的跨进程传播协议（Cross Process Protocol） B 服务收到请求时： Agent 自动拦截——读 Header——解出 TraceId → 创建新 Segment → 关联到同一个 Trace 这样——无论经过多少服务——同一个 TraceId 串起所有调用 📖 前置知识：分布式追踪的传播协议有多种——SkyWalking 用 sw8，OpenTelemetry 用 traceparent（W3C 标准），Zipkin 用 B3。SkyWalking Agent 自动兼容——不需要手动处理。\n三、🏗️ SkyWalking 架构——Agent → OAP → UI 三层设计 3.1 总体架构 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │ order-svc │ │ user-svc │ │ product-svc │ │ + Agent │ │ + Agent │ │ + Agent │ │ .jar 挂载 │ │ .jar 挂载 │ │ .jar 挂载 │ └────┬─────────┘ └────┬─────────┘ └────┬─────────┘ │ trace/日志/metrics│ │ │ gRPC │ │ └──────────┬───────┴───────────────┘ ▼ ┌─────────────────────┐ │ SkyWalking OAP │ ← 核心——分析平台 │ (可集群部署) │ │ ① 接收 Agent 数据 │ │ ② 分析、聚合、存储 │ │ ③ 计算指标（P99等）│ │ ④ 构建拓扑图 │ │ ⑤ 识别慢端点 │ └──────────┬──────────┘ │ ▼ ┌─────────────────────┐ │ Storage（存储层） │ │ Elasticsearch 7 │ ← 生产环境用 ES——支持海量 Trace │ 或 MySQL / H2 │ └──────────┬──────────┘ │ ▼ ┌─────────────────────┐ │ SkyWalking UI │ │ :8080 │ │ 拓扑图 / 追踪 / │ │ 性能剖析 / 日志 │ └─────────────────────┘ 三层设计——每层独立扩展：\n层 作用 一句话 部署方式 Agent（探针） 拦截请求——采集 Trace 数据 挂载到目标 JVM——零代码 -javaagent:skywalking-agent.jar OAP（分析平台） 接收、分析、聚合、存储 Trace 数据 大脑——接收海量数据——算出拓扑和指标 集群部署——可横向扩展 UI（可视化） 展示拓扑图、链路详情、指标、告警 界面——所有分析结果展示 单节点——从 OAP 拉数据 3.2 Agent 是怎么做到零侵入的？——Java Agent + 字节码增强 普通 Spring Boot 启动： java -jar order-service.jar 加了 SkyWalking Agent： java -javaagent:/opt/skywalking/agent/skywalking-agent.jar -jar order-service.jar Agent 做了什么： ① JVM 启动时——Agent 先于 main() 加载 ② Agent 中的 ClassFileTransformer 注册到 JVM ③ 每次加载类时——JVM 通知 Transformer——\"要不要改这个类的字节码？\" ④ SkyWalking Transformer 匹配目标类： → Controller：给每个方法加上\"记录 HTTP 请求 Span\"的逻辑 → RestTemplate/Feign：给 execute() 方法加上\"传播 Trace Header\"的逻辑 → DataSource：给 executeQuery() 方法加上\"记录 DB Span\"的逻辑 → RedisTemplate：给所有操作加上\"记录 Redis Span\"的逻辑 ⑤ 修改后的字节码交给 JVM——类加载完成 → 看起来什么都没变——但所有关键方法已被\"编织\"了 Tracing 逻辑 被增强的层次：\n框架/组件 Agent 拦截位置 产生的 Span 类型 Spring MVC @RestController DispatcherServlet / HandlerInterceptor HTTP Server Span RestTemplate ClientHttpRequestInterceptor HTTP Client Span OpenFeign feign.Client#execute() HTTP Client Span Dubbo org.apache.dubbo.rpc.Filter RPC Server/Client Span gRPC ServerInterceptor / ClientInterceptor RPC Span JDBC java.sql.Statement#execute() Database Span（自动记录 SQL） Redis（Jedis/Lettuce） redis.clients.jedis.Connection#sendCommand() 等 Cache Span（自动记录命令） Kafka / RocketMQ Producer#send() / Consumer#poll() MQ Span Spring Async @Async 方法 异步任务 Span 3.3 Trace 数据的采样——全量还是采样？ SkyWalking 默认全量采样——每个请求都追踪（和 Jaeger/OpenTelemetry 不同） 为什么全量？ → 分布式追踪的核心价值在于\"找出那条特别慢的\" → 如果采样——那一条 3s 的请求可能刚好被跳过了——查不到 全量的成本： → 每个 Trace 约 1-5KB（取决于 Span 数量） → 10,000 QPS × 1KB = 10MB/s → 864GB/天 → 需要 Elasticsearch 集群存储——成本可控（ES 的压缩率很高） 如果 QPS 特别高（\u003e 50,000）： → 在 agent/config/agent.config 中配置采样率： agent.sample_n_per_3_secs=1000 # 每 3 秒最多采集 1000 条——超过的跳过 ⚠️ 新手提示：采样率不要设太低——SkyWalking 的核心价值是\"定位慢请求\"——采样太少了可能抓不到异常值。默认全量就是最佳实践——除非 QPS \u003e 50,000。\n四、🔧 SkyWalking 搭建——Docker Compose 一键部署 4.1 Docker Compose——OAP + UI + Elasticsearch version: '3.8' services: # ===== 存储层：Elasticsearch ===== elasticsearch: image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9 container_name: es environment: - discovery.type=single-node # 单节点模式——演示用 - \"ES_JAVA_OPTS=-Xms512m -Xmx512m\" - xpack.security.enabled=false # 关闭安全认证——演示用 ports: - \"9200:9200\" volumes: - es-data:/usr/share/elasticsearch/data # ===== 分析平台：OAP Server ===== oap: image: apache/skywalking-oap-server:9.5.0 container_name: oap depends_on: - elasticsearch environment: SW_STORAGE: elasticsearch # 存储方式——生产用 ES SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200 # ES 地址 SW_HEALTH_CHECKER: default # 健康检查 SW_TELEMETRY: prometheus # OAP 自身的指标暴露给 Prometheus ports: - \"11800:11800\" # ← Agent 上报数据的 gRPC 端口——最重要 - \"12800:12800\" # ← Agent HTTP 上报端口（备用） - \"1234:1234\" # ← Prometheus metrics 端口——Prometheus 从这里拉 OAP 自身指标 # ===== 可视化：UI ===== ui: image: apache/skywalking-ui:9.5.0 container_name: skywalking-ui depends_on: - oap environment: SW_OAP_ADDRESS: http://oap:12800 # UI 从 OAP 的 HTTP 接口拉数据 ports: - \"8080:8080\" # ← 浏览器访问 http://localhost:8080 volumes: es-data: # 启动 docker-compose up -d # 验证——访问 UI http://localhost:8080 # 检查 OAP Agent 接收端口是否正常 curl http://localhost:12800/receive 4.2 服务接入——加一行 JVM 参数 # 下载 Agent（和 OAP 版本一致） wget https://dlcdn.apache.org/skywalking/java-agent/9.1.0/apache-skywalking-java-agent-9.1.0.tgz tar -xzf apache-skywalking-java-agent-9.1.0.tgz -C /opt/skywalking/ # 修改 Agent 配置——指定 OAP 地址 vim /opt/skywalking/agent/config/agent.config # 关键配置： # agent.service_name=order-service ← 服务名——在 UI 中显示的名称 # collector.backend_service=127.0.0.1:11800 ← OAP 的 gRPC 地址 # Spring Boot 启动时挂载 Agent java -javaagent:/opt/skywalking/agent/skywalking-agent.jar \\ -Dskywalking.agent.service_name=order-service \\ -Dskywalking.collector.backend_service=127.0.0.1:11800 \\ -jar order-service.jar # 看到这行日志——表示 Agent 已连接上 OAP： # INFO - SkyWalking agent connected to collector successfully # Docker Compose 中——挂载 Agent 到容器 # docker-compose.yml services: order-service: image: order-service:latest environment: JAVA_TOOL_OPTIONS: \u003e -javaagent:/opt/skywalking/agent/skywalking-agent.jar -Dskywalking.agent.service_name=order-service -Dskywalking.collector.backend_service=oap:11800 volumes: - /opt/skywalking/agent:/opt/skywalking/agent ⚠️ 新手提示：agent.service_name 必须和 Nacos 中注册的服务名一致——否则拓扑图中两个名字——对不上。建议直接用 spring.application.name 的值。\n4.3 完整 Docker Compose——SkyWalking + 微服务一键启动 # docker-compose.yml——完整的开发环境 version: '3.8' services: # ===== SkyWalking 基础设施 ===== elasticsearch: image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9 container_name: es environment: - discovery.type=single-node - \"ES_JAVA_OPTS=-Xms512m -Xmx512m\" - xpack.security.enabled=false ports: - \"9200:9200\" volumes: - es-data:/usr/share/elasticsearch/data oap: image: apache/skywalking-oap-server:9.5.0 container_name: oap depends_on: - elasticsearch environment: SW_STORAGE: elasticsearch SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200 SW_TELEMETRY: prometheus ports: - \"11800:11800\" - \"12800:12800\" ui: image: apache/skywalking-ui:9.5.0 container_name: skywalking-ui depends_on: - oap environment: SW_OAP_ADDRESS: http://oap:12800 ports: - \"8080:8080\" # ===== 注册中心 ===== nacos: image: nacos/nacos-server:v2.2.3 container_name: nacos environment: - MODE=standalone ports: - \"8848:8848\" # ===== 微服务——都挂载 Agent ===== order-service: build: ./order-service container_name: order-service ports: - \"8081:8081\" environment: - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848 - JAVA_TOOL_OPTIONS=-javaagent:/agent/skywalking-agent.jar - SW_AGENT_NAME=order-service - SW_AGENT_COLLECTOR_BACKEND_SERVICES=oap:11800 volumes: - ./skywalking-agent:/agent:ro depends_on: - nacos - oap user-service: build: ./user-service container_name: user-service ports: - \"8082:8082\" environment: - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848 - JAVA_TOOL_OPTIONS=-javaagent:/agent/skywalking-agent.jar - SW_AGENT_NAME=user-service - SW_AGENT_COLLECTOR_BACKEND_SERVICES=oap:11800 volumes: - ./skywalking-agent:/agent:ro depends_on: - nacos - oap volumes: es-data: # ① 下载 Agent 到项目目录 wget https://dlcdn.apache.org/skywalking/java-agent/9.1.0/apache-skywalking-java-agent-9.1.0.tgz tar -xzf apache-skywalking-java-agent-9.1.0.tgz mv apache-skywalking-java-agent ./skywalking-agent # ② 启动所有容器 docker-compose up -d # ③ 等待服务启动——大约 30 秒 # 观察 order-service 日志——确认 Agent 连接成功 docker logs order-service 2\u003e\u00261 | grep \"SkyWalking\" # 预期输出：INFO - SkyWalking agent connected to collector successfully 4.4 逐步验证——确认链路追踪已经生效 # Step 1：检查 SkyWalking 基础设施 # OAP 是否正常接收 curl http://localhost:12800/receive # 预期：返回 \"SkyWalking OAP Server\" # UI 是否可访问 curl http://localhost:8080 # 预期：返回 HTML 页面 # Step 2：检查服务注册——所有服务应该出现在 Nacos 中 curl http://localhost:8848/nacos/v1/ns/service/list # 预期：order-service, user-service # Step 3：制造流量——调用几次接口产生 Trace 数据 curl http://localhost:8081/api/orders -H \"Content-Type: application/json\" \\ -d '{\"userId\":1001,\"items\":[{\"productId\":2001,\"quantity\":2}]}' curl http://localhost:8082/api/users/1001 # 等 15 秒——Agent 是异步批量上报 Trace 的 sleep 15 # Step 4：在 SkyWalking UI 中验证 # 打开浏览器 → http://localhost:8080 # ① 顶部栏选择\"服务\"——应该看到 order-service 和 user-service # ② 点击\"拓扑图\"——应该看到两个服务的调用关系 # ③ 点击\"追踪\"——选择 order-service——应该看到刚才的 Trace # ④ 展开 Trace——应该看到 HTTP Span + MySQL Span 验证成功的标志： ✅ SkyWalking UI 的服务列表中出现 order-service 和 user-service ✅ 拓扑图中出现调用连线——order-service → user-service ✅ 追踪列表中能看到刚才的请求——展开有完整的 Span 树 ✅ MySQL 查询语句自动出现在 Database Span 中 如果只有服务名没有 Trace 数据： → 检查 -javaagent 参数是否真的生效——看启动日志有没有 \"SkyWalking agent\" → 检查 collector.backend_service 端口——Agent 上报用 11800（gRPC），不是 12800（HTTP） → 等待 15 秒——Agent 不是实时上报的——有缓冲 如果连服务名都看不到： → Agent 没连上 OAP——检查 oap:11800 网络连通性 → docker exec order-service curl oap:11800（容器内测试连通性） 五、📊 SkyWalking UI 全景指南——看什么？怎么看？ 启动服务后——随便调几个接口——打开 http://localhost:8080：\n5.1 全局拓扑图——系统整体调用关系 SkyWalking UI → 拓扑图 → 选择服务 效果： ┌──────────────┐ ┌──────────────┐ │ Gateway │────→│ order-service│ │ (HTTP/200) │ │ (HTTP/200) │ └──────────────┘ └──┬───┬───┬──┘ │ │ │ ┌───────────┘ │ └───────────┐ ▼ ▼ ▼ ┌──────────┐ ┌──────────────┐ ┌──────────────┐ │user-svc │ │product-svc │ │inventory-svc│ │(RPC/50ms)│ │(HTTP/45ms) │ │(HTTP/2.8s) │← 红色的——慢了 └──────────┘ └──────────────┘ └──────────────┘ │ ▼ ┌──────────┐ │ MySQL │ │ (DB/30ms)│ └──────────┘ 拓扑图告诉你什么：\n箭头方向 = 调用方向——谁调了谁 节点颜色 = 健康状态——绿色正常——黄色警告——红色异常 连线粗细 = 调用量——越粗 QPS 越高 连线延迟 = 该调用的平均耗时 5.2 追踪查询——找那条有问题的请求 SkyWalking UI → 追踪 → 选择服务 + 时间范围 查询条件： ① 服务名：order-service ② 端点：POST:/api/orders → 只看创建订单的请求 ③ 耗时范围：2000ms ~ 10000ms → 只看慢的 ④ 状态：Error → 或者只看有异常的 结果——列出所有匹配的 Trace： ┌─────────────────────────────────────────────────────┐ │ t-abc123 | 2022-12-19 03:15:22.331 | 3056ms | ✅ │ │ t-def456 | 2022-12-19 03:15:22.441 | 2891ms | ✅ │ │ t-ghi789 | 2022-12-19 03:15:22.551 | 3855ms | ❌ │← 这个有异常 └─────────────────────────────────────────────────────┘ 点开 t-abc123——看到完整调用树： POST /api/orders (3056ms) ├─ MySQL: SELECT * FROM orders WHERE id=? (12ms) ├─ Feign: user-service GET /api/users/1001 (52ms) │ ├─ MySQL: SELECT * FROM users WHERE id=? (8ms) │ └─ Redis: GET user:1001 (3ms) ├─ Feign: product-service GET /api/products/2001 (48ms) │ ├─ MySQL: SELECT * FROM products WHERE id=? (10ms) │ └─ Redis: GET product:2001 (4ms) ├─ Feign: inventory-service POST /api/inventory/check (2850ms) ← 这里 │ └─ MySQL: SELECT * FROM inventory WHERE product_id=? (2830ms) ← 罪魁祸首 │ ↑ 展开可以看到完整的 SQL 语句！ └─ MySQL: INSERT INTO orders (...) VALUES (...) (15ms) 每个 Span 能看到什么：\n具体方法——OrderController.createOrder() SQL 语句——SELECT * FROM inventory WHERE product_id = ? 参数——product_id = 2001 耗时——2830ms 状态——成功/失败/异常堆栈 5.3 端点详情——看接口的统计信息 SkyWalking UI → 端点 → 选择服务 → 选择端点 POST:/api/orders 的统计： 平均响应时间: 320ms P50: 150ms P75: 280ms P90: 450ms P95: 800ms P99: 3100ms ← P99 很高——有长尾——一定是偶尔哪次特别慢 SLA（成功率）: 99.8% 调用次数: 125,000 次/小时 下面可以看： → 耗时分布图（直方图） → 哪天哪个小时慢了 → 哪些实例慢了 5.4 数据库慢查询——自动识别 SkyWalking UI → 数据库 → 选择服务 MySQL 操作统计（按 SQL 去重）： SELECT * FROM inventory WHERE product_id = ? 平均: 2100ms 调用: 850次 ← 肯定有问题 SELECT * FROM users WHERE id = ? 平均: 8ms 调用: 12000次 INSERT INTO orders ... 平均: 15ms 调用: 850次 SELECT * FROM products WHERE id = ? 平均: 10ms 调用: 850次 不需要自己埋 log.info(sql, time)——Agent 自动记录每条 SQL 的耗时。\n六、🧪 实战——用 SkyWalking 排查一次完整的性能问题 6.1 模拟场景 场景：商品服务的数据库连接池太小——高峰期请求排队等待连接——导致接口变慢 模拟： ① 启动 Gateway + order-service + product-service ② product-service 连接池故意设很小： spring.datasource.hikari.maximum-pool-size=3 ③ 用 JMeter 100 并发打 POST /api/orders 6.2 问题发现 Grafana 仪表盘： P99 延迟从 80ms 涨到 2.5s → 知道有问题了——但不知道为什么 SkyWalking 追踪——找一条慢请求： POST /api/orders (2580ms) ├─ Feign: user-service GET /api/users/1 (45ms) ← 正常 ├─ Feign: product-service GET /api/products/1 (2480ms) ← 这里慢 │ └─ MySQL: SELECT * FROM products WHERE id=? (2450ms) ← SQL 本身不慢 │ 但为什么等了 2.4s 才执行？ └─ MySQL: INSERT INTO orders ... (15ms) 点开 product-service 的 MySQL Span——看详情： 开始时间: 03:15:22.331 执行时间: 03:15:24.781 ← 等待了 2.45 秒才拿到连接！ SQL 实际耗时: 10ms ← SQL 本身很快——是等连接等了 2.45 秒 结合 Grafana HikariCP 面板： HikariCP Active Connections: 3/3 (100%) ← 连接池满了 HikariCP Pending Connections: 97 ← 97 个请求在排队等连接 → 结论：HikariCP 连接池太小——增大到 20——问题解决 这就是 SkyWalking 和 Prometheus 的配合：Prometheus 的 HikariCP 面板告诉你\"连接池满了\"，SkyWalking 告诉你\"这个 Span 等了 2.45 秒才拿到连接——因为连接池满了\"。两者不是二选一——是一起用。\n七、📊 SkyWalking 自身的 Prometheus 指标 SkyWalking OAP 自带 Prometheus 指标暴露——接入 Prometheus：\n# prometheus.yml——加一个 job scrape_configs: - job_name: 'skywalking-oap' static_configs: - targets: ['oap:1234'] # OAP 的 Prometheus 指标端口 # SkyWalking OAP 的关键指标： # ① OAP 接收的 Trace 速率（Trace/秒） rate(sw_mesh_analysis_latency[1m]) # ② 每个服务的 P99 延迟（OAP 内部算好的——不需要 histogram_quantile） sw_service_resp_time{service_name=\"order-service\", quantile=\"99\"} # ③ 每个服务的 SLA（成功率） sw_service_sla{service_name=\"order-service\"} # ④ 每个服务的 CPM（每分钟调用次数） sw_service_cpm{service_name=\"order-service\"} # ⑤ OAP JVM 指标（OAP 自己也是 Java 应用） jvm_memory_used_bytes{service=\"oap\", area=\"heap\"} ⚠️ 新手提示：sw_ 前缀是 SkyWalking 9.x 新命名——8.x 及以前是 meter_ 前缀。如果你用的是旧版本——指标名可能不同——在 Prometheus 中查询 {__name__=~\".*service.*\"} 找一下。\n八、⚖️ SkyWalking vs Jaeger vs Zipkin vs Pinpoint 维度 SkyWalking Jaeger Zipkin Pinpoint Java Agent 零侵入 ✅ 极强 ✅ 有 ✅ 有 ✅ 极强 支持语言 Java/.NET/Go/Python/Node.js/PHP 多语言 多语言 只 Java 自动埋点范围 极广——Spring/Dubbo/Feign/DB/Cache/MQ 标准——HTTP/DB/MQ 基础——HTTP/DB 极广——但只 Java 拓扑图 ✅ 自动生成——美观 ✅ 有——功能简单 ✅ 有——简单 ✅ 很详细 SQL 记录 ✅ 自动——能看到完整 SQL ✅ 有 ✅ 有 ✅ 有 存储 ES/H2/MySQL/BanyanDB ES/Cassandra/Memory ES/MySQL/Cassandra HBase 性能开销 极低——字节码增强 中等——SDK 埋点 中等 中等 社区/生态 Apache 顶级项目——活跃 CNCF——生态好 CNCF——老牌 韩国 Naver——相对小众 集成告警 ✅ 内置 ❌——需要外部 ❌——需要外部 ✅ 内置 日志关联 ✅ 支持——通过 TraceId 关联 ❌ ❌ ❌ 适用场景 Java 微服务——首选 多语言混合 简单易用——快速上手 Java 大型单体/微服务 为什么选 SkyWalking：\nJava Agent 零侵入——一行 JVM 参数——不用改代码 自动埋点范围最广——Spring/Dubbo/Feign/DB/Cache/MQ 全自动 拓扑图直观——自动构建调用关系 Apache 顶级项目——国内蚂蚁/华为/腾讯大规模使用——久经考验 🎯 总结 SkyWalking 和 Prometheus 是互补关系：Prometheus 告诉你\"P99 延迟涨了\"——SkyWalking 告诉你\"这条具体请求在 inventory-service 花了 2.8s——因为这条 SQL 全表扫描\"。一个是聚合指标——一个是请求级详情。\nTrace / Segment / Span 三层模型：Trace 是一次完整请求（一个 TraceId 贯穿所有服务），Segment 是一个服务内的一段（每个服务一个 SegmentId），Span 是一个具体操作（HTTP 调用/DB 查询/缓存操作——有父子关系）。\nAgent 零侵入——字节码增强：-javaagent:skywalking-agent.jar 一行 JVM 参数——Spring Controller/Dubbo/Feign/DataSource/Redis/Kafka 全部自动拦截。不需要加注解——不需要加依赖——不需要改配置。Agent 在类加载时修改字节码——织入 Tracing 逻辑。\n排查性能问题——从拓扑图到 SQL 语句——两分钟定位：拓扑图找到哪个服务红了一→ 追踪列表按耗时排序——找最慢的那一条 → 展开调用树——找到最慢的 Span → 展开——看到完整 SQL、参数、耗时 → 定位到具体 SQL——加索引解决。\n📖 下一步阅读：Agent 自动埋点了 HTTP/Dubbo/Feign/DB/Cache——但跨服务的自制 Span 怎么加？Gateway 和 Sentinel 如何完整追踪？日志怎么通过 TraceId 关联？继续阅读 SkyWalking 中间件集成与链路分析实战。\n","wordCount":"2142","inLanguage":"zh","image":"https://yaocat55.github.io/images/avatar.jpg","datePublished":"2022-12-19T08:00:00Z","dateModified":"2022-12-19T08:00:00Z","author":{"@type":"Person","name":"yaomingye"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/"},"publisher":{"@type":"Organization","name":"CatBlog","logo":{"@type":"ImageObject","url":"https://yaocat55.github.io/favicon.ico"}}}</script><link rel=preconnect href=https://fonts.loli.net><link rel=preconnect href=https://fonts.loli.net crossorigin><link href="https://fonts.loli.net/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css><script defer src=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js></script><script>(function(){if(window._katexInitialized)return;window._katexInitialized=!0;function e(){var e=document.createElement("script");e.src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js",e.onload=function(){typeof renderMathInElement!="undefined"&&renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})},document.head.appendChild(e)}document.addEventListener("DOMContentLoaded",e)})()</script><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script><script>(function(){if(window._mermaidInitialized)return;window._mermaidInitialized=!0;function e(){if(document.getElementsByClassName("mermaid").length===0)return;mermaid.initialize({startOnLoad:!0,theme:"base",securityLevel:"loose",themeVariables:{background:"transparent",primaryColor:getComputedStyle(document.body).getPropertyValue("--theme").trim()||"#5c6bc0",primaryBorderColor:getComputedStyle(document.body).getPropertyValue("--secondary").trim()||"#90a4ae",primaryTextColor:getComputedStyle(document.body).getPropertyValue("--primary").trim()||"#212529",lineColor:getComputedStyle(document.body).getPropertyValue("--tertiary").trim()||"#b0bec5",secondaryColor:getComputedStyle(document.body).getPropertyValue("--code-bg").trim()||"#f5f5f5"}})}document.addEventListener("DOMContentLoaded",e)})()</script><style>.mermaid,.zoomable-img-container{background:0 0!important;display:flex;justify-content:center;align-items:center;cursor:zoom-in;position:relative;border:1px solid var(--border);border-radius:8px;margin:1.5rem 0;overflow:hidden;width:100%;max-width:100%;transition:width .45s cubic-bezier(.25,1,.5,1),margin .45s cubic-bezier(.25,1,.5,1),box-shadow .3s ease,border-color .3s ease}.zoomable-img-container img{width:auto;max-width:100%;height:auto;display:block;transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid svg{transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid.is-expanded,.zoomable-img-container.is-expanded{width:92vw!important;max-width:92vw!important;margin-left:calc(50% - 46vw)!important;margin-right:calc(50% - 46vw)!important;margin-top:2.5rem!important;margin-bottom:2.5rem!important;cursor:zoom-out;border-color:var(--theme)!important;z-index:999;display:flex!important;justify-content:flex-start!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;padding:30px 40px!important;box-sizing:border-box!important;background:var(--code-bg,#1e1e1e)!important;box-shadow:0 0 0 5e3px rgba(0,0,0,.65),0 20px 50px rgba(0,0,0,.5)!important}.mermaid.is-expanded::-webkit-scrollbar,.zoomable-img-container.is-expanded::-webkit-scrollbar{height:8px!important;display:block!important}.mermaid.is-expanded::-webkit-scrollbar-thumb,.zoomable-img-container.is-expanded::-webkit-scrollbar-thumb{background:var(--theme,#5c6bc0)!important;border-radius:4px!important}.mermaid.is-expanded::-webkit-scrollbar-track,.zoomable-img-container.is-expanded::-webkit-scrollbar-track{background:rgba(255,255,255,.1)!important;border-radius:4px!important}.zoomable-img-container.is-expanded img{width:auto!important;min-width:100%!important;max-width:none!important;height:auto!important;display:block;margin:0!important}.mermaid.is-expanded svg{width:auto!important;max-width:none!important;height:auto!important;display:block!important;margin:0!important}.mermaid:not(.is-expanded):hover,.zoomable-img-container:not(.is-expanded):hover{box-shadow:0 4px 12px rgba(0,0,0,8%);border-color:var(--theme)!important}.mermaid:not(.is-expanded)::before,.zoomable-img-container:not(.is-expanded)::before{content:"点击展开 🔍";position:absolute;top:10px;right:10px;background:var(--theme,#5c6bc0);color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;opacity:0;transition:opacity .2s ease;z-index:5;pointer-events:none}.mermaid:not(.is-expanded):hover::before,.zoomable-img-container:not(.is-expanded):hover::before{opacity:.9}.mermaid.is-expanded::before,.zoomable-img-container.is-expanded::before{display:none!important}</style><style>@media screen and (min-width:1280px){.toc{position:fixed;right:calc(50% + 400px);top:120px;width:280px;max-height:80vh;overflow-y:auto;background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:15px;font-size:14px}.toc .inner{margin:0;padding:0}.toc summary{list-style:none;cursor:default;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:5px}.toc summary::-webkit-details-marker{display:none}}@media screen and (max-width:1279px){.toc{margin-bottom:20px}}</style><script>(function(){if(window._imageZoomInitialized)return;window._imageZoomInitialized=!0;function e(e){for(var t=e.parentElement;t&&t!==document.body;){if(t.classList&&(t.classList.contains("profile")||t.classList.contains("profile-img")))return!0;if(t.classList&&t.classList.contains("avatar"))return!0;t=t.parentElement}return!!(e.classList&&(e.classList.contains("avatar")||e.classList.contains("profile-img")))||!!e.closest(".profile")}function t(){var t="article img, .post-content img, .content img, main img";document.querySelectorAll(t).forEach(function(t){if(e(t))return;if(t.closest(".toc")||t.closest("nav")||t.closest("header")||t.closest("footer"))return;if(t.complete&&t.naturalWidth>0&&t.naturalWidth<80)return;if(t.parentElement&&t.parentElement.classList&&t.parentElement.classList.contains("zoomable-img-container"))return;var n=document.createElement("div");n.className="zoomable-img-container",t.parentNode.insertBefore(n,t),n.appendChild(t)})}function n(){if(window._zoomEventsBound)return;window._zoomEventsBound=!0,document.body.addEventListener("click",function(e){var t,n,o,i,a,r,s=document.querySelector(".is-expanded");if(s){s.classList.contains("mermaid")&&(t=s.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),s.classList.remove("is-expanded");return}n=e.target.closest(".zoomable-img-container, .mermaid"),n&&(e.preventDefault(),e.stopPropagation(),n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth||(t.dataset.origWidth=t.getAttribute("width")||""),t.dataset.origStyle||(t.dataset.origStyle=t.getAttribute("style")||""),o=t.getAttribute("viewBox"),o?(i=o.split(" "),i.length===4&&(a=parseFloat(i[2]),a>800?(r=a*1.15,t.style.setProperty("width",r+"px","important"),t.style.setProperty("min-width",r+"px","important")):t.style.setProperty("width","100%","important"))):t.style.setProperty("width","1500px","important"))),n.classList.add("is-expanded"),n.scrollWidth<=n.clientWidth?n.style.setProperty("justify-content","center","important"):(n.style.setProperty("justify-content","flex-start","important"),n.scrollLeft=0))}),document.addEventListener("keydown",function(e){if(e.key==="Escape"){var t,n=document.querySelector(".is-expanded");n&&(n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),n.classList.remove("is-expanded"))}})}document.addEventListener("DOMContentLoaded",function(){t(),n()})})()</script></head><body id=top><header class=header><nav class=header-nav><div class=logo><a href=https://yaocat55.github.io/ accesskey=h title="CatBlog (Alt + H)">CatBlog</a><div class=logo-switches><button id=theme-toggle class=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu class=menu><li><a href=https://yaocat55.github.io/posts/ title="📝 文章"><span>📝 文章</span></a></li><li><a href=https://yaocat55.github.io/archives/ title="📂 归档"><span>📂 归档</span></a></li><li><a href=https://yaocat55.github.io/search/ title="🔍 搜索"><span>🔍 搜索</span></a></li><li><a href=https://yaocat55.github.io/tags/ title="🏷️ 标签"><span>🏷️ 标签</span></a></li><li><a href=https://yaocat55.github.io/categories/ title="📁 分类"><span>📁 分类</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><nav class=breadcrumbs role=navigation aria-label=Breadcrumb><a href=https://yaocat55.github.io/>主页</a>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+<a href=https://yaocat55.github.io/posts/>文章</a></nav><h1 class="post-title entry-hint-parent">SkyWalking 分布式链路追踪——从零搭建 APM 平台</h1><div class=post-description>从零搭建 SkyWalking 分布式链路追踪：Trace/Span/Segment 核心概念、Agent 无侵入自动埋点原理、OAP + UI + Elasticsearch 架构、Docker Compose 一键部署、全局调用拓扑图、单条链路完整追踪、慢查询自动识别——以及 SkyWalking 与 Prometheus 的互补关系：指标告诉你'出问题了'，链路告诉你'为什么出问题'。</div><div class=post-meta><span title='2022-12-19 08:00:00 +0000 UTC'>十二月 19, 2022</span>&nbsp;·&nbsp;<span>11 分钟</span>&nbsp;·&nbsp;<span>2142 字</span>&nbsp;·&nbsp;<span>yaomingye</span></div></header><details class=toc open><summary accesskey=c title="(Alt + C)"><span class=title>目录</span></summary><div class=inner><nav id=TableOfContents><ul><li><a href=#一-qps-正常但用户说下单很慢是哪个服务慢了>一、⚡ QPS 正常——但用户说"下单很慢"——是哪个服务慢了？</a></li><li><a href=#二-分布式追踪核心概念trace--span--segment>二、🧩 分布式追踪核心概念——Trace / Span / Segment</a><ul><li><a href=#21-从单体到微服务为什么需要-tracing>2.1 从单体到微服务——为什么需要 Tracing？</a></li><li><a href=#22-三个核心概念>2.2 三个核心概念</a></li><li><a href=#23-trace-是怎么串起来的跨服务传播>2.3 Trace 是怎么串起来的——跨服务传播</a></li></ul></li><li><a href=#三-skywalking-架构agent--oap--ui-三层设计>三、🏗️ SkyWalking 架构——Agent → OAP → UI 三层设计</a><ul><li><a href=#31-总体架构>3.1 总体架构</a></li><li><a href=#32-agent-是怎么做到零侵入的java-agent--字节码增强>3.2 Agent 是怎么做到零侵入的？——Java Agent + 字节码增强</a></li><li><a href=#33-trace-数据的采样全量还是采样>3.3 Trace 数据的采样——全量还是采样？</a></li></ul></li><li><a href=#四-skywalking-搭建docker-compose-一键部署>四、🔧 SkyWalking 搭建——Docker Compose 一键部署</a><ul><li><a href=#41-docker-composeoap--ui--elasticsearch>4.1 Docker Compose——OAP + UI + Elasticsearch</a></li><li><a href=#42-服务接入加一行-jvm-参数>4.2 服务接入——加一行 JVM 参数</a></li><li><a href=#43-完整-docker-composeskywalking--微服务一键启动>4.3 完整 Docker Compose——SkyWalking + 微服务一键启动</a></li><li><a href=#44-逐步验证确认链路追踪已经生效>4.4 逐步验证——确认链路追踪已经生效</a></li></ul></li><li><a href=#五-skywalking-ui-全景指南看什么怎么看>五、📊 SkyWalking UI 全景指南——看什么？怎么看？</a><ul><li><a href=#51-全局拓扑图系统整体调用关系>5.1 全局拓扑图——系统整体调用关系</a></li><li><a href=#52-追踪查询找那条有问题的请求>5.2 追踪查询——找那条有问题的请求</a></li><li><a href=#53-端点详情看接口的统计信息>5.3 端点详情——看接口的统计信息</a></li><li><a href=#54-数据库慢查询自动识别>5.4 数据库慢查询——自动识别</a></li></ul></li><li><a href=#六-实战用-skywalking-排查一次完整的性能问题>六、🧪 实战——用 SkyWalking 排查一次完整的性能问题</a><ul><li><a href=#61-模拟场景>6.1 模拟场景</a></li><li><a href=#62-问题发现>6.2 问题发现</a></li></ul></li><li><a href=#七-skywalking-自身的-prometheus-指标>七、📊 SkyWalking 自身的 Prometheus 指标</a></li><li><a href=#八-skywalking-vs-jaeger-vs-zipkin-vs-pinpoint>八、⚖️ SkyWalking vs Jaeger vs Zipkin vs Pinpoint</a></li><li><a href=#-总结>🎯 总结</a></li></ul></nav></div></details><div class="post-content md-content"><h1 id=skywalking-分布式链路追踪>SkyWalking 分布式链路追踪<a hidden class=anchor aria-hidden=true href=#skywalking-分布式链路追踪>#</a></h1><blockquote><p>📖 <strong>前置阅读</strong>：本文假设读者已了解微服务基本概念和 Docker。如果已搭建 Prometheus + Grafana，理解本文会更快——两者互补。建议先阅读 <a href=/posts/monitoring/prometheusgrafanafundamentals/><strong>Prometheus + Grafana 环境搭建与指标采集</strong></a>。</p></blockquote><h2 id=一-qps-正常但用户说下单很慢是哪个服务慢了>一、⚡ QPS 正常——但用户说"下单很慢"——是哪个服务慢了？<a hidden class=anchor aria-hidden=true href=#一-qps-正常但用户说下单很慢是哪个服务慢了>#</a></h2><p>前两篇搭好了 Prometheus + Grafana——指标面板很漂亮——QPS、RT、错误率一目了然。</p><p>但凌晨 3 点的告警是这样的：</p><pre tabindex=0><code>PagerDuty：order-service P99 延迟从 50ms 涨到 3s——错误率 2%——还没触发告警阈值（5%）
+你打开 Grafana：
+  ✅ order-service：QPS 正常——RT 涨了但不知道原因
+  ✅ user-service：所有指标正常——没问题
+  ✅ product-service：所有指标正常——没问题
+  ✅ inventory-service：所有指标正常——没问题
+  ✅ payment-service：所有指标正常——没问题
+  → 你盯着仪表盘——所有服务看起来都&#34;还行&#34;——但订单就是慢了
+
+有了 SkyWalking 链路追踪：
+  ① 找到那条慢了 3s 的 /api/orders 请求的完整调用链路
+  ② 看到调用链：order-service → user-service(50ms) → product-service(45ms)
+                      → inventory-service(2800ms!!!)  ← 找到了
+  ③ 展开 inventory-service 的 Span——MySQL SELECT 语句执行了 2.5s
+  ④ 点开 SQL——SELECT * FROM inventory WHERE product_id = ?——没有索引——全表扫描
+  → 2 分钟定位——加索引——P99 回到 50ms
+</code></pre><p><strong>Prometheus 告诉你"出问题了"——SkyWalking 告诉你"为什么出问题"。</strong>两者不是替代关系——是互补关系：</p><table><thead><tr><th>维度</th><th style=text-align:center>Prometheus + Grafana</th><th style=text-align:center>SkyWalking</th></tr></thead><tbody><tr><td><strong>数据类型</strong></td><td style=text-align:center>指标（Metrics）——数字、聚合</td><td style=text-align:center>链路（Traces）——请求级详情</td></tr><tr><td><strong>能看到什么</strong></td><td style=text-align:center>&ldquo;P99 延迟是 3s&rdquo;</td><td style=text-align:center>&ldquo;这个请求在 inventory-service 花了 2.8s——因为这条 SQL&rdquo;</td></tr><tr><td><strong>数据来源</strong></td><td style=text-align:center>应用暴露指标——Prometheus 拉</td><td style=text-align:center>Agent 自动埋点——OAP 收</td></tr><tr><td><strong>典型问题</strong></td><td style=text-align:center>&ldquo;QPS 突然降了&rdquo;</td><td style=text-align:center>&ldquo;这条链路中第几个服务慢了&rdquo;</td></tr><tr><td><strong>粒度</strong></td><td style=text-align:center>聚合——&ldquo;1分钟内的平均值&rdquo;</td><td style=text-align:center>单次请求——&ldquo;2022-12-19 03:15:22.331 那一次&rdquo;</td></tr><tr><td><strong>代码侵入</strong></td><td style=text-align:center>需要手动打点（Counter/Timer）</td><td style=text-align:center><strong>零侵入</strong>——Agent 自动拦截</td></tr></tbody></table><h2 id=二-分布式追踪核心概念trace--span--segment>二、🧩 分布式追踪核心概念——Trace / Span / Segment<a hidden class=anchor aria-hidden=true href=#二-分布式追踪核心概念trace--span--segment>#</a></h2><h3 id=21-从单体到微服务为什么需要-tracing>2.1 从单体到微服务——为什么需要 Tracing？<a hidden class=anchor aria-hidden=true href=#21-从单体到微服务为什么需要-tracing>#</a></h3><pre tabindex=0><code>单体应用排查：
+  Browser → Nginx → Tomcat → Service → DAO → MySQL
+  看日志：grep &#34;requestId=abc123&#34; app.log → 一行一行读——请求路径一目了然
+
+微服务排查：
+  Browser → Gateway → order-service → user-service → MySQL
+                                    → product-service → Redis
+                                    → inventory-service → MySQL
+                                    → payment-service → MQ
+  看日志：去 5 个服务的 15 个实例上 grep &#34;requestId=abc123&#34;
+  → 还要按时间排序、脑补调用图——30 分钟定位一个问题
+</code></pre><p>分布式追踪解决的就是这个：<strong>一个 TraceId 贯穿所有服务——把一次请求的全过程串起来</strong>。</p><h3 id=22-三个核心概念>2.2 三个核心概念<a hidden class=anchor aria-hidden=true href=#22-三个核心概念>#</a></h3><pre tabindex=0><code>┌──────────────────────────────────────────────────────────────────┐
+│                          Trace                                    │
+│  TraceId: t-abc123                                                │
+│                                                                   │
+│  ┌──────────────────────────────┐    ┌──────────────────────────┐ │
+│  │ Segment (order-service)      │    │ Segment (user-service)   │ │
+│  │ SegmentId: s-order-1         │    │ SegmentId: s-user-1      │ │
+│  │                              │    │                          │ │
+│  │  Span: POST /api/orders      │    │  Span: GET /api/users/1  │ │
+│  │   ├─ Span: SELECT order      │    │   ├─ Span: SELECT user   │ │
+│  │   ├─ Span: Feign/user-service│───→│   │              (50ms)  │ │
+│  │   │              (52ms)      │ ←──│   └─ 返回 user 对象      │ │
+│  │   ├─ Span: Feign/product-svc │    └──────────────────────────┘ │
+│  │   │              (48ms)      │───→ product-service ...         │
+│  │   └─ Span: INSERT order      │                                 │
+│  │                (15ms)        │                                 │
+│  └──────────────────────────────┘                                 │
+│  总耗时: 3s                                                       │
+└──────────────────────────────────────────────────────────────────┘
+</code></pre><table><thead><tr><th>概念</th><th>一句话</th><th>类比</th></tr></thead><tbody><tr><td><strong>Trace</strong></td><td>一次完整的请求——从入口到出口</td><td>一次完整的点餐过程——从进门到出门</td></tr><tr><td><strong>Segment</strong></td><td>Trace 在每个服务中的一段——一个服务一个 Segment</td><td>在点餐台前的一段过程</td></tr><tr><td><strong>Span</strong></td><td>Segment 中的一个具体操作——HTTP 调用/DB 查询/缓存操作</td><td>一个具体动作——&ldquo;点前菜&rdquo;、&ldquo;点主菜&rdquo;</td></tr><tr><td><strong>TraceId</strong></td><td>全局唯一——贯穿所有服务的标识</td><td>排号单上的号码</td></tr><tr><td><strong>SegmentId</strong></td><td>每个服务内部的标识——服务内唯一</td><td>在点餐台的序号</td></tr><tr><td><strong>SpanId</strong></td><td>每个操作的标识——父子关系构成调用链</td><td>每个菜品点的序号</td></tr><tr><td><strong>ParentSpanId</strong></td><td>指向父 Span——-1 表示根 Span（第一个操作）</td><td>这道菜是套餐里的——主菜是父</td></tr></tbody></table><h3 id=23-trace-是怎么串起来的跨服务传播>2.3 Trace 是怎么串起来的——跨服务传播<a hidden class=anchor aria-hidden=true href=#23-trace-是怎么串起来的跨服务传播>#</a></h3><pre class=mermaid>sequenceDiagram
+    participant GW as Gateway
+    participant OS as order-service
+    participant US as user-service
+
+    Note over GW: 收到请求——创建 Trace<br>TraceId: t-123<br>ParentSpanId: -1
+    
+    GW->>OS: GET /api/orders/1<br>Header: sw8: 1-t-123-s-gw-1-...
+    Note over GW,OS: 把 Trace 信息放在 HTTP Header 中传给下一个服务
+
+    Note over OS: 收到 Header——解出 TraceId: t-123<br>创建自己的 Segment (s-os-1)<br>创建 Span (ParentSpanId = gw-span-1)
+
+    OS->>US: GET /api/users/1001<br>Header: sw8: 1-t-123-s-os-1-...
+    Note over OS,US: TraceId 不变——ParentSpanId 变成 order-service 的 SpanId
+
+    Note over US: 收到 Header——解出 TraceId: t-123<br>创建自己的 Segment (s-us-1)
+
+    US-->>OS: user 对象
+    OS-->>GW: order 对象
+</pre><p><strong>关键机制——Trace 信息通过 HTTP Header 传播</strong>：</p><pre tabindex=0><code>请求从 A 服务到 B 服务时：
+  A 在 HTTP Header 中加上：
+    sw8: 1-{TraceId}-{SegmentId}-{SpanId}-{ServiceName}-{ServiceInstance}-{Endpoint}-{Peer}
+    ↑ 这就是 SkyWalking 的跨进程传播协议（Cross Process Protocol）
+
+B 服务收到请求时：
+  Agent 自动拦截——读 Header——解出 TraceId → 创建新 Segment → 关联到同一个 Trace
+
+这样——无论经过多少服务——同一个 TraceId 串起所有调用
+</code></pre><blockquote><p>📖 <strong>前置知识</strong>：分布式追踪的传播协议有多种——SkyWalking 用 sw8，OpenTelemetry 用 traceparent（W3C 标准），Zipkin 用 B3。SkyWalking Agent 自动兼容——不需要手动处理。</p></blockquote><h2 id=三-skywalking-架构agent--oap--ui-三层设计>三、🏗️ SkyWalking 架构——Agent → OAP → UI 三层设计<a hidden class=anchor aria-hidden=true href=#三-skywalking-架构agent--oap--ui-三层设计>#</a></h2><h3 id=31-总体架构>3.1 总体架构<a hidden class=anchor aria-hidden=true href=#31-总体架构>#</a></h3><pre tabindex=0><code>┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  order-svc   │  │  user-svc    │  │  product-svc │
+│  + Agent     │  │  + Agent     │  │  + Agent     │
+│  .jar 挂载    │  │  .jar 挂载    │  │  .jar 挂载    │
+└────┬─────────┘  └────┬─────────┘  └────┬─────────┘
+     │ trace/日志/metrics│               │
+     │      gRPC        │               │
+     └──────────┬───────┴───────────────┘
+                ▼
+     ┌─────────────────────┐
+     │   SkyWalking OAP    │  ← 核心——分析平台
+     │   (可集群部署)       │
+     │   ① 接收 Agent 数据  │
+     │   ② 分析、聚合、存储  │
+     │   ③ 计算指标（P99等）│
+     │   ④ 构建拓扑图       │
+     │   ⑤ 识别慢端点      │
+     └──────────┬──────────┘
+                │
+                ▼
+     ┌─────────────────────┐
+     │   Storage（存储层）   │
+     │   Elasticsearch 7    │  ← 生产环境用 ES——支持海量 Trace
+     │   或 MySQL / H2      │
+     └──────────┬──────────┘
+                │
+                ▼
+     ┌─────────────────────┐
+     │   SkyWalking UI     │
+     │   :8080              │
+     │   拓扑图 / 追踪 /     │
+     │   性能剖析 / 日志     │
+     └─────────────────────┘
+</code></pre><p><strong>三层设计——每层独立扩展</strong>：</p><table><thead><tr><th>层</th><th>作用</th><th>一句话</th><th>部署方式</th></tr></thead><tbody><tr><td><strong>Agent（探针）</strong></td><td>拦截请求——采集 Trace 数据</td><td>挂载到目标 JVM——零代码</td><td><code>-javaagent:skywalking-agent.jar</code></td></tr><tr><td><strong>OAP（分析平台）</strong></td><td>接收、分析、聚合、存储 Trace 数据</td><td>大脑——接收海量数据——算出拓扑和指标</td><td>集群部署——可横向扩展</td></tr><tr><td><strong>UI（可视化）</strong></td><td>展示拓扑图、链路详情、指标、告警</td><td>界面——所有分析结果展示</td><td>单节点——从 OAP 拉数据</td></tr></tbody></table><h3 id=32-agent-是怎么做到零侵入的java-agent--字节码增强>3.2 Agent 是怎么做到零侵入的？——Java Agent + 字节码增强<a hidden class=anchor aria-hidden=true href=#32-agent-是怎么做到零侵入的java-agent--字节码增强>#</a></h3><pre tabindex=0><code>普通 Spring Boot 启动：
+  java -jar order-service.jar
+
+加了 SkyWalking Agent：
+  java -javaagent:/opt/skywalking/agent/skywalking-agent.jar
+       -jar order-service.jar
+
+Agent 做了什么：
+  ① JVM 启动时——Agent 先于 main() 加载
+  ② Agent 中的 ClassFileTransformer 注册到 JVM
+  ③ 每次加载类时——JVM 通知 Transformer——&#34;要不要改这个类的字节码？&#34;
+  ④ SkyWalking Transformer 匹配目标类：
+     → Controller：给每个方法加上&#34;记录 HTTP 请求 Span&#34;的逻辑
+     → RestTemplate/Feign：给 execute() 方法加上&#34;传播 Trace Header&#34;的逻辑
+     → DataSource：给 executeQuery() 方法加上&#34;记录 DB Span&#34;的逻辑
+     → RedisTemplate：给所有操作加上&#34;记录 Redis Span&#34;的逻辑
+  ⑤ 修改后的字节码交给 JVM——类加载完成
+  → 看起来什么都没变——但所有关键方法已被&#34;编织&#34;了 Tracing 逻辑
+</code></pre><p><strong>被增强的层次</strong>：</p><table><thead><tr><th>框架/组件</th><th>Agent 拦截位置</th><th>产生的 Span 类型</th></tr></thead><tbody><tr><td>Spring MVC <code>@RestController</code></td><td><code>DispatcherServlet</code> / <code>HandlerInterceptor</code></td><td>HTTP Server Span</td></tr><tr><td>RestTemplate</td><td><code>ClientHttpRequestInterceptor</code></td><td>HTTP Client Span</td></tr><tr><td>OpenFeign</td><td><code>feign.Client#execute()</code></td><td>HTTP Client Span</td></tr><tr><td>Dubbo</td><td><code>org.apache.dubbo.rpc.Filter</code></td><td>RPC Server/Client Span</td></tr><tr><td>gRPC</td><td><code>ServerInterceptor</code> / <code>ClientInterceptor</code></td><td>RPC Span</td></tr><tr><td>JDBC</td><td><code>java.sql.Statement#execute()</code></td><td>Database Span（自动记录 SQL）</td></tr><tr><td>Redis（Jedis/Lettuce）</td><td><code>redis.clients.jedis.Connection#sendCommand()</code> 等</td><td>Cache Span（自动记录命令）</td></tr><tr><td>Kafka / RocketMQ</td><td><code>Producer#send()</code> / <code>Consumer#poll()</code></td><td>MQ Span</td></tr><tr><td>Spring Async</td><td><code>@Async</code> 方法</td><td>异步任务 Span</td></tr></tbody></table><h3 id=33-trace-数据的采样全量还是采样>3.3 Trace 数据的采样——全量还是采样？<a hidden class=anchor aria-hidden=true href=#33-trace-数据的采样全量还是采样>#</a></h3><pre tabindex=0><code>SkyWalking 默认全量采样——每个请求都追踪（和 Jaeger/OpenTelemetry 不同）
+
+为什么全量？
+  → 分布式追踪的核心价值在于&#34;找出那条特别慢的&#34;
+  → 如果采样——那一条 3s 的请求可能刚好被跳过了——查不到
+
+全量的成本：
+  → 每个 Trace 约 1-5KB（取决于 Span 数量）
+  → 10,000 QPS × 1KB = 10MB/s → 864GB/天
+  → 需要 Elasticsearch 集群存储——成本可控（ES 的压缩率很高）
+
+如果 QPS 特别高（&gt; 50,000）：
+  → 在 agent/config/agent.config 中配置采样率：
+    agent.sample_n_per_3_secs=1000   # 每 3 秒最多采集 1000 条——超过的跳过
+</code></pre><blockquote><p>⚠️ 新手提示：采样率不要设太低——SkyWalking 的核心价值是"定位慢请求"——采样太少了可能抓不到异常值。默认全量就是最佳实践——除非 QPS > 50,000。</p></blockquote><h2 id=四-skywalking-搭建docker-compose-一键部署>四、🔧 SkyWalking 搭建——Docker Compose 一键部署<a hidden class=anchor aria-hidden=true href=#四-skywalking-搭建docker-compose-一键部署>#</a></h2><h3 id=41-docker-composeoap--ui--elasticsearch>4.1 Docker Compose——OAP + UI + Elasticsearch<a hidden class=anchor aria-hidden=true href=#41-docker-composeoap--ui--elasticsearch>#</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;3.8&#39;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>services</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># ===== 存储层：Elasticsearch =====</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>elasticsearch</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>docker.elastic.co/elasticsearch/elasticsearch:7.17.9</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>es</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>discovery.type=single-node    </span><span class=w> </span><span class=c># 单节点模式——演示用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;ES_JAVA_OPTS=-Xms512m -Xmx512m&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>xpack.security.enabled=false  </span><span class=w> </span><span class=c># 关闭安全认证——演示用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;9200:9200&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>es-data:/usr/share/elasticsearch/data</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># ===== 分析平台：OAP Server =====</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>oap</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>apache/skywalking-oap-server:9.5.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>oap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>elasticsearch</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_STORAGE</span><span class=p>:</span><span class=w> </span><span class=l>elasticsearch                       </span><span class=w> </span><span class=c># 存储方式——生产用 ES</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_STORAGE_ES_CLUSTER_NODES</span><span class=p>:</span><span class=w> </span><span class=l>elasticsearch:9200 </span><span class=w> </span><span class=c># ES 地址</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_HEALTH_CHECKER</span><span class=p>:</span><span class=w> </span><span class=l>default                      </span><span class=w> </span><span class=c># 健康检查</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_TELEMETRY</span><span class=p>:</span><span class=w> </span><span class=l>prometheus                        </span><span class=w> </span><span class=c># OAP 自身的指标暴露给 Prometheus</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;11800:11800&#34;</span><span class=w>  </span><span class=c># ← Agent 上报数据的 gRPC 端口——最重要</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;12800:12800&#34;</span><span class=w>  </span><span class=c># ← Agent HTTP 上报端口（备用）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;1234:1234&#34;</span><span class=w>    </span><span class=c># ← Prometheus metrics 端口——Prometheus 从这里拉 OAP 自身指标</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># ===== 可视化：UI =====</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ui</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>apache/skywalking-ui:9.5.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>skywalking-ui</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>oap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_OAP_ADDRESS</span><span class=p>:</span><span class=w> </span><span class=l>http://oap:12800  </span><span class=w> </span><span class=c># UI 从 OAP 的 HTTP 接口拉数据</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8080:8080&#34;</span><span class=w>   </span><span class=c># ← 浏览器访问 http://localhost:8080</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>es-data</span><span class=p>:</span><span class=w>
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 启动</span>
+</span></span><span class=line><span class=cl>docker-compose up -d
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 验证——访问 UI</span>
+</span></span><span class=line><span class=cl>http://localhost:8080
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 检查 OAP Agent 接收端口是否正常</span>
+</span></span><span class=line><span class=cl>curl http://localhost:12800/receive
+</span></span></code></pre></div><h3 id=42-服务接入加一行-jvm-参数>4.2 服务接入——加一行 JVM 参数<a hidden class=anchor aria-hidden=true href=#42-服务接入加一行-jvm-参数>#</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 下载 Agent（和 OAP 版本一致）</span>
+</span></span><span class=line><span class=cl>wget https://dlcdn.apache.org/skywalking/java-agent/9.1.0/apache-skywalking-java-agent-9.1.0.tgz
+</span></span><span class=line><span class=cl>tar -xzf apache-skywalking-java-agent-9.1.0.tgz -C /opt/skywalking/
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 修改 Agent 配置——指定 OAP 地址</span>
+</span></span><span class=line><span class=cl>vim /opt/skywalking/agent/config/agent.config
+</span></span><span class=line><span class=cl><span class=c1># 关键配置：</span>
+</span></span><span class=line><span class=cl><span class=c1>#   agent.service_name=order-service       ← 服务名——在 UI 中显示的名称</span>
+</span></span><span class=line><span class=cl><span class=c1>#   collector.backend_service=127.0.0.1:11800  ← OAP 的 gRPC 地址</span>
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># Spring Boot 启动时挂载 Agent</span>
+</span></span><span class=line><span class=cl>java -javaagent:/opt/skywalking/agent/skywalking-agent.jar <span class=se>\
+</span></span></span><span class=line><span class=cl>     -Dskywalking.agent.service_name<span class=o>=</span>order-service <span class=se>\
+</span></span></span><span class=line><span class=cl>     -Dskywalking.collector.backend_service<span class=o>=</span>127.0.0.1:11800 <span class=se>\
+</span></span></span><span class=line><span class=cl>     -jar order-service.jar
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 看到这行日志——表示 Agent 已连接上 OAP：</span>
+</span></span><span class=line><span class=cl><span class=c1># INFO  - SkyWalking agent connected to collector successfully</span>
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># Docker Compose 中——挂载 Agent 到容器</span>
+</span></span><span class=line><span class=cl><span class=c1># docker-compose.yml</span>
+</span></span><span class=line><span class=cl>services:
+</span></span><span class=line><span class=cl>  order-service:
+</span></span><span class=line><span class=cl>    image: order-service:latest
+</span></span><span class=line><span class=cl>    environment:
+</span></span><span class=line><span class=cl>      JAVA_TOOL_OPTIONS: &gt;
+</span></span><span class=line><span class=cl>        -javaagent:/opt/skywalking/agent/skywalking-agent.jar
+</span></span><span class=line><span class=cl>        -Dskywalking.agent.service_name<span class=o>=</span>order-service
+</span></span><span class=line><span class=cl>        -Dskywalking.collector.backend_service<span class=o>=</span>oap:11800
+</span></span><span class=line><span class=cl>    volumes:
+</span></span><span class=line><span class=cl>      - /opt/skywalking/agent:/opt/skywalking/agent
+</span></span></code></pre></div><blockquote><p>⚠️ 新手提示：<code>agent.service_name</code> 必须和 Nacos 中注册的服务名一致——否则拓扑图中两个名字——对不上。建议直接用 <code>spring.application.name</code> 的值。</p></blockquote><h3 id=43-完整-docker-composeskywalking--微服务一键启动>4.3 完整 Docker Compose——SkyWalking + 微服务一键启动<a hidden class=anchor aria-hidden=true href=#43-完整-docker-composeskywalking--微服务一键启动>#</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># docker-compose.yml——完整的开发环境</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;3.8&#39;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>services</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># ===== SkyWalking 基础设施 =====</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>elasticsearch</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>docker.elastic.co/elasticsearch/elasticsearch:7.17.9</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>es</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>discovery.type=single-node</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;ES_JAVA_OPTS=-Xms512m -Xmx512m&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>xpack.security.enabled=false</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;9200:9200&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>es-data:/usr/share/elasticsearch/data</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>oap</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>apache/skywalking-oap-server:9.5.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>oap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>elasticsearch</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_STORAGE</span><span class=p>:</span><span class=w> </span><span class=l>elasticsearch</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_STORAGE_ES_CLUSTER_NODES</span><span class=p>:</span><span class=w> </span><span class=l>elasticsearch:9200</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_TELEMETRY</span><span class=p>:</span><span class=w> </span><span class=l>prometheus</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;11800:11800&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;12800:12800&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ui</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>apache/skywalking-ui:9.5.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>skywalking-ui</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>oap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>SW_OAP_ADDRESS</span><span class=p>:</span><span class=w> </span><span class=l>http://oap:12800</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8080:8080&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># ===== 注册中心 =====</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>nacos</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>nacos/nacos-server:v2.2.3</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>nacos</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>MODE=standalone</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8848:8848&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># ===== 微服务——都挂载 Agent =====</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>order-service</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>build</span><span class=p>:</span><span class=w> </span><span class=l>./order-service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>order-service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8081:8081&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>JAVA_TOOL_OPTIONS=-javaagent:/agent/skywalking-agent.jar</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>SW_AGENT_NAME=order-service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>SW_AGENT_COLLECTOR_BACKEND_SERVICES=oap:11800</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>./skywalking-agent:/agent:ro</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>nacos</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>oap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>user-service</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>build</span><span class=p>:</span><span class=w> </span><span class=l>./user-service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>container_name</span><span class=p>:</span><span class=w> </span><span class=l>user-service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8082:8082&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>JAVA_TOOL_OPTIONS=-javaagent:/agent/skywalking-agent.jar</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>SW_AGENT_NAME=user-service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>SW_AGENT_COLLECTOR_BACKEND_SERVICES=oap:11800</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>./skywalking-agent:/agent:ro</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>nacos</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>oap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>es-data</span><span class=p>:</span><span class=w>
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># ① 下载 Agent 到项目目录</span>
+</span></span><span class=line><span class=cl>wget https://dlcdn.apache.org/skywalking/java-agent/9.1.0/apache-skywalking-java-agent-9.1.0.tgz
+</span></span><span class=line><span class=cl>tar -xzf apache-skywalking-java-agent-9.1.0.tgz
+</span></span><span class=line><span class=cl>mv apache-skywalking-java-agent ./skywalking-agent
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ② 启动所有容器</span>
+</span></span><span class=line><span class=cl>docker-compose up -d
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ③ 等待服务启动——大约 30 秒</span>
+</span></span><span class=line><span class=cl><span class=c1># 观察 order-service 日志——确认 Agent 连接成功</span>
+</span></span><span class=line><span class=cl>docker logs order-service 2&gt;<span class=p>&amp;</span><span class=m>1</span> <span class=p>|</span> grep <span class=s2>&#34;SkyWalking&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># 预期输出：INFO  - SkyWalking agent connected to collector successfully</span>
+</span></span></code></pre></div><h3 id=44-逐步验证确认链路追踪已经生效>4.4 逐步验证——确认链路追踪已经生效<a hidden class=anchor aria-hidden=true href=#44-逐步验证确认链路追踪已经生效>#</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># Step 1：检查 SkyWalking 基础设施</span>
+</span></span><span class=line><span class=cl><span class=c1># OAP 是否正常接收</span>
+</span></span><span class=line><span class=cl>curl http://localhost:12800/receive
+</span></span><span class=line><span class=cl><span class=c1># 预期：返回 &#34;SkyWalking OAP Server&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># UI 是否可访问</span>
+</span></span><span class=line><span class=cl>curl http://localhost:8080
+</span></span><span class=line><span class=cl><span class=c1># 预期：返回 HTML 页面</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Step 2：检查服务注册——所有服务应该出现在 Nacos 中</span>
+</span></span><span class=line><span class=cl>curl http://localhost:8848/nacos/v1/ns/service/list
+</span></span><span class=line><span class=cl><span class=c1># 预期：order-service, user-service</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Step 3：制造流量——调用几次接口产生 Trace 数据</span>
+</span></span><span class=line><span class=cl>curl http://localhost:8081/api/orders -H <span class=s2>&#34;Content-Type: application/json&#34;</span> <span class=se>\
+</span></span></span><span class=line><span class=cl>  -d <span class=s1>&#39;{&#34;userId&#34;:1001,&#34;items&#34;:[{&#34;productId&#34;:2001,&#34;quantity&#34;:2}]}&#39;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>curl http://localhost:8082/api/users/1001
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 等 15 秒——Agent 是异步批量上报 Trace 的</span>
+</span></span><span class=line><span class=cl>sleep <span class=m>15</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># Step 4：在 SkyWalking UI 中验证</span>
+</span></span><span class=line><span class=cl><span class=c1># 打开浏览器 → http://localhost:8080</span>
+</span></span><span class=line><span class=cl><span class=c1># ① 顶部栏选择&#34;服务&#34;——应该看到 order-service 和 user-service</span>
+</span></span><span class=line><span class=cl><span class=c1># ② 点击&#34;拓扑图&#34;——应该看到两个服务的调用关系</span>
+</span></span><span class=line><span class=cl><span class=c1># ③ 点击&#34;追踪&#34;——选择 order-service——应该看到刚才的 Trace</span>
+</span></span><span class=line><span class=cl><span class=c1># ④ 展开 Trace——应该看到 HTTP Span + MySQL Span</span>
+</span></span></code></pre></div><pre tabindex=0><code>验证成功的标志：
+  ✅ SkyWalking UI 的服务列表中出现 order-service 和 user-service
+  ✅ 拓扑图中出现调用连线——order-service → user-service
+  ✅ 追踪列表中能看到刚才的请求——展开有完整的 Span 树
+  ✅ MySQL 查询语句自动出现在 Database Span 中
+
+如果只有服务名没有 Trace 数据：
+  → 检查 -javaagent 参数是否真的生效——看启动日志有没有 &#34;SkyWalking agent&#34;
+  → 检查 collector.backend_service 端口——Agent 上报用 11800（gRPC），不是 12800（HTTP）
+  → 等待 15 秒——Agent 不是实时上报的——有缓冲
+
+如果连服务名都看不到：
+  → Agent 没连上 OAP——检查 oap:11800 网络连通性
+  → docker exec order-service curl oap:11800（容器内测试连通性）
+</code></pre><h2 id=五-skywalking-ui-全景指南看什么怎么看>五、📊 SkyWalking UI 全景指南——看什么？怎么看？<a hidden class=anchor aria-hidden=true href=#五-skywalking-ui-全景指南看什么怎么看>#</a></h2><p>启动服务后——随便调几个接口——打开 <code>http://localhost:8080</code>：</p><h3 id=51-全局拓扑图系统整体调用关系>5.1 全局拓扑图——系统整体调用关系<a hidden class=anchor aria-hidden=true href=#51-全局拓扑图系统整体调用关系>#</a></h3><pre tabindex=0><code>SkyWalking UI → 拓扑图 → 选择服务
+
+效果：
+  ┌──────────────┐     ┌──────────────┐
+  │   Gateway    │────→│ order-service│
+  │  (HTTP/200)  │     │  (HTTP/200)  │
+  └──────────────┘     └──┬───┬───┬──┘
+                          │   │   │
+              ┌───────────┘   │   └───────────┐
+              ▼               ▼               ▼
+        ┌──────────┐  ┌──────────────┐  ┌──────────────┐
+        │user-svc │  │product-svc  │  │inventory-svc│
+        │(RPC/50ms)│  │(HTTP/45ms)  │  │(HTTP/2.8s)  │← 红色的——慢了
+        └──────────┘  └──────────────┘  └──────────────┘
+                            │
+                            ▼
+                     ┌──────────┐
+                     │  MySQL   │
+                     │ (DB/30ms)│
+                     └──────────┘
+</code></pre><p><strong>拓扑图告诉你什么</strong>：</p><ul><li>箭头方向 = 调用方向——谁调了谁</li><li>节点颜色 = 健康状态——绿色正常——黄色警告——红色异常</li><li>连线粗细 = 调用量——越粗 QPS 越高</li><li>连线延迟 = 该调用的平均耗时</li></ul><h3 id=52-追踪查询找那条有问题的请求>5.2 追踪查询——找那条有问题的请求<a hidden class=anchor aria-hidden=true href=#52-追踪查询找那条有问题的请求>#</a></h3><pre tabindex=0><code>SkyWalking UI → 追踪 → 选择服务 + 时间范围
+
+查询条件：
+  ① 服务名：order-service
+  ② 端点：POST:/api/orders  → 只看创建订单的请求
+  ③ 耗时范围：2000ms ~ 10000ms  → 只看慢的
+  ④ 状态：Error  → 或者只看有异常的
+
+结果——列出所有匹配的 Trace：
+  ┌─────────────────────────────────────────────────────┐
+  │ t-abc123 | 2022-12-19 03:15:22.331 | 3056ms | ✅  │
+  │ t-def456 | 2022-12-19 03:15:22.441 | 2891ms | ✅  │
+  │ t-ghi789 | 2022-12-19 03:15:22.551 | 3855ms | ❌  │← 这个有异常
+  └─────────────────────────────────────────────────────┘
+
+点开 t-abc123——看到完整调用树：
+  POST /api/orders (3056ms)
+    ├─ MySQL: SELECT * FROM orders WHERE id=? (12ms)
+    ├─ Feign: user-service GET /api/users/1001 (52ms)
+    │   ├─ MySQL: SELECT * FROM users WHERE id=? (8ms)
+    │   └─ Redis: GET user:1001 (3ms)
+    ├─ Feign: product-service GET /api/products/2001 (48ms)
+    │   ├─ MySQL: SELECT * FROM products WHERE id=? (10ms)
+    │   └─ Redis: GET product:2001 (4ms)
+    ├─ Feign: inventory-service POST /api/inventory/check (2850ms)  ← 这里
+    │   └─ MySQL: SELECT * FROM inventory WHERE product_id=? (2830ms)  ← 罪魁祸首
+    │       ↑ 展开可以看到完整的 SQL 语句！
+    └─ MySQL: INSERT INTO orders (...) VALUES (...) (15ms)
+</code></pre><p><strong>每个 Span 能看到什么</strong>：</p><ul><li>具体方法——<code>OrderController.createOrder()</code></li><li>SQL 语句——<code>SELECT * FROM inventory WHERE product_id = ?</code></li><li>参数——<code>product_id = 2001</code></li><li>耗时——<code>2830ms</code></li><li>状态——成功/失败/异常堆栈</li></ul><h3 id=53-端点详情看接口的统计信息>5.3 端点详情——看接口的统计信息<a hidden class=anchor aria-hidden=true href=#53-端点详情看接口的统计信息>#</a></h3><pre tabindex=0><code>SkyWalking UI → 端点 → 选择服务 → 选择端点
+
+POST:/api/orders 的统计：
+  平均响应时间: 320ms
+  P50:  150ms
+  P75:  280ms
+  P90:  450ms
+  P95:  800ms
+  P99:  3100ms  ← P99 很高——有长尾——一定是偶尔哪次特别慢
+  
+  SLA（成功率）: 99.8%
+  调用次数: 125,000 次/小时
+  
+  下面可以看：
+    → 耗时分布图（直方图）
+    → 哪天哪个小时慢了
+    → 哪些实例慢了
+</code></pre><h3 id=54-数据库慢查询自动识别>5.4 数据库慢查询——自动识别<a hidden class=anchor aria-hidden=true href=#54-数据库慢查询自动识别>#</a></h3><pre tabindex=0><code>SkyWalking UI → 数据库 → 选择服务
+
+MySQL 操作统计（按 SQL 去重）：
+  SELECT * FROM inventory WHERE product_id = ?   平均: 2100ms  调用: 850次  ← 肯定有问题
+  SELECT * FROM users WHERE id = ?               平均: 8ms     调用: 12000次
+  INSERT INTO orders ...                         平均: 15ms    调用: 850次
+  SELECT * FROM products WHERE id = ?            平均: 10ms    调用: 850次
+</code></pre><p><strong>不需要自己埋 log.info(sql, time)——Agent 自动记录每条 SQL 的耗时。</strong></p><h2 id=六-实战用-skywalking-排查一次完整的性能问题>六、🧪 实战——用 SkyWalking 排查一次完整的性能问题<a hidden class=anchor aria-hidden=true href=#六-实战用-skywalking-排查一次完整的性能问题>#</a></h2><h3 id=61-模拟场景>6.1 模拟场景<a hidden class=anchor aria-hidden=true href=#61-模拟场景>#</a></h3><pre tabindex=0><code>场景：商品服务的数据库连接池太小——高峰期请求排队等待连接——导致接口变慢
+
+模拟：
+  ① 启动 Gateway + order-service + product-service
+  ② product-service 连接池故意设很小：
+     spring.datasource.hikari.maximum-pool-size=3
+  ③ 用 JMeter 100 并发打 POST /api/orders
+</code></pre><h3 id=62-问题发现>6.2 问题发现<a hidden class=anchor aria-hidden=true href=#62-问题发现>#</a></h3><pre tabindex=0><code>Grafana 仪表盘：
+  P99 延迟从 80ms 涨到 2.5s  → 知道有问题了——但不知道为什么
+
+SkyWalking 追踪——找一条慢请求：
+  POST /api/orders (2580ms)
+    ├─ Feign: user-service GET /api/users/1 (45ms)      ← 正常
+    ├─ Feign: product-service GET /api/products/1 (2480ms) ← 这里慢
+    │   └─ MySQL: SELECT * FROM products WHERE id=? (2450ms) ← SQL 本身不慢
+    │       但为什么等了 2.4s 才执行？
+    └─ MySQL: INSERT INTO orders ... (15ms)
+
+点开 product-service 的 MySQL Span——看详情：
+  开始时间: 03:15:22.331
+  执行时间: 03:15:24.781  ← 等待了 2.45 秒才拿到连接！
+  SQL 实际耗时: 10ms  ← SQL 本身很快——是等连接等了 2.45 秒
+
+结合 Grafana HikariCP 面板：
+  HikariCP Active Connections: 3/3 (100%)  ← 连接池满了
+  HikariCP Pending Connections: 97  ← 97 个请求在排队等连接
+  
+→ 结论：HikariCP 连接池太小——增大到 20——问题解决
+</code></pre><p><strong>这就是 SkyWalking 和 Prometheus 的配合</strong>：Prometheus 的 HikariCP 面板告诉你"连接池满了"，SkyWalking 告诉你"这个 Span 等了 2.45 秒才拿到连接——因为连接池满了"。两者不是二选一——是一起用。</p><h2 id=七-skywalking-自身的-prometheus-指标>七、📊 SkyWalking 自身的 Prometheus 指标<a hidden class=anchor aria-hidden=true href=#七-skywalking-自身的-prometheus-指标>#</a></h2><p>SkyWalking OAP 自带 Prometheus 指标暴露——接入 Prometheus：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># prometheus.yml——加一个 job</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>scrape_configs</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>job_name</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;skywalking-oap&#39;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>static_configs</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>targets</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=s1>&#39;oap:1234&#39;</span><span class=p>]</span><span class=w>  </span><span class=c># OAP 的 Prometheus 指标端口</span><span class=w>
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-promql data-lang=promql><span class=line><span class=cl><span class=c1># SkyWalking OAP 的关键指标：</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1># ① OAP 接收的 Trace 速率（Trace/秒）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kr>rate</span><span class=o>(</span><span class=nv>sw_mesh_analysis_latency</span><span class=p>[</span><span class=s>1m</span><span class=p>]</span><span class=o>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1># ② 每个服务的 P99 延迟（OAP 内部算好的——不需要 histogram_quantile）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nv>sw_service_resp_time</span><span class=p>{</span><span class=nl>service_name</span><span class=o>=</span><span class=p>&#34;</span><span class=s>order-service</span><span class=p>&#34;,</span><span class=w> </span><span class=nl>quantile</span><span class=o>=</span><span class=p>&#34;</span><span class=s>99</span><span class=p>&#34;}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1># ③ 每个服务的 SLA（成功率）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nv>sw_service_sla</span><span class=p>{</span><span class=nl>service_name</span><span class=o>=</span><span class=p>&#34;</span><span class=s>order-service</span><span class=p>&#34;}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1># ④ 每个服务的 CPM（每分钟调用次数）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nv>sw_service_cpm</span><span class=p>{</span><span class=nl>service_name</span><span class=o>=</span><span class=p>&#34;</span><span class=s>order-service</span><span class=p>&#34;}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1># ⑤ OAP JVM 指标（OAP 自己也是 Java 应用）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nv>jvm_memory_used_bytes</span><span class=p>{</span><span class=nl>service</span><span class=o>=</span><span class=p>&#34;</span><span class=s>oap</span><span class=p>&#34;,</span><span class=w> </span><span class=nl>area</span><span class=o>=</span><span class=p>&#34;</span><span class=s>heap</span><span class=p>&#34;}</span><span class=w>
+</span></span></span></code></pre></div><blockquote><p>⚠️ 新手提示：<code>sw_</code> 前缀是 SkyWalking 9.x 新命名——8.x 及以前是 <code>meter_</code> 前缀。如果你用的是旧版本——指标名可能不同——在 Prometheus 中查询 <code>{__name__=~".*service.*"}</code> 找一下。</p></blockquote><h2 id=八-skywalking-vs-jaeger-vs-zipkin-vs-pinpoint>八、⚖️ SkyWalking vs Jaeger vs Zipkin vs Pinpoint<a hidden class=anchor aria-hidden=true href=#八-skywalking-vs-jaeger-vs-zipkin-vs-pinpoint>#</a></h2><table><thead><tr><th>维度</th><th style=text-align:center>SkyWalking</th><th style=text-align:center>Jaeger</th><th style=text-align:center>Zipkin</th><th style=text-align:center>Pinpoint</th></tr></thead><tbody><tr><td><strong>Java Agent 零侵入</strong></td><td style=text-align:center>✅ 极强</td><td style=text-align:center>✅ 有</td><td style=text-align:center>✅ 有</td><td style=text-align:center>✅ 极强</td></tr><tr><td><strong>支持语言</strong></td><td style=text-align:center>Java/.NET/Go/Python/Node.js/PHP</td><td style=text-align:center>多语言</td><td style=text-align:center>多语言</td><td style=text-align:center><strong>只 Java</strong></td></tr><tr><td><strong>自动埋点范围</strong></td><td style=text-align:center><strong>极广</strong>——Spring/Dubbo/Feign/DB/Cache/MQ</td><td style=text-align:center>标准——HTTP/DB/MQ</td><td style=text-align:center>基础——HTTP/DB</td><td style=text-align:center>极广——但只 Java</td></tr><tr><td><strong>拓扑图</strong></td><td style=text-align:center>✅ 自动生成——美观</td><td style=text-align:center>✅ 有——功能简单</td><td style=text-align:center>✅ 有——简单</td><td style=text-align:center>✅ 很详细</td></tr><tr><td><strong>SQL 记录</strong></td><td style=text-align:center>✅ 自动——能看到完整 SQL</td><td style=text-align:center>✅ 有</td><td style=text-align:center>✅ 有</td><td style=text-align:center>✅ 有</td></tr><tr><td><strong>存储</strong></td><td style=text-align:center>ES/H2/MySQL/BanyanDB</td><td style=text-align:center>ES/Cassandra/Memory</td><td style=text-align:center>ES/MySQL/Cassandra</td><td style=text-align:center>HBase</td></tr><tr><td><strong>性能开销</strong></td><td style=text-align:center><strong>极低</strong>——字节码增强</td><td style=text-align:center>中等——SDK 埋点</td><td style=text-align:center>中等</td><td style=text-align:center>中等</td></tr><tr><td><strong>社区/生态</strong></td><td style=text-align:center>Apache 顶级项目——活跃</td><td style=text-align:center>CNCF——生态好</td><td style=text-align:center>CNCF——老牌</td><td style=text-align:center>韩国 Naver——相对小众</td></tr><tr><td><strong>集成告警</strong></td><td style=text-align:center>✅ 内置</td><td style=text-align:center>❌——需要外部</td><td style=text-align:center>❌——需要外部</td><td style=text-align:center>✅ 内置</td></tr><tr><td><strong>日志关联</strong></td><td style=text-align:center>✅ 支持——通过 TraceId 关联</td><td style=text-align:center>❌</td><td style=text-align:center>❌</td><td style=text-align:center>❌</td></tr><tr><td><strong>适用场景</strong></td><td style=text-align:center><strong>Java 微服务——首选</strong></td><td style=text-align:center>多语言混合</td><td style=text-align:center>简单易用——快速上手</td><td style=text-align:center>Java 大型单体/微服务</td></tr></tbody></table><p><strong>为什么选 SkyWalking</strong>：</p><ol><li>Java Agent 零侵入——一行 JVM 参数——不用改代码</li><li>自动埋点范围最广——Spring/Dubbo/Feign/DB/Cache/MQ 全自动</li><li>拓扑图直观——自动构建调用关系</li><li>Apache 顶级项目——国内蚂蚁/华为/腾讯大规模使用——久经考验</li></ol><h2 id=-总结>🎯 总结<a hidden class=anchor aria-hidden=true href=#-总结>#</a></h2><ol><li><p><strong>SkyWalking 和 Prometheus 是互补关系</strong>：Prometheus 告诉你"P99 延迟涨了"——SkyWalking 告诉你"这条具体请求在 inventory-service 花了 2.8s——因为这条 SQL 全表扫描"。一个是聚合指标——一个是请求级详情。</p></li><li><p><strong>Trace / Segment / Span 三层模型</strong>：Trace 是一次完整请求（一个 TraceId 贯穿所有服务），Segment 是一个服务内的一段（每个服务一个 SegmentId），Span 是一个具体操作（HTTP 调用/DB 查询/缓存操作——有父子关系）。</p></li><li><p><strong>Agent 零侵入——字节码增强</strong>：<code>-javaagent:skywalking-agent.jar</code> 一行 JVM 参数——Spring Controller/Dubbo/Feign/DataSource/Redis/Kafka 全部自动拦截。不需要加注解——不需要加依赖——不需要改配置。Agent 在类加载时修改字节码——织入 Tracing 逻辑。</p></li><li><p><strong>排查性能问题——从拓扑图到 SQL 语句——两分钟定位</strong>：拓扑图找到哪个服务红了一→ 追踪列表按耗时排序——找最慢的那一条 → 展开调用树——找到最慢的 Span → 展开——看到完整 SQL、参数、耗时 → 定位到具体 SQL——加索引解决。</p></li></ol><blockquote><p>📖 <strong>下一步阅读</strong>：Agent 自动埋点了 HTTP/Dubbo/Feign/DB/Cache——但跨服务的自制 Span 怎么加？Gateway 和 Sentinel 如何完整追踪？日志怎么通过 TraceId 关联？继续阅读 <a href=/posts/skywalking/skywalkingproduction/><strong>SkyWalking 中间件集成与链路分析实战</strong></a>。</p></blockquote></div><script type=module>
+    
+    var theme = localStorage.getItem("pref-theme") === "dark" ? "dark" : "default";
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: theme === "dark" ? "dark" : "base"
+    });
+  </script><footer class=post-footer><ul class=post-tags><li><a href=https://yaocat55.github.io/tags/%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/>可观测性</a></li><li><a href=https://yaocat55.github.io/tags/%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/>入门指南</a></li><li><a href=https://yaocat55.github.io/tags/springcloud/>SpringCloud</a></li></ul><nav class=paginav><a class=prev href=https://yaocat55.github.io/posts/skywalking/skywalkingproduction/><span class=title>« 上一页</span>
+<span>SkyWalking 中间件集成与链路分析实战</span>
+</a><a class=next href=https://yaocat55.github.io/posts/monitoring/prometheusmiddleware/><span class=title>下一页 »</span>
+<span>所有中间件指标接入 Prometheus——统一仪表盘实战</span></a></nav></footer></article></main><footer class=footer><span>© 2022 CatBlog</span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top id=top-link class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey=g><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg></a><style>body .waifu{left:auto!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important}body .waifu-tips{bottom:80px!important;right:20px!important;left:auto!important}</style><script>(function(){if(window._live2dModuleInitialized){console.log("看板娘模块已初始化，跳过");return}if(window._live2dModuleInitialized=!0,typeof window._live2dResourcesLoaded=="undefined"&&(window._live2dResourcesLoaded=!1,window._live2dModelRendered=!1),window._live2dResourcesLoaded){console.log("看板娘资源已加载，跳过");return}const n="https://cdn.jsdelivr.net/gh/letere-gzj/live2d-widget-v3@main",o="https://cdn.jsdelivr.net/gh/yaocat55/Resources@v1.0.7/",e={path:{homePath:"/",modelPath:o,cssPath:n+"/waifu.css",tipsJsonPath:"/waifu-tips.json",tipsJsPath:"/libs/waifu-tips.js",live2dCorePath:n+"/Core/live2dcubismcore.js",live2dSdkPath:n+"/live2d-sdk.js"},tools:["hitokoto","asteroids","express","switch-model","switch-texture","photo","info","quit"],drag:{enable:!0,direction:["x","y"]},switchType:"order"};function t(e,t){return new Promise((n,s)=>{let o;if(t==="css"?(o=document.createElement("link"),o.rel="stylesheet",o.href=e):t==="js"&&(o=document.createElement("script"),o.src=e,o.async=!0),!o)return s("Unknown type: "+t);o.onload=()=>n(e),o.onerror=()=>s(e),document.head.appendChild(o)})}function i(){return new Promise(e=>{document.readyState==="loading"?document.addEventListener("DOMContentLoaded",e):e()})}function s(){if(window._live2dModelRendered)return;if(window._live2dModelRendered=!0,typeof initWidget!="undefined"){initWidget({homePath:e.path.homePath,waifuPath:e.path.tipsJsonPath,cdnPath:e.path.modelPath,tools:e.tools,dragEnable:e.drag.enable,dragDirection:e.drag.direction,switchType:e.switchType});const t=document.createElement("style");t.innerHTML=`
+                #waifu {
+                    position: fixed !important;
+                    right: 20px;
+                    bottom: 0;
+                    left: auto !important;
+                    top: auto !important;
+                    z-index: 9999;
+                }
+                `,document.head.appendChild(t),console.log("✅ Live2D 看板娘加载完成")}else console.warn("initWidget 未定义，500ms 后重试"),setTimeout(s,500)}async function a(){if(window._live2dResourcesLoaded)return!0;if(window._live2dResourcesLoaded=!0,!window.matchMedia("(min-width: 768px)").matches)return!1;await i();try{return await Promise.all([t(e.path.cssPath,"css"),t(e.path.live2dCorePath,"js"),t(e.path.live2dSdkPath,"js")]),await t(e.path.tipsJsPath,"js"),s(),!0}catch(e){return console.error("❌ Live2D 加载失败:",e),!1}}a()})()</script><script>(function(){if(!document.querySelector("#cat-paw-style")){const e=document.createElement("style");e.id="cat-paw-style",e.innerHTML=`
+                .cat-paw {
+                    position: fixed;
+                    pointer-events: none;
+                    z-index: 999999;
+                    font-size: 26px;
+                    user-select: none;
+                    animation: catPawFade 1.8s ease-out forwards;
+                    transform-origin: center;
+                }
+                @keyframes catPawFade {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.4) rotate(var(--rotate));
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: scale(1.1) rotate(var(--rotate));
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translateY(-25px) scale(0.8) rotate(var(--rotate));
+                    }
+                }
+            `,document.head.appendChild(e)}function e(){return document.documentElement.classList.contains("dark")}window._catPawBound||(window._catPawBound=!0,document.body.addEventListener("click",function(t){const n=document.createElement("div");n.className="cat-paw",n.textContent="🐾";const s=(Math.random()*60-30).toFixed(0)+"deg";n.style.setProperty("--rotate",s),n.style.left=t.clientX-10+"px",n.style.top=t.clientY-10+"px",e()?(n.style.color="#9cffb5",n.style.textShadow=`
+                        0 0 8px rgba(156,255,181,.8),
+                        0 0 15px rgba(156,255,181,.6),
+                        0 0 25px rgba(156,255,181,.4)
+                    `):(n.style.color="#2f7d32",n.style.textShadow=`0 0 4px rgba(47,125,50,.15)`),document.body.appendChild(n),setTimeout(()=>n.remove(),1800)}))})()</script><script>let menu=document.getElementById("menu");if(menu){const e=localStorage.getItem("menu-scroll-position");e&&(menu.scrollLeft=parseInt(e,10)),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}}document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var toplink=document.getElementById("top-link");window.onscroll=function(){const e=window.innerHeight;document.body.scrollTop>e||document.documentElement.scrollTop>e?toplink.classList.remove("hidden"):toplink.classList.add("hidden")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{const e=document.querySelector("html");e.dataset.theme==="dark"?(e.dataset.theme="light",localStorage.setItem("pref-theme","light")):(e.dataset.theme="dark",localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="复制";function s(){t.innerHTML="已复制！",setTimeout(()=>{t.innerHTML="复制"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script><style>body .waifu{left:auto!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important}body .waifu-tips{bottom:80px!important;right:20px!important;left:auto!important}</style><script>(function(){if(window._live2dModuleInitialized){console.log("看板娘模块已初始化，跳过");return}if(window._live2dModuleInitialized=!0,typeof window._live2dResourcesLoaded=="undefined"&&(window._live2dResourcesLoaded=!1,window._live2dModelRendered=!1),window._live2dResourcesLoaded){console.log("看板娘资源已加载，跳过");return}const n="https://cdn.jsdelivr.net/gh/letere-gzj/live2d-widget-v3@main",o="https://cdn.jsdelivr.net/gh/yaocat55/Resources@v1.0.7/",e={path:{homePath:"/",modelPath:o,cssPath:n+"/waifu.css",tipsJsonPath:"/waifu-tips.json",tipsJsPath:"/libs/waifu-tips.js",live2dCorePath:n+"/Core/live2dcubismcore.js",live2dSdkPath:n+"/live2d-sdk.js"},tools:["hitokoto","asteroids","express","switch-model","switch-texture","photo","info","quit"],drag:{enable:!0,direction:["x","y"]},switchType:"order"};function t(e,t){return new Promise((n,s)=>{let o;if(t==="css"?(o=document.createElement("link"),o.rel="stylesheet",o.href=e):t==="js"&&(o=document.createElement("script"),o.src=e,o.async=!0),!o)return s("Unknown type: "+t);o.onload=()=>n(e),o.onerror=()=>s(e),document.head.appendChild(o)})}function i(){return new Promise(e=>{document.readyState==="loading"?document.addEventListener("DOMContentLoaded",e):e()})}function s(){if(window._live2dModelRendered)return;if(window._live2dModelRendered=!0,typeof initWidget!="undefined"){initWidget({homePath:e.path.homePath,waifuPath:e.path.tipsJsonPath,cdnPath:e.path.modelPath,tools:e.tools,dragEnable:e.drag.enable,dragDirection:e.drag.direction,switchType:e.switchType});const t=document.createElement("style");t.innerHTML=`
+                #waifu {
+                    position: fixed !important;
+                    right: 20px;
+                    bottom: 0;
+                    left: auto !important;
+                    top: auto !important;
+                    z-index: 9999;
+                }
+                `,document.head.appendChild(t),console.log("✅ Live2D 看板娘加载完成")}else console.warn("initWidget 未定义，500ms 后重试"),setTimeout(s,500)}async function a(){if(window._live2dResourcesLoaded)return!0;if(window._live2dResourcesLoaded=!0,!window.matchMedia("(min-width: 768px)").matches)return!1;await i();try{return await Promise.all([t(e.path.cssPath,"css"),t(e.path.live2dCorePath,"js"),t(e.path.live2dSdkPath,"js")]),await t(e.path.tipsJsPath,"js"),s(),!0}catch(e){return console.error("❌ Live2D 加载失败:",e),!1}}a()})()</script><script>(function(){if(!document.querySelector("#cat-paw-style")){const e=document.createElement("style");e.id="cat-paw-style",e.innerHTML=`
+                .cat-paw {
+                    position: fixed;
+                    pointer-events: none;
+                    z-index: 999999;
+                    font-size: 26px;
+                    user-select: none;
+                    animation: catPawFade 1.8s ease-out forwards;
+                    transform-origin: center;
+                }
+                @keyframes catPawFade {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.4) rotate(var(--rotate));
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: scale(1.1) rotate(var(--rotate));
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translateY(-25px) scale(0.8) rotate(var(--rotate));
+                    }
+                }
+            `,document.head.appendChild(e)}function e(){return document.documentElement.classList.contains("dark")}window._catPawBound||(window._catPawBound=!0,document.body.addEventListener("click",function(t){const n=document.createElement("div");n.className="cat-paw",n.textContent="🐾";const s=(Math.random()*60-30).toFixed(0)+"deg";n.style.setProperty("--rotate",s),n.style.left=t.clientX-10+"px",n.style.top=t.clientY-10+"px",e()?(n.style.color="#9cffb5",n.style.textShadow=`
+                        0 0 8px rgba(156,255,181,.8),
+                        0 0 15px rgba(156,255,181,.6),
+                        0 0 25px rgba(156,255,181,.4)
+                    `):(n.style.color="#2f7d32",n.style.textShadow=`0 0 4px rgba(47,125,50,.15)`),document.body.appendChild(n),setTimeout(()=>n.remove(),1800)}))})()</script><audio id=cat-player preload=metadata></audio><div id=cat-radio><div id=cat-btn>🐱</div><div id=cat-info>Cat Radio</div></div><style>#cat-radio{position:fixed;right:90px;bottom:20px;z-index:99999;display:flex;align-items:center;gap:0;background:rgba(255,255,255,.5);backdrop-filter:blur(20px);border-radius:60px;border:1px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.1);padding:4px;padding-right:16px}#cat-btn{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#5d9e5a,#3d6b35);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;box-shadow:0 2px 8px rgba(0,0,0,.1);border:none;transition:all .3s ease;color:#fff;margin:0}#cat-btn:hover{transform:scale(1.05)rotate(8deg);background:linear-gradient(135deg,#4a8a47,#2a5522);box-shadow:0 4px 12px rgba(0,0,0,.15)}#cat-info{max-width:220px;padding:0 8px 0 12px;border-radius:0;background:0 0;backdrop-filter:none;font-size:14px;font-family:segoe ui,pingfang sc,microsoft yahei,monospace;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:none;border:none;transition:all .2s ease;color:#2c3e2a;letter-spacing:.5px}html[data-theme=dark] #cat-radio{background:rgba(30,33,35,.5);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,8%);box-shadow:0 8px 32px rgba(0,0,0,.3)}html[data-theme=dark] #cat-btn{background:linear-gradient(135deg,#e6b860,#d4a652);color:#1e2123}html[data-theme=dark] #cat-btn:hover{background:linear-gradient(135deg,#d4a652,#c49a48)}html[data-theme=dark] #cat-info{color:#e8dcc8}@media(max-width:768px){#cat-radio{right:20px;bottom:20px;padding:4px;padding-right:0}#cat-info{display:none}#cat-btn{width:48px;height:48px;font-size:22px}}</style><script>(function(){if(window._musicPlayerInitialized)return;window._musicPlayerInitialized=!0;const n=[{name:"oddloop",file:"/music/oddloop.mp3"},{name:"night dancer",file:"/music/night dancer.mp3"},{name:"夜に駆ける",file:"/music/夜に駆ける.mp3"},{name:"brain rot",file:"/music/brain rot.mp3"},{name:"dehors",file:"/music/dehors.mp3"},{name:"I love you so",file:"/music/I love you so.mp3"},{name:"odoriko",file:"/music/odoriko.mp3"},{name:"tek it",file:"/music/tek it.mp3"}],e=document.getElementById("cat-player"),t=document.getElementById("cat-btn"),c=document.getElementById("cat-info");let s=parseInt(localStorage.getItem("cat-radio-index")||"0");function a(t){s=t,e.src=n[t].file,c.innerHTML="🎵 "+n[t].name,localStorage.setItem("cat-radio-index",t)}function o(){let o=s+1;o>=n.length&&(o=0),a(o),e.play(),t.innerHTML="🎵"}setInterval(()=>{!e.paused&&!isNaN(e.currentTime)&&(localStorage.setItem("cat-radio-time",e.currentTime),localStorage.setItem("cat-radio-playing","true"))},3e3);const i=localStorage.getItem("cat-radio-time"),r=localStorage.getItem("cat-radio-playing")==="true";if(a(s),i&&!isNaN(parseFloat(i))&&(e.currentTime=parseFloat(i)),r){const n=e.play();n!==0[0]&&n.then(()=>{t.innerHTML="🎵"}).catch(()=>{t.innerHTML="🐱",console.log("自动播放被阻止，需要用户点击页面")})}document.addEventListener("visibilitychange",()=>{!document.hidden&&r&&e.paused&&e.play().catch(()=>{})}),t.addEventListener("click",()=>{e.paused?(e.play(),t.innerHTML="🎵"):(e.pause(),t.innerHTML="🐱")}),t.addEventListener("contextmenu",e=>{e.preventDefault(),o()}),e.addEventListener("ended",o),e.addEventListener("error",()=>{console.warn("音频加载失败，尝试下一首"),o()}),window.addEventListener("beforeunload",()=>{!e.paused&&!isNaN(e.currentTime)?(localStorage.setItem("cat-radio-time",e.currentTime),localStorage.setItem("cat-radio-playing","true")):localStorage.setItem("cat-radio-playing","false")}),console.log("🎵 Cat Radio 已启动（断点续播）")})()</script></body></html>

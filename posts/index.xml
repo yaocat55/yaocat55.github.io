@@ -1,0 +1,1222 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>文章 on CatBlog</title>
+    <link>https://yaocat55.github.io/posts/</link>
+    <description>Recent content in 文章 on CatBlog</description>
+    <image>
+      <title>CatBlog</title>
+      <url>https://yaocat55.github.io/images/avatar.jpg</url>
+      <link>https://yaocat55.github.io/images/avatar.jpg</link>
+    </image>
+    <generator>Hugo</generator>
+    <language>zh</language>
+    <copyright>2022 CatBlog</copyright>
+    <lastBuildDate>Fri, 10 Feb 2023 11:30:03 +0000</lastBuildDate>
+    <atom:link href="https://yaocat55.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Go Runtime vs JVM：调度、GC、反射全方位对比</title>
+      <link>https://yaocat55.github.io/posts/go/goruntimejvm/</link>
+      <pubDate>Fri, 10 Feb 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/go/goruntimejvm/</guid>
+      <description>Go 二进制跑起来只占 4MB 内存，JVM 还没加载完类就已经吃了几百 MB。goroutine 和 JVM 线程到底差在哪？Go GC 和 G1/ZGC 哪个更合适？Go 的反射为什么比 Java 慢？JIT 和 AOT 编译对性能影响有多大？本文从运行时底层把 Go 和 JVM 的差异讲清楚。</description>
+    </item>
+    <item>
+      <title>Go Web 开发全栈：从 Gin 到微服务</title>
+      <link>https://yaocat55.github.io/posts/go/gowebdevelopment/</link>
+      <pubDate>Wed, 08 Feb 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/go/gowebdevelopment/</guid>
+      <description>Spring Boot 里有 @Autowired、@Controller、application.yml——到了 Go 这边全没了。Gin 和 Spring Boot 怎么对应？go-zero 和 Spring Cloud 是什么关系？依赖注入怎么搞？gRPC 怎么替代 OpenFeign？本文用 Spring Boot 用户的视角，把 Go Web 开发的技术栈一次讲清楚。</description>
+    </item>
+    <item>
+      <title>Go 网络编程与 IO 模型</title>
+      <link>https://yaocat55.github.io/posts/go/gonetworking/</link>
+      <pubDate>Mon, 06 Feb 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/go/gonetworking/</guid>
+      <description>Go 的 net/http 凭什么比 Netty 还简洁？netpoll 是怎么工作的？阻塞 IO、非阻塞 IO、IO 多路复用到底差在哪？本文用 Java NIO/Netty 的经验来理解 Go 的网络模型，包含完整的代码对比和 netpoller 原理解析。</description>
+    </item>
+    <item>
+      <title>Go 并发编程：Goroutine、Channel 与 CSP 模型</title>
+      <link>https://yaocat55.github.io/posts/go/goconcurrency/</link>
+      <pubDate>Sat, 04 Feb 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/go/goconcurrency/</guid>
+      <description>goroutine 到底比 Java 线程轻量在哪？CSP 模型怎么替代你的 BlockingQueue？select 怎么写超时控制？GMP 调度器如何支撑百万协程？本文用 Java 线程池/Virtual Thread 的经验来理解 Go 并发，附带有栈协程 vs 线程 vs 协程的图解。</description>
+    </item>
+    <item>
+      <title>Java vs Go 语法快速对比</title>
+      <link>https://yaocat55.github.io/posts/go/javavsgosyntax/</link>
+      <pubDate>Thu, 02 Feb 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/go/javavsgosyntax/</guid>
+      <description>从 Java 程序员视角快速上手 Go 语法：变量声明、函数多返回值、defer 资源清理、error 返回值 vs exception、struct vs class、go mod vs Maven 命令对照。每节都有 Java/Go 代码对比例子，看完就能写 Go。</description>
+    </item>
+    <item>
+      <title>Go 语言历史与设计哲学</title>
+      <link>https://yaocat55.github.io/posts/go/godesignphilosophy/</link>
+      <pubDate>Tue, 31 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/go/godesignphilosophy/</guid>
+      <description>Go 语言诞生于 Google 内部对 C&#43;&#43; 工程效率的不满，三位大佬用 25 个关键字和 goroutine 重新定义了系统编程。本文从 Java 程序员的视角，带你理解 Go 的设计哲学——隐式接口、组合优于继承、CSP 并发，以及为什么没有 class 和 try-catch。</description>
+    </item>
+    <item>
+      <title>统一开发团队的流水线哲学</title>
+      <link>https://yaocat55.github.io/posts/cicd/devplatformmicroservicecollaboration/</link>
+      <pubDate>Sun, 29 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/cicd/devplatformmicroservicecollaboration/</guid>
+      <description>从.gitlab-ci.yml和Dockerfile的编写规范出发，结合IDP平台化治理思路，聊聊微服务环境下多人协作的工程实践。</description>
+    </item>
+    <item>
+      <title>SpringCloud微服务测试实战</title>
+      <link>https://yaocat55.github.io/posts/springcloud/springcloudmicroservicetesting/</link>
+      <pubDate>Thu, 26 Jan 2023 04:01:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springcloud/springcloudmicroservicetesting/</guid>
+      <description>SpringCloud微服务环境下，测试用例的分层策略、完整代码示例、个人全量测试流程，以及对AI辅助编写测试的未来展望</description>
+    </item>
+    <item>
+      <title>从写完代码到上线运行</title>
+      <link>https://yaocat55.github.io/posts/springcloud/springbootcicdpipeline/</link>
+      <pubDate>Wed, 25 Jan 2023 03:43:21 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springcloud/springbootcicdpipeline/</guid>
+      <description>从本地测试到生产环境上线，SpringBoot微服务CI/CD每个环节的完整脚本、配置和避坑指南</description>
+    </item>
+    <item>
+      <title>Dapper 模型：TraceId 与 SpanId 的传播之道</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/dappertraceidspanidpropagation/</link>
+      <pubDate>Tue, 24 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/dappertraceidspanidpropagation/</guid>
+      <description>从 Google 内部一个慢请求到底卡在哪个服务上的排查噩梦出发，拆解 Dapper 论文的核心模型——TraceId 串联全局、SpanId 标记每一步、父子关系重建调用树，以及 SkyWalking 如何自动埋点实现无侵入追踪</description>
+    </item>
+    <item>
+      <title>负载均衡三剑客：加权随机、最少活跃与一致性哈希</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/loadbalancingweightedrandomleastactiveconsistenthash/</link>
+      <pubDate>Mon, 23 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/loadbalancingweightedrandomleastactiveconsistenthash/</guid>
+      <description>从早期 CDN 缓存分发的难题出发，拆解三种负载均衡算法的设计思路——加权随机按比例分配、最少活跃挑最闲的、一致性哈希让节点增减时只影响邻近数据</description>
+    </item>
+    <item>
+      <title>事务消息：半消息与回查</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/transactionalmessagehalfmessageandcheckback/</link>
+      <pubDate>Sun, 22 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/transactionalmessagehalfmessageandcheckback/</guid>
+      <description>从&amp;#39;数据库写入和消息发送无法原子化&amp;#39;的经典难题出发，拆解事务消息的核心机制——半消息如何暂存而不投递、回查如何兜底确保最终一致，以及它和 2PC/TCC 在不同场景下的分工</description>
+    </item>
+    <item>
+      <title>分布式事务：两阶段提交与 TCC</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/distributedtransaction2pcandtcc/</link>
+      <pubDate>Sat, 21 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/distributedtransaction2pcandtcc/</guid>
+      <description>从单体拆分微服务后&amp;#39;跨库事务&amp;#39;的难题出发，拆解 2PC 和 TCC 两种分布式事务算法的设计思路——准备阶段与提交阶段、Try-Confirm-Cancel 预留资源模式，以及 Seata 如何用 AT 模式和 TCC 模式分别实现它们</description>
+    </item>
+    <item>
+      <title>流控算法三件套：滑动窗口、漏桶与令牌桶</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/slidingwindowleakybuckettokenbucket/</link>
+      <pubDate>Fri, 20 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/slidingwindowleakybuckettokenbucket/</guid>
+      <description>从早期互联网的拥塞崩溃出发，拆解三种流控算法的设计思路——滑动窗口统计QPS、漏桶匀速排水、令牌桶允许突发，以及 Sentinel 如何组合使用它们</description>
+    </item>
+    <item>
+      <title>Raft 协议：选举、日志复制与强一致</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/raftprotocol/</link>
+      <pubDate>Thu, 19 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/raftprotocol/</guid>
+      <description>从 Paxos 太难懂的痛点出发，拆解 Raft 协议如何用多数派机制实现 CP 模型——领导者选举、日志复制、安全保证，以及为什么配置中心需要强一致</description>
+    </item>
+    <item>
+      <title>Distro 协议：去中心化与最终一致</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/distroprotocol/</link>
+      <pubDate>Wed, 18 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/distroprotocol/</guid>
+      <description>从微服务注册中心的难题出发，拆解 Distro 协议如何用去中心化设计实现 AP 模型——没有主节点的集群、异步同步与反熵修复，以及它和 Raft 在同一套系统里的分工</description>
+    </item>
+    <item>
+      <title>Redis 高可用架构：主从、哨兵、集群与分片</title>
+      <link>https://yaocat55.github.io/posts/redis/redishaconcepts/</link>
+      <pubDate>Tue, 17 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/redis/redishaconcepts/</guid>
+      <description>从开发者视角厘清 Redis 主从复制、哨兵模式、集群模式和分布式分片键的核心概念——关注架构原理和开发注意事项，而非运维部署细节。</description>
+    </item>
+    <item>
+      <title>时序数据库在物联网日志系统中的设计与实践</title>
+      <link>https://yaocat55.github.io/posts/database/time-series-database-iot-springboot/</link>
+      <pubDate>Mon, 16 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/database/time-series-database-iot-springboot/</guid>
+      <description>从数据结构层面对比时序数据库与关系型数据库的差异，介绍国产主流时序数据库，并以TDengine和IoTDB为例演示Spring Boot集成实践。</description>
+    </item>
+    <item>
+      <title>七牛云 OSS &#43; SMTP 邮件：两个轻量级第三方接入实战</title>
+      <link>https://yaocat55.github.io/posts/third-party/qiniuossemailintegration/</link>
+      <pubDate>Sun, 15 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/third-party/qiniuossemailintegration/</guid>
+      <description>从零接入七牛云对象存储（图片/文件上传 &#43; CDN）和 SMTP 邮件服务（Freemarker 模板邮件 &#43; 发送开关），两个轻量第三方接入，一篇文章搞定。</description>
+    </item>
+    <item>
+      <title>支付宝支付接入：沙箱调试 &#43; EasySDK &#43; QR 码支付实战</title>
+      <link>https://yaocat55.github.io/posts/third-party/alipaypaymentintegration/</link>
+      <pubDate>Sat, 14 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/third-party/alipaypaymentintegration/</guid>
+      <description>从零接入支付宝当面付：沙箱环境零成本调试、RSA2 密钥配置、EasySDK 扫码支付、MockPay 开发模式，附带真实商城项目的完整集成代码。</description>
+    </item>
+    <item>
+      <title>阿里云短信接入：双 Provider &#43; Mock 验证码实战</title>
+      <link>https://yaocat55.github.io/posts/third-party/aliyunsmsintegration/</link>
+      <pubDate>Fri, 13 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/third-party/aliyunsmsintegration/</guid>
+      <description>从零接入阿里云短信服务：dysmsapi 官方 SDK &#43; dypnsapi 个人测试双 Provider 切换、Mock 验证码开发模式、Redis 发送频率控制，手把手带你绕过官方文档的坑。</description>
+    </item>
+    <item>
+      <title>Flyway 数据库迁移：告别手工执行 SQL 脚本</title>
+      <link>https://yaocat55.github.io/posts/database/flywaymigrationguide/</link>
+      <pubDate>Thu, 12 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/database/flywaymigrationguide/</guid>
+      <description>从 Mall 项目 38 个手工 SQL 脚本的真实痛点出发，手把手集成 Flyway 实现 DDL 版本化管理，深入讲解为什么需要追踪跑过哪些 DDL，以及 Flyway 内部执行机制。</description>
+    </item>
+    <item>
+      <title>Knife4j 接口文档从配置到上线</title>
+      <link>https://yaocat55.github.io/posts/swagger/knife4jswaggerguide/</link>
+      <pubDate>Wed, 11 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/swagger/knife4jswaggerguide/</guid>
+      <description>基于 Mall 商城项目的 Knife4j &#43; Swagger 接口文档实战教程，从依赖引入到分组配置，手把手教你生成可交互的 API 文档。</description>
+    </item>
+    <item>
+      <title>一个商城项目的结构化日志改造实录</title>
+      <link>https://yaocat55.github.io/posts/monitoring/structuredloggingguide/</link>
+      <pubDate>Tue, 10 Jan 2023 12:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/monitoring/structuredloggingguide/</guid>
+      <description>以真实商城项目的日志审计和修复过程为主线，手把手教新人写出可被监控、可被检索、不丢异常栈的结构化日志。</description>
+    </item>
+    <item>
+      <title>第4步：开发者 K8s 全景图 —— Ingress、Helm 和你的职责边界</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/k8sdeveloperpanorama/</link>
+      <pubDate>Mon, 09 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/k8sdeveloperpanorama/</guid>
+      <description>掌握 Ingress 七层路由、Helm 包管理、本地 K8s 环境选型、高级资源速览，并理清开发者与运维的职责边界</description>
+    </item>
+    <item>
+      <title>第3步：kubectl 生存手册 —— 开发者每天必敲的命令</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/kubectlsurvivalmanual/</link>
+      <pubDate>Sun, 08 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/kubectlsurvivalmanual/</guid>
+      <description>掌握开发者日常必备的 kubectl 命令：get、describe、logs、exec、port-forward、rollout，以及 9 种 Pod 异常状态的完整排查流程</description>
+    </item>
+    <item>
+      <title>第2步：让 Pod 活得久一点 —— 探针、资源和配置注入实战</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/podsurvivalguide/</link>
+      <pubDate>Sat, 07 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/podsurvivalguide/</guid>
+      <description>深入掌握 liveness/readiness/startup 探针、CPU/内存限制、环境变量三种注入方式、存储挂载——让 Pod 不再动不动就 CrashLoop</description>
+    </item>
+    <item>
+      <title>第1步：写出你的第一个 K8s 应用</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/firstk8sapplication/</link>
+      <pubDate>Fri, 06 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/firstk8sapplication/</guid>
+      <description>从零写出第一个完整的 K8s 应用：Deployment &#43; Service &#43; ConfigMap &#43; Secret，搞懂每一行 YAML 是什么意思</description>
+    </item>
+    <item>
+      <title>第0步：Docker 是什么，K8s 为什么要存在</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/k8sfoundationconcepts/</link>
+      <pubDate>Thu, 05 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/k8sfoundationconcepts/</guid>
+      <description>从零开始理解容器和 Kubernetes：Image、Container、Pod、Deployment、Service 这些概念到底是什么，它们之间什么关系，K8s 架构长什么样</description>
+    </item>
+    <item>
+      <title>流控三板斧——Sentinel滑动窗口、令牌桶与Dubbo负载均衡</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/flowcontrolalgorithms/</link>
+      <pubDate>Wed, 04 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/flowcontrolalgorithms/</guid>
+      <description>限流不只是&amp;#39;每秒只能通过 100 个请求&amp;#39;——固定窗口的边界突刺、滑动窗口的平滑统计、令牌桶的预热与排队、一致性哈希在节点增减时的最小迁移——讲清楚 Sentinel 和 Dubbo 中流控与负载均衡算法的原理与取舍。</description>
+    </item>
+    <item>
+      <title>谁说了算——Raft选举、心跳与故障检测在Nacos/Dubbo中的应用</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/raftelectionandheartbeat/</link>
+      <pubDate>Tue, 03 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/raftelectionandheartbeat/</guid>
+      <description>Raft 不是只有论文里的状态机。从 Nacos 配置中心的 CP 选主、到 Nacos 注册中心的 AP 心跳、再到 Dubbo 的服务上下线感知——讲清楚领导者选举、心跳机制和故障检测在日常中间件中到底是怎么用的。</description>
+    </item>
+    <item>
+      <title>CAP定理与一致性模型——从Nacos AP/CP双模理解取舍</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/captheoremandconsistency/</link>
+      <pubDate>Mon, 02 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/captheoremandconsistency/</guid>
+      <description>CAP 不是三选二的复选框游戏——P 是前提，C 和 A 之间是光谱而不是开关。用 Nacos 的 Distro 与 Raft 双模、Redis Cluster 的异步复制、Kafka 的 ISR 机制——讲清楚一致性到底是什么，以及为什么每个中间件都在一致性光谱上选择了不同的位置。</description>
+    </item>
+    <item>
+      <title>如果网络会骗你，时钟也会骗你——分布式世界的两个不确定性</title>
+      <link>https://yaocat55.github.io/posts/distributed-algorithms/distributeduncertainty/</link>
+      <pubDate>Sun, 01 Jan 2023 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-algorithms/distributeduncertainty/</guid>
+      <description>分布式系统的所有复杂设计——从心跳到共识——都源于两个根本问题：网络不可靠，时钟不可信。用图解讲清楚两将军问题的理论困境、NTP 为什么不能给你准确时间、以及为什么最终总是要做取舍。</description>
+    </item>
+    <item>
+      <title>MySQL 实战优化：从 EXPLAIN 到 NULL 陷阱</title>
+      <link>https://yaocat55.github.io/posts/mysql/mysqlpracticaloptimization/</link>
+      <pubDate>Sat, 31 Dec 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mysql/mysqlpracticaloptimization/</guid>
+      <description>面向日常开发的 MySQL 优化实战：EXPLAIN 字段逐一解读、索引优化三板斧、SQL 改写技巧、慢查询定位，以及 UNIQUE 多 NULL、COUNT/NOT IN 等经典 NULL 陷阱的彻底拆解。</description>
+    </item>
+    <item>
+      <title>MySQL 锁与日志系统：从并发控制到崩溃恢复</title>
+      <link>https://yaocat55.github.io/posts/mysql/mysqllockandlog/</link>
+      <pubDate>Fri, 30 Dec 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mysql/mysqllockandlog/</guid>
+      <description>拆解 InnoDB 六种锁类型（Record/Gap/Next-Key/意向锁）、死锁检测机制、Redo Log 与 Binlog 的两阶段提交过程，以及崩溃恢复如何利用日志保证数据不丢。</description>
+    </item>
+    <item>
+      <title>事务消息 &#43; 本地消息表 &#43; 生产踩坑</title>
+      <link>https://yaocat55.github.io/posts/distributed-transaction/dtmessageandproduction/</link>
+      <pubDate>Fri, 30 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-transaction/dtmessageandproduction/</guid>
+      <description>事务消息（RocketMQ 半消息 &#43; 回查）和本地消息表是异步分布式事务的两大利器——代码侵入最小、性能最好。本文从 Seata AT/TCC/Saga 的同步瓶颈出发，讲清楚半消息的完整生命周期、回查机制的实现细节、本地消息表的状态机设计、幂等消费的 3 种方案（唯一索引 &#43; Redis &#43; 版本号）、RocketMQ 事务消息的完整搭建与集成代码、以及四大方案（AT/TCC/Saga/事务消息）的生产踩坑总结——空回滚、悬挂、超时碰撞、消息堆积、补偿死循环——一个都跑不掉。</description>
+    </item>
+    <item>
+      <title>MySQL 事务与 MVCC：多版本并发控制的完整原理</title>
+      <link>https://yaocat55.github.io/posts/mysql/mysqltransactionmvcc/</link>
+      <pubDate>Thu, 29 Dec 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mysql/mysqltransactionmvcc/</guid>
+      <description>从四种隔离级别出发，深入拆解 MVCC 的隐藏列、Undo Log 版本链、ReadView 可见性判断，以及 RC 与 RR 在 MVCC 下的实现差异，配合 HTML&#43;CSS 结构图和 draw.io 流程图讲透多版本并发控制。</description>
+    </item>
+    <item>
+      <title>TCC &#43; Saga——补偿型分布式事务</title>
+      <link>https://yaocat55.github.io/posts/distributed-transaction/dttccsaga/</link>
+      <pubDate>Thu, 29 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-transaction/dttccsaga/</guid>
+      <description>TCC 和 Saga 的完整落地：为什么 AT 搞不定&amp;#39;发优惠券&amp;#39;这种操作（第三方 API 无法自动回滚）、TCC 的 Try/Confirm/Cancel 三阶段——每个接口写三套逻辑、空回滚和悬挂的成因与解决（操作记录的幂等表）、Seata TCC 模式代码实战（@TwoPhaseBusinessAction 注解）、Saga 的编排型（orchestration）vs 协同型（choreography）——状态机驱动补偿链——以及 TCC vs Saga 的选型决策框架。</description>
+    </item>
+    <item>
+      <title>MySQL Join 原理：B&#43;树上的表连接</title>
+      <link>https://yaocat55.github.io/posts/mysql/mysqljoinonbplustree/</link>
+      <pubDate>Wed, 28 Dec 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mysql/mysqljoinonbplustree/</guid>
+      <description>从 Nested-Loop Join 到 Hash Join，深入拆解四种 Join 算法在 B&#43;树上的执行过程，讲清 INNER/LEFT/RIGHT Join 的数据流差异，以及小表驱动大表的选择原理。</description>
+    </item>
+    <item>
+      <title>Seata AT 模式——undo_log 与二阶段原理</title>
+      <link>https://yaocat55.github.io/posts/distributed-transaction/dtseataat/</link>
+      <pubDate>Wed, 28 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-transaction/dtseataat/</guid>
+      <description>Seata AT 模式完整落地：TC（Seata Server）/ TM / RM 三角架构、undo_log 表做了什么——一阶段保存前置镜像、二阶段提交时删除/回滚时还原、全局锁（global_lock）的写隔离原理、Seata Server Docker Compose 搭建（Nacos 注册 &#43; MySQL 存储）、order-service &#43; product-service &#43; account-service 完整集成代码——以及 AT 模式的三个限制（仅支持关系型数据库、不支持跨 SQL 查询、性能开销 5%-15%）。</description>
+    </item>
+    <item>
+      <title>MySQL B&#43;树索引体系</title>
+      <link>https://yaocat55.github.io/posts/mysql/mysqlbplustreeindexsystem/</link>
+      <pubDate>Tue, 27 Dec 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mysql/mysqlbplustreeindexsystem/</guid>
+      <description>从数据结构演进到 InnoDB 页结构，再到聚簇索引、联合索引、SQL执行路径、范围/模糊/分页查询在 B&#43; 树上的完整呈现，8~10 张图讲透 MySQL B&#43;树索引体系。</description>
+    </item>
+    <item>
+      <title>分布式事务本质——CAP、BASE 与四大方案</title>
+      <link>https://yaocat55.github.io/posts/distributed-transaction/dtfundamentals/</link>
+      <pubDate>Tue, 27 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/distributed-transaction/dtfundamentals/</guid>
+      <description>分布式事务的本质不是背八股文中的 CAP——搞懂为什么 @Transactional 在微服务中失效、CAP 到底在说什么（P 是前提——只能在 C 和 A 之间取舍——但实际情况是&amp;#39;不同程度的取舍&amp;#39;——不是二选一）、BASE 最终一致性的核心——补偿而不是回滚、XA 两阶段提交为什么不能用（性能黑洞 &#43; 单点故障）、四种方案的本质区别（XA-同步回滚 / AT-自动补偿 / TCC-手动补偿 / Saga-长事务编排 / 事务消息-异步确保）——以及选型决策框架。</description>
+    </item>
+    <item>
+      <title>GitLab CI/CD 多环境部署与生产实践</title>
+      <link>https://yaocat55.github.io/posts/cicd/gitlabcicdproduction/</link>
+      <pubDate>Mon, 26 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/cicd/gitlabcicdproduction/</guid>
+      <description>多环境 CI/CD 完整落地：dev（自动部署）→ staging（自动部署 &#43; 自动化测试）→ prod（人工审批 &#43; 手动触发）、GitLab Environments 管理部署历史与一键回滚、K8s Deployment 滚动更新集成、环境变量分层管理（CI Variables &#43; ConfigMap &#43; Secret）、Helm 简化部署模板、审批卡点（Manual Action）、部署后自动健康检查——以及版本回滚的三种方式、发布规范与 Checklist。</description>
+    </item>
+    <item>
+      <title>GitLab CI/CD 流水线实战——编译、扫描、构建镜像、推送仓库</title>
+      <link>https://yaocat55.github.io/posts/cicd/gitlabcicdpipeline/</link>
+      <pubDate>Sun, 25 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/cicd/gitlabcicdpipeline/</guid>
+      <description>完整的微服务 CI/CD 流水线：Maven 编译 → JUnit 单元测试 &#43; GitLab 测试报告展示 → SonarQube 代码质量扫描 &#43; Quality Gate 拦截 → Docker 构建镜像（Docker-in-Docker） → 推送到 Harbor 私有镜像仓库 → 多模块 Maven 项目的策略（逐个构建 vs 全量构建）——以及 Runner 内存不足、Docker 缓存层优化等实战踩坑。</description>
+    </item>
+    <item>
+      <title>GitLab CI/CD 搭建与 Pipeline 语法精讲</title>
+      <link>https://yaocat55.github.io/posts/cicd/gitlabcicdfundamentals/</link>
+      <pubDate>Sat, 24 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/cicd/gitlabcicdfundamentals/</guid>
+      <description>从零搭建 GitLab CI/CD：GitLab &#43; Runner Docker Compose 部署、Runner 注册与执行原理（shell vs docker executor）、.gitlab-ci.yml 语法精讲（stages/jobs/script/cache/artifacts/variables/needs/rules）、预定义变量（CI_COMMIT_SHA 等）、制品传递原理、Maven 依赖缓存策略——以及第一个可运行的 Pipeline：编译 → 跑单测 → 看绿色对号。</description>
+    </item>
+    <item>
+      <title>DDD 重构实战——什么时候该用 DDD？什么时候 MVC 就够了？</title>
+      <link>https://yaocat55.github.io/posts/ddd/dddrefactor/</link>
+      <pubDate>Fri, 23 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/ddd/dddrefactor/</guid>
+      <description>用 DDD 重构已有微服务的完整实战：order-service 从 800 行 Service 拆成 Application Service &#43; Domain Service &#43; 聚合根 &#43; Repository、user-service 为什么不需要 DDD（MVC 就够了）、DDD vs MVC 的决策框架——看复杂度而非跟风——以及重构的三个切入策略：从哪里开始、什么时候停、什么情况下不要用 DDD。</description>
+    </item>
+    <item>
+      <title>DDD 战术落地——代码怎么写</title>
+      <link>https://yaocat55.github.io/posts/ddd/dddtactical/</link>
+      <pubDate>Thu, 22 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/ddd/dddtactical/</guid>
+      <description>DDD 战术落地的完整代码实现：四层项目结构（interfaces/application/domain/infrastructure）、聚合根完整设计（业务方法 &#43; 不变量 &#43; 领域事件收集）、Repository 接口放在 domain 层——实现在 infrastructure 层、Domain Service vs Application Service 的黄金判断标准——逻辑归谁、防腐层（ACL）隔离外部系统、领域事件的事务性发布与异步消费、Factory 封装复杂创建——以及一个完整的&amp;#39;创建订单&amp;#39;端到端实现。</description>
+    </item>
+    <item>
+      <title>DDD 本质——领域驱动设计的核心概念</title>
+      <link>https://yaocat55.github.io/posts/ddd/dddfundamentals/</link>
+      <pubDate>Wed, 21 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/ddd/dddfundamentals/</guid>
+      <description>DDD 的本质不是背概念——搞懂贫血模型为什么导致代码腐烂、实体 vs 值对象的真正区别（标识符相等 vs 属性相等）、聚合根作为一致性边界（不能跨聚合直接改数据）、限界上下文的隔离落地（User 在订单上下文中不是同一个东西）、领域事件作为&amp;#39;已发生的事实&amp;#39;驱动业务流转——以及战略设计（划分上下文）和战术设计（写聚合根/Repository）的落地方法。</description>
+    </item>
+    <item>
+      <title>SkyWalking 中间件集成与链路分析实战</title>
+      <link>https://yaocat55.github.io/posts/skywalking/skywalkingproduction/</link>
+      <pubDate>Tue, 20 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/skywalking/skywalkingproduction/</guid>
+      <description>SkyWalking 生产实战：Gateway/Dubbo/OpenFeign/gRPC/Sentinel 所有中间件的链路追踪配置、自定义业务 Span 和 @Trace 注解、异步任务和 MQ 追踪、日志通过 TraceId 关联——ELK &#43; SkyWalking 联合排错、gRPC 手动埋点、性能剖析（慢端点识别 &#43; 调用树分析）、性能开销实测、集群部署、生产检查清单。</description>
+    </item>
+    <item>
+      <title>SkyWalking 分布式链路追踪——从零搭建 APM 平台</title>
+      <link>https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/</link>
+      <pubDate>Mon, 19 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/skywalking/skywalkingfundamentals/</guid>
+      <description>从零搭建 SkyWalking 分布式链路追踪：Trace/Span/Segment 核心概念、Agent 无侵入自动埋点原理、OAP &#43; UI &#43; Elasticsearch 架构、Docker Compose 一键部署、全局调用拓扑图、单条链路完整追踪、慢查询自动识别——以及 SkyWalking 与 Prometheus 的互补关系：指标告诉你&amp;#39;出问题了&amp;#39;，链路告诉你&amp;#39;为什么出问题&amp;#39;。</description>
+    </item>
+    <item>
+      <title>所有中间件指标接入 Prometheus——统一仪表盘实战</title>
+      <link>https://yaocat55.github.io/posts/monitoring/prometheusmiddleware/</link>
+      <pubDate>Sun, 18 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/monitoring/prometheusmiddleware/</guid>
+      <description>将 Spring Cloud Gateway、Sentinel、Nacos、Dubbo、OpenFeign、gRPC 六种中间件的指标全部接入 Prometheus——每个中间件的指标暴露配置、关键指标解读——以及在一张 Grafana 仪表盘上构建&amp;#39;微服务全景图&amp;#39;：QPS/RT/错误率/中间件健康状态一目了然，附带分级告警规则。</description>
+    </item>
+    <item>
+      <title>Prometheus &#43; Grafana 环境搭建与指标采集</title>
+      <link>https://yaocat55.github.io/posts/monitoring/prometheusgrafanafundamentals/</link>
+      <pubDate>Sat, 17 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/monitoring/prometheusgrafanafundamentals/</guid>
+      <description>从零搭建微服务监控体系：Prometheus pull 模型原理、四种指标类型（Counter/Gauge/Histogram/Summary）、Spring Boot Actuator &#43; Micrometer 打点实战、JVM 指标解读、自定义业务指标、PromQL 查询语法——以及 Grafana 接入 Prometheus 构建第一个仪表盘。</description>
+    </item>
+    <item>
+      <title>Nacos 集群与生产部署——中间件整合总览</title>
+      <link>https://yaocat55.github.io/posts/nacos/nacosproduction/</link>
+      <pubDate>Fri, 16 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/nacos/nacosproduction/</guid>
+      <description>Nacos 集群部署全方案：三节点 Nacos &#43; MySQL 集群 Raft 共识、Docker Compose 一键启动、Prometheus &#43; Grafana 监控、JVM 调优——以及最重要的——Dubbo/OpenFeign/gRPC/Gateway/Sentinel 五种中间件如何通过 Nacos 串联成一个完整的微服务体系，附带总览架构图和 12 项生产 Checklist。</description>
+    </item>
+    <item>
+      <title>Nacos 配置中心全操作</title>
+      <link>https://yaocat55.github.io/posts/nacos/nacosconfigcenter/</link>
+      <pubDate>Thu, 15 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/nacos/nacosconfigcenter/</guid>
+      <description>Nacos 配置中心完整操作指南：配置优先级（shared-configs &amp;gt; extension-configs &amp;gt; 本地）、多服务共享配置抽取公共配置、@RefreshScope 动态刷新原理与陷阱、灰度发布配置（标签路由）、Gateway 路由规则放 Nacos 动态生效、Sentinel 规则持久化到 Nacos——附带多服务配置组织最佳实践。</description>
+    </item>
+    <item>
+      <title>Nacos 服务发现深度解析</title>
+      <link>https://yaocat55.github.io/posts/nacos/nacosservicediscovery/</link>
+      <pubDate>Wed, 14 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/nacos/nacosservicediscovery/</guid>
+      <description>Nacos 服务发现完整拆解：注册流程全景（心跳/剔除/自保）、临时实例 vs 持久实例（AP vs CP）、健康检查机制、保护阈值原理、本地缓存兜底——以及 Dubbo/OpenFeign/gRPC 三种 RPC 如何通过 Nacos 发现服务的完整配置。</description>
+    </item>
+    <item>
+      <title>Nacos 核心概念与快速上手</title>
+      <link>https://yaocat55.github.io/posts/nacos/nacosfundamentals/</link>
+      <pubDate>Tue, 13 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/nacos/nacosfundamentals/</guid>
+      <description>从零理解 Nacos：为什么它一个组件能替代 Eureka &#43; Config &#43; Bus？服务发现和配置中心的核心概念、AP/CP 模式切换（何时选 AP 何时选 CP）、namespace/group/dataId 三级隔离体系——读完部署第一个 Nacos 并跑通服务注册和动态配置刷新。</description>
+    </item>
+    <item>
+      <title>OpenFeign 生产实战——Nacos &#43; Sentinel &#43; 性能调优</title>
+      <link>https://yaocat55.github.io/posts/openfeign/openfeignproduction/</link>
+      <pubDate>Mon, 12 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/openfeign/openfeignproduction/</guid>
+      <description>OpenFeign 生产环境完整方案：Nacos 服务发现（零 URL 硬编码）、Sentinel 熔断降级（Feign 专用 fallback）、Contract 契约优先设计（共享接口模块消除 DTO 不一致）、Gzip 压缩 &#43; 连接池调优 &#43; 异步并发优化——附带 Feign vs Dubbo vs gRPC 终极选型指南。</description>
+    </item>
+    <item>
+      <title>OpenFeign 进阶——配置、拦截器与容错</title>
+      <link>https://yaocat55.github.io/posts/openfeign/openfeignadvanced/</link>
+      <pubDate>Sun, 11 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/openfeign/openfeignadvanced/</guid>
+      <description>OpenFeign 进阶全操作：超时/重试/连接池配置、RequestInterceptor 自动传递鉴权 Header 和 TraceId、日志级别、自定义 ErrorDecoder、FallbackFactory 降级——从能调到调得稳、调得快、调得安心。</description>
+    </item>
+    <item>
+      <title>OpenFeign 核心概念与快速上手</title>
+      <link>https://yaocat55.github.io/posts/openfeign/openfeignfundamentals/</link>
+      <pubDate>Sat, 10 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/openfeign/openfeignfundamentals/</guid>
+      <description>从零理解 OpenFeign：声明式 HTTP 客户端如何让微服务调用像本地方法一样简单？@FeignClient 注解、接口即契约的无侵入设计、与 RestTemplate 的对比、第一个 OpenFeign 项目——读完就知道为什么微服务拆分第一步是 Feign 而不是 Dubbo。</description>
+    </item>
+    <item>
+      <title>Sentinel 系统规则与生产部署</title>
+      <link>https://yaocat55.github.io/posts/sentinel/sentinelproduction/</link>
+      <pubDate>Fri, 09 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/sentinel/sentinelproduction/</guid>
+      <description>Sentinel 生产环境完整方案：系统自适应保护（Load/CPU/RT/QPS/线程数）、Gateway 集成 Sentinel 限流、热点参数限流、规则持久化到 Nacos（重启不丢失）、Dashboard 集群部署、Prometheus 指标对接——附带 10 项生产 Checklist。</description>
+    </item>
+    <item>
+      <title>Sentinel 熔断降级规则</title>
+      <link>https://yaocat55.github.io/posts/sentinel/sentineldegrade/</link>
+      <pubDate>Thu, 08 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/sentinel/sentineldegrade/</guid>
+      <description>Sentinel 熔断降级规则深度拆解：三种熔断策略（慢调用比例/异常比例/异常数）、熔断器状态机（CLOSED→OPEN→HALF_OPEN）、blockHandler vs fallback 的精确区分、与 Hystrix/Resilience4j 的熔断对比——附带完整的熔断恢复时间线图示。</description>
+    </item>
+    <item>
+      <title>Sentinel 流控规则全解</title>
+      <link>https://yaocat55.github.io/posts/sentinel/sentinelflowcontrol/</link>
+      <pubDate>Wed, 07 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/sentinel/sentinelflowcontrol/</guid>
+      <description>Sentinel 流控规则彻底讲透：QPS 限流 vs 线程数限流、三种流控效果（快速失败/WarmUp 预热/排队等待）、三种流控策略（直接/关联/链路）——每一条都有代码示例和 Dashboard 演示——附带流控规则调试指南。</description>
+    </item>
+    <item>
+      <title>Sentinel 核心概念与快速上手</title>
+      <link>https://yaocat55.github.io/posts/sentinel/sentinelfundamentals/</link>
+      <pubDate>Tue, 06 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/sentinel/sentinelfundamentals/</guid>
+      <description>从零理解 Sentinel：为什么 Hystrix 停更后 Sentinel 成了 Java 微服务限流熔断的事实标准？资源/规则/流量 grade 核心概念、@SentinelResource 注解、blockHandler 与 fallback 的区别、Dashboard 控制台部署——读完能跑起来第一个带限流的接口。</description>
+    </item>
+    <item>
+      <title>Gateway 生产实战——鉴权、限流、熔断与部署</title>
+      <link>https://yaocat55.github.io/posts/gateway/gatewayproduction/</link>
+      <pubDate>Mon, 05 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/gateway/gatewayproduction/</guid>
+      <description>Spring Cloud Gateway 生产环境全方案：JWT 鉴权 GlobalFilter、Redis 令牌桶限流、Resilience4j 熔断降级、CORS 跨域配置、Prometheus &#43; Grafana 监控、traceId 全链路追踪、Docker Compose 部署——附带 12 项生产上线 Checklist。</description>
+    </item>
+    <item>
+      <title>GatewayFilter 与 GlobalFilter 全操作</title>
+      <link>https://yaocat55.github.io/posts/gateway/gatewayfilterguide/</link>
+      <pubDate>Sun, 04 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/gateway/gatewayfilterguide/</guid>
+      <description>Spring Cloud Gateway Filter 全解：GatewayFilter 与 GlobalFilter 的区别、所有内置过滤器逐一拆解、自定义 GatewayFilter Factory、自定义 GlobalFilter、Filter 执行顺序与链式调用——附带完整的请求/响应处理时序图。</description>
+    </item>
+    <item>
+      <title>Predicate 与路由规则全解</title>
+      <link>https://yaocat55.github.io/posts/gateway/gatewaypredicate/</link>
+      <pubDate>Sat, 03 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/gateway/gatewaypredicate/</guid>
+      <description>Spring Cloud Gateway 的 12 种 Predicate 逐一拆解——Path/Host/Header/Query/Cookie/RemoteAddr/Weight/时间路由——每条有配置示例加验证命令、Java DSL 对比 yml、动态路由与 Nacos 集成——读完彻底搞清楚路由规则。</description>
+    </item>
+    <item>
+      <title>Spring Cloud Gateway 核心概念与快速上手</title>
+      <link>https://yaocat55.github.io/posts/gateway/gatewayfundamentals/</link>
+      <pubDate>Fri, 02 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/gateway/gatewayfundamentals/</guid>
+      <description>从零理解 API 网关：Spring Cloud Gateway 为什么选 WebFlux&#43;Netty 而不是 Tomcat？Route/Predicate/Filter 三大核心概念拆解、第一个网关项目搭建、与 Zuul/Nginx/Kong 的对比——读完就知道网关是干什么的和怎么上手。</description>
+    </item>
+    <item>
+      <title>gRPC Gateway 与生产环境部署</title>
+      <link>https://yaocat55.github.io/posts/grpc/grpcgateway/</link>
+      <pubDate>Thu, 01 Dec 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/grpc/grpcgateway/</guid>
+      <description>gRPC 调通了——前端怎么调？gRPC-Gateway 把 gRPC 转成 HTTP JSON、Envoy 负载均衡、gRPC 健康检查协议、TLS/mTLS 加密、JWT 认证——附带完整的生产环境 Docker Compose 部署方案。</description>
+    </item>
+    <item>
+      <title>微服务拆分实战：以 proto 为契约</title>
+      <link>https://yaocat55.github.io/posts/grpc/grpcmicroservice/</link>
+      <pubDate>Wed, 30 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/grpc/grpcmicroservice/</guid>
+      <description>微服务拆分后服务间怎么通信？以 proto 作为服务契约——多模块项目结构、proto 文件组织、DTO 与 Domain 转换、proto 版本管理、服务边界设计——一个完整的电商微服务拆分实操。</description>
+    </item>
+    <item>
+      <title>SpringBoot gRPC 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/grpc/springbootgrpc/</link>
+      <pubDate>Tue, 29 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/grpc/springbootgrpc/</guid>
+      <description>SpringBoot 集成 gRPC 的全部操作：grpc-spring-boot-starter 环境搭建、四种 RPC 模式完整代码（Unary/ServerStream/ClientStream/BiDi Stream）、拦截器、异常处理 Status、Deadline 超时传播——附带完整的 Maven 多模块项目与 curl/grpcurl 验证。</description>
+    </item>
+    <item>
+      <title>Protobuf 语法精讲与 gRPC 概念</title>
+      <link>https://yaocat55.github.io/posts/grpc/protobufguide/</link>
+      <pubDate>Mon, 28 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/grpc/protobufguide/</guid>
+      <description>从零讲透 Protobuf 的每一个语法元素——message/oneof/map/enum/reserved/import/service、每行语法都有完整代码示例与编译验证、附带 HTTP/2 基础与 gRPC 四种调用模式概念——读完就能写出正确的 .proto 文件。</description>
+    </item>
+    <item>
+      <title>Jackson vs Fastjson2 终极对比</title>
+      <link>https://yaocat55.github.io/posts/serialization/serializationcomparison/</link>
+      <pubDate>Sun, 27 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/serialization/serializationcomparison/</guid>
+      <description>注解对照表、API 设计哲学差异、性能基准与实测注意事项、生态整合对比（SpringBoot 兼容性、中间件支持）、选型决策树——从 Jackson 和 Fastjson2 中选出适合你的那一个。</description>
+    </item>
+    <item>
+      <title>Fastjson 进化史：从 1.x 漏洞到 Fastjson2</title>
+      <link>https://yaocat55.github.io/posts/serialization/fastjson2guide/</link>
+      <pubDate>Sat, 26 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/serialization/fastjson2guide/</guid>
+      <description>Fastjson 1.x 为什么快又为什么危险——autoType 机制与 CVE 漏洞链条、哪些中间件还在依赖它、Fastjson2 的安全性重构与 API 兼容方案、@JSONField 等注解全操作——附带完整的 Fastjson 1 → Fastjson2 迁移指南。</description>
+    </item>
+    <item>
+      <title>序列化本质与 Jackson 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/serialization/jacksonguide/</link>
+      <pubDate>Fri, 25 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/serialization/jacksonguide/</guid>
+      <description>从序列化的本质出发，拆解 Jackson 作为 SpringBoot 默认序列化器的全部核心操作：@JsonProperty/@JsonIgnore/@JsonFormat/@JsonInclude 等常用注解、ObjectMapper 定制配置、泛型反序列化、多态处理——附带完整代码示例。</description>
+    </item>
+    <item>
+      <title>Dubbo 生产环境部署与调优</title>
+      <link>https://yaocat55.github.io/posts/dubbo/dubboproduction/</link>
+      <pubDate>Thu, 24 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/dubbo/dubboproduction/</guid>
+      <description>从单机开发到多协议多注册中心的生产集群：Dubbo Admin 可视化监控、JVM/Netty/线程池调优、Provider 并发控制、Consumer 超时与重试最佳实践、多注册中心高可用部署、10 项上线前检查清单——Dubbo 系列的最后一站。</description>
+    </item>
+    <item>
+      <title>Dubbo 3.x 新特性：Triple 协议与应用级服务发现</title>
+      <link>https://yaocat55.github.io/posts/dubbo/dubbo3features/</link>
+      <pubDate>Wed, 23 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/dubbo/dubbo3features/</guid>
+      <description>拆解 Dubbo 3.x 的两大革新：Triple 协议（HTTP/2 &#43; Protobuf 如何打通浏览器与跨语言 RPC）、应用级服务发现（从接口粒度到应用粒度的注册模型演进）——附带完整的 Triple 协议 SpringBoot 配置与 curl 验证示例。</description>
+    </item>
+    <item>
+      <title>Dubbo 注册中心：Nacos 与 Zookeeper</title>
+      <link>https://yaocat55.github.io/posts/dubbo/dubboregistry/</link>
+      <pubDate>Tue, 22 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/dubbo/dubboregistry/</guid>
+      <description>深入 Dubbo 注册中心的本质：服务注册与发现的全链路流程、Nacos vs Zookeeper 技术选型、Nacos 同时做注册中心与配置中心、多注册中心（双活/异地多活）、地址缓存与失效机制——附带完整的配置和代码示例。</description>
+    </item>
+    <item>
+      <title>Dubbo 集群容错、负载均衡与异步调用</title>
+      <link>https://yaocat55.github.io/posts/dubbo/dubboadvanced/</link>
+      <pubDate>Mon, 21 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/dubbo/dubboadvanced/</guid>
+      <description>拆解 Dubbo 的全部服务治理能力：六种集群容错策略（Failover/Failfast/Failsafe 等）、七种负载均衡算法（含 P2C 和 Adaptive）、服务分组与版本隔离、异步调用 CompletableFuture、参数校验、本地存根——逐个场景给 @DubboService/@DubboReference 的精确配置。</description>
+    </item>
+    <item>
+      <title>SpringBoot Dubbo 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/dubbo/springbootdubbo/</link>
+      <pubDate>Sun, 20 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/dubbo/springbootdubbo/</guid>
+      <description>从原生 Dubbo Spring XML 迁移到 SpringBoot Starter：@DubboService 和 @DubboReference 两个注解替代全部 XML、dubbo/triple 协议切换、Hessian2/Fastjson2 序列化配置、Nacos 注册中心集成——附带完整的 Provider &#43; Consumer 双向调用代码。</description>
+    </item>
+    <item>
+      <title>Dubbo 核心架构与 RPC 模型</title>
+      <link>https://yaocat55.github.io/posts/dubbo/dubbofundamentals/</link>
+      <pubDate>Sat, 19 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/dubbo/dubbofundamentals/</guid>
+      <description>从 HTTP REST 的分布式通信局限出发，拆解 Dubbo 的 RPC 核心模型、Provider-Consumer-Registry 三角架构、服务治理三要素、Dubbo 3.x 的 Triple 协议革新——附带 Nacos 注册中心 Docker 安装与第一条远程调用。</description>
+    </item>
+    <item>
+      <title>Kafka 生产环境部署与调优</title>
+      <link>https://yaocat55.github.io/posts/kafka/kafkaproduction/</link>
+      <pubDate>Fri, 18 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kafka/kafkaproduction/</guid>
+      <description>从单节点 Docker 到 KRaft 三节点集群的完整部署指南：Docker Compose 多 Controller 选举、JVM/OS 调优参数、Producer/Consumer/Broker 层性能优化、Prometheus &#43; Grafana 监控配置、10 项上线前检查清单——Kafka 系列的最后一站。</description>
+    </item>
+    <item>
+      <title>Kafka Streams 与高级特性</title>
+      <link>https://yaocat55.github.io/posts/kafka/kafkastreams/</link>
+      <pubDate>Thu, 17 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kafka/kafkastreams/</guid>
+      <description>从 Kafka Consumer/Producer 到 Kafka Streams：KStream/KTable/GlobalKTable 双流概念、有状态聚合与精确一次语义、流-表 Join、窗口操作（Tumbling/Hopping/Sliding）、Log Compaction 原理——附带完整的 SpringBoot Kafka Streams 代码示例。</description>
+    </item>
+    <item>
+      <title>Kafka Consumer 深入：位移管理与 Rebalance</title>
+      <link>https://yaocat55.github.io/posts/kafka/consumerinternals/</link>
+      <pubDate>Wed, 16 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kafka/consumerinternals/</guid>
+      <description>拆解 Kafka Consumer 的全部控制力：Offset 自动/手动提交机制、__consumer_offsets 内部 Topic、Rebalance 触发时机与四种分配策略、重复消费的根源与幂等防线、多线程消费模型——附带完整的 SpringBoot 配置与代码模板。</description>
+    </item>
+    <item>
+      <title>Kafka Producer 深入：分区、ACK 与幂等</title>
+      <link>https://yaocat55.github.io/posts/kafka/producerinternals/</link>
+      <pubDate>Tue, 15 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kafka/producerinternals/</guid>
+      <description>拆解 KafkaProducer 的全部控制力：默认/自定义分区策略、acks=0/1/all 可靠性对比、幂等生产者实现精确一次语义、事务消息跨 Topic 原子写入、linger.ms/batch.size 吞吐量调优——附带完整的 SpringBoot 配置与代码。</description>
+    </item>
+    <item>
+      <title>SpringBoot Kafka 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/kafka/springbootkafka/</link>
+      <pubDate>Mon, 14 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kafka/springbootkafka/</guid>
+      <description>从原生 Kafka Client 迁移到 Spring Kafka：KafkaTemplate 同步/异步/回调发送、@KafkaListener 批量消费、JSON 序列化配置、Producer/Consumer 参数调优、完整 Controller 示例——读完直接上项目。</description>
+    </item>
+    <item>
+      <title>Kafka 核心架构与日志存储模型</title>
+      <link>https://yaocat55.github.io/posts/kafka/kafkafundamentals/</link>
+      <pubDate>Sun, 13 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kafka/kafkafundamentals/</guid>
+      <description>从 RabbitMQ/RocketMQ 的本质局限出发，拆解 Kafka 的 Topic-Partition 分布式日志模型、零拷贝顺序读写、ConsumerGroup 偏移量管理与 KRaft 去 Zookeeper 架构，附带 Docker 安装与第一条消息。</description>
+    </item>
+    <item>
+      <title>RocketMQ 生产环境部署与调优</title>
+      <link>https://yaocat55.github.io/posts/rocketmq/productiondeployment/</link>
+      <pubDate>Sat, 12 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rocketmq/productiondeployment/</guid>
+      <description>从单机 Docker 到双主双从高可用集群的完整部署指南：Docker Compose 四节点搭建、Dashboard 可视化监控、JVM/OS/应用层调优参数、10 项上线前检查清单——RocketMQ 系列的最后一站。</description>
+    </item>
+    <item>
+      <title>RocketMQ 消费者模式与过滤器</title>
+      <link>https://yaocat55.github.io/posts/rocketmq/consumerpatterns/</link>
+      <pubDate>Fri, 11 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rocketmq/consumerpatterns/</guid>
+      <description>深入 RocketMQ 的集群消费与广播消费、Push 与 Pull 两种拉取模式、Tag 与 SQL92 消息过滤、Rebalance 队列分配机制——消费端的全部控制力。</description>
+    </item>
+    <item>
+      <title>RocketMQ 消息可靠性与容错</title>
+      <link>https://yaocat55.github.io/posts/rocketmq/messagereliability/</link>
+      <pubDate>Thu, 10 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rocketmq/messagereliability/</guid>
+      <description>从消息不丢的四个防线出发，逐层拆解 RocketMQ 的同步/异步刷盘、主从同步复制、消费重试与死信队列、消息幂等方案——附带完整的 SpringBoot 配置与代码模板。</description>
+    </item>
+    <item>
+      <title>RocketMQ 顺序消息、延迟消息与事务消息</title>
+      <link>https://yaocat55.github.io/posts/rocketmq/advancedmessages/</link>
+      <pubDate>Wed, 09 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rocketmq/advancedmessages/</guid>
+      <description>深入 RocketMQ 的三大核心差异化特性：顺序消息的 Queue 哈希机制与消费陷阱、延迟消息的 18 级时间轮实现、事务消息的半消息 &#43; 回查两阶段提交——完整代码与 Mermaid 流程图。</description>
+    </item>
+    <item>
+      <title>SpringBoot RocketMQ 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/rocketmq/springbootrocketmq/</link>
+      <pubDate>Tue, 08 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rocketmq/springbootrocketmq/</guid>
+      <description>真实商城项目 RocketMQ 实战：MqHelper 封装、延迟消息自动取消订单、WebSocket 通知推送、多节点任务同步、RabbitMQ 双 MQ 基础设施先行策略。</description>
+    </item>
+    <item>
+      <title>RocketMQ 核心架构与消息模型</title>
+      <link>https://yaocat55.github.io/posts/rocketmq/rocketmqfundamentals/</link>
+      <pubDate>Mon, 07 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rocketmq/rocketmqfundamentals/</guid>
+      <description>从 RabbitMQ 的局限性出发，拆解 RocketMQ 的 NameServer-Broker 去中心化架构、Topic-Queue-ConsumerGroup 消息模型、CommitLog 顺序写存储，附带 Docker 安装与纯 Java Client 第一条消息。</description>
+    </item>
+    <item>
+      <title>RabbitMQ 生产环境部署与调优</title>
+      <link>https://yaocat55.github.io/posts/rabbitmq/productiondeployment/</link>
+      <pubDate>Sun, 06 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rabbitmq/productiondeployment/</guid>
+      <description>从单机到集群的 RabbitMQ 生产部署完整指南：集群搭建、仲裁队列（Quorum Queue）、监控告警、性能调优、连接池配置与 10 项上线前检查清单。</description>
+    </item>
+    <item>
+      <title>RabbitMQ 延迟队列与高级特性</title>
+      <link>https://yaocat55.github.io/posts/rabbitmq/delayqueueadvanced/</link>
+      <pubDate>Sat, 05 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rabbitmq/delayqueueadvanced/</guid>
+      <description>延迟队列两种实现方式（插件 vs TTL&#43;DLX）、优先级队列、惰性队列、RPC 模式——四个实战场景覆盖 RabbitMQ 高级特性。</description>
+    </item>
+    <item>
+      <title>RabbitMQ 消息可靠性保障</title>
+      <link>https://yaocat55.github.io/posts/rabbitmq/messagereliability/</link>
+      <pubDate>Fri, 04 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rabbitmq/messagereliability/</guid>
+      <description>从消息可能丢失的三个环节出发，逐层覆盖 Publisher Confirm、持久化、手动 ACK/NACK、死信队列、重试机制与消息幂等，彻底解决 RabbitMQ 消息可靠性问题。</description>
+    </item>
+    <item>
+      <title>SpringBoot RabbitMQ 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/rabbitmq/springbootrabbitmq/</link>
+      <pubDate>Thu, 03 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rabbitmq/springbootrabbitmq/</guid>
+      <description>一篇掌握 SpringBoot RabbitMQ 全部常用操作：RabbitTemplate 发送、@RabbitListener 消费、Jackson2Json 消息转换、声明式拓扑配置、手动 ACK，以及真实电商项目的常量管理、MqHelper 双 Broker 抽象、四条业务线 MQ 模式与 RabbitMQ vs RocketMQ 分工。</description>
+    </item>
+    <item>
+      <title>RabbitMQ 交换机类型完全指南</title>
+      <link>https://yaocat55.github.io/posts/rabbitmq/exchangetypesguide/</link>
+      <pubDate>Wed, 02 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rabbitmq/exchangetypesguide/</guid>
+      <description>逐一拆解 Direct / Fanout / Topic / Headers 四种交换机的路由规则，附带 Java 原生客户端验证代码与消息轨迹追踪，是 RabbitMQ 路由机制最详尽的中文教程。</description>
+    </item>
+    <item>
+      <title>RabbitMQ 核心概念与 AMQP 协议</title>
+      <link>https://yaocat55.github.io/posts/rabbitmq/rabbitmqfundamentals/</link>
+      <pubDate>Tue, 01 Nov 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/rabbitmq/rabbitmqfundamentals/</guid>
+      <description>从同步处理的性能瓶颈出发，拆解 RabbitMQ 的 AMQP 协议、核心组件（Exchange/Queue/Binding）、Virtual Host 隔离、Connection 与 Channel 的关系，附带 Docker 安装与管理界面实操。</description>
+    </item>
+    <item>
+      <title>Redis &#43; Caffeine 双层缓存：降级与容错</title>
+      <link>https://yaocat55.github.io/posts/caffeine/rediscaffeinemultilevelcache/</link>
+      <pubDate>Mon, 31 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/caffeine/rediscaffeinemultilevelcache/</guid>
+      <description>从真实数据字典缓存案例出发，对比简化 @Cacheable&#43;Caffeine&#43;Redis 方案与完整 TieredCacheManager 方案——不是所有场景都需要 200 行降级代码。</description>
+    </item>
+    <item>
+      <title>Caffeine 本地缓存核心与 SpringBoot 集成</title>
+      <link>https://yaocat55.github.io/posts/caffeine/caffeinefundamentals/</link>
+      <pubDate>Sun, 30 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/caffeine/caffeinefundamentals/</guid>
+      <description>从数据字典真实缓存案例出发，讲解 Caffeine W-TinyLFU 淘汰算法、三种过期策略、Spring Cache 注解式集成（含自定义 KeyGenerator），对比 @Cacheable &#43; Caffeine 与 @Cacheable &#43; Redis 的本质区别。</description>
+    </item>
+    <item>
+      <title>MongoDB 索引、事务与性能调优</title>
+      <link>https://yaocat55.github.io/posts/mongodb/mongodbproductionoptimization/</link>
+      <pubDate>Sat, 29 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mongodb/mongodbproductionoptimization/</guid>
+      <description>深入讲解 MongoDB 索引类型与策略、explain() 查询计划分析、Schema 设计（嵌入 vs 引用）、事务使用边界与生产环境性能自查清单。</description>
+    </item>
+    <item>
+      <title>MongoDB 聚合管道深入</title>
+      <link>https://yaocat55.github.io/posts/mongodb/mongodbaggregation/</link>
+      <pubDate>Fri, 28 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mongodb/mongodbaggregation/</guid>
+      <description>深入讲解 MongoDB Aggregation Pipeline 的各阶段操作符——$match/$group/$sort/$project/$unwind/$lookup/$facet/$bucket，附带完整 mongosh 与 Java 代码对照。</description>
+    </item>
+    <item>
+      <title>SpringBoot MongoDB 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/mongodb/springbootmongodb/</link>
+      <pubDate>Thu, 27 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mongodb/springbootmongodb/</guid>
+      <description>一篇覆盖 SpringBoot MongoDB 全部常用操作，含 Entity 映射、MongoTemplate、MongoRepository、Criteria 查询构建、聚合初探、批量写入，以及真实电商项目的双写架构分析与两种 MongoDB 使用模式对照，看完直接上手做项目。</description>
+    </item>
+    <item>
+      <title>MongoDB 核心概念</title>
+      <link>https://yaocat55.github.io/posts/mongodb/mongodbfundamentals/</link>
+      <pubDate>Wed, 26 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/mongodb/mongodbfundamentals/</guid>
+      <description>MongoDB 核心概念、文档模型与 BSON 数据类型、与 MySQL 的思维差异、mongosh 基础 CRUD 与查询操作符全解析</description>
+    </item>
+    <item>
+      <title>Elasticsearch 生产调优与索引设计</title>
+      <link>https://yaocat55.github.io/posts/elasticsearch/esproductionoptimization/</link>
+      <pubDate>Tue, 25 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/elasticsearch/esproductionoptimization/</guid>
+      <description>深入讲解 ES 生产环境的分片设计、批量写入优化、深分页解决方案（search_after/scroll/PIT）、搜索性能排查与慢查询优化，附带完整电商搜索系统设计案例。</description>
+    </item>
+    <item>
+      <title>ES 高级搜索与聚合分析</title>
+      <link>https://yaocat55.github.io/posts/elasticsearch/esadvancedsearch/</link>
+      <pubDate>Mon, 24 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/elasticsearch/esadvancedsearch/</guid>
+      <description>深入讲解 multi_match 多字段搜索、bool 组合查询、bucket/metric/pipeline 聚合分析、高亮、相关性算分（BM25）和搜索建议，附带完整 DSL 与 Java 代码对照。</description>
+    </item>
+    <item>
+      <title>SpringBoot Elasticsearch 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/elasticsearch/springbootes/</link>
+      <pubDate>Sun, 23 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/elasticsearch/springbootes/</guid>
+      <description>一篇覆盖 SpringBoot Elasticsearch 全部常用操作，含 Entity 映射、ElasticsearchRestTemplate、Repository、搜索、聚合、高亮、批量写入，以及真实电商项目的 RestHighLevelClient 封装、四种数据同步模式与搜索优化实践，看完直接上手做项目。</description>
+    </item>
+    <item>
+      <title>Elasticsearch 核心概念</title>
+      <link>https://yaocat55.github.io/posts/elasticsearch/esfundamentals/</link>
+      <pubDate>Sat, 22 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/elasticsearch/esfundamentals/</guid>
+      <description>Elasticsearch 核心概念、倒排索引原理、分词器工作流程、Mapping 设计与 REST API 基础 CRUD</description>
+    </item>
+    <item>
+      <title>Redis 缓存策略进阶：六大模式全解析</title>
+      <link>https://yaocat55.github.io/posts/redis/cachestrategies/</link>
+      <pubDate>Fri, 21 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/redis/cachestrategies/</guid>
+      <description>深入对比 Cache-Aside、Read-Through、Write-Through、Write-Behind、Refresh-Ahead、Write-Around 六大缓存策略的原理、Mermaid 图解、RedisTemplate 代码模板与实战选型指南，是 SpringBoot Redis 系列的进阶篇。</description>
+    </item>
+    <item>
+      <title>SpringBoot Redis 全操作指南</title>
+      <link>https://yaocat55.github.io/posts/redis/springbootredis/</link>
+      <pubDate>Thu, 20 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/redis/springbootredis/</guid>
+      <description>一篇覆盖 SpringBoot Redis 全部常用操作，含五种数据结构、Spring Cache 注解、Redisson 分布式锁、Pipeline 批量操作与发布订阅，看完直接上手做项目。</description>
+    </item>
+    <item>
+      <title>Redis 核心架构</title>
+      <link>https://yaocat55.github.io/posts/redis/redisfundamentals/</link>
+      <pubDate>Wed, 19 Oct 2022 08:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/redis/redisfundamentals/</guid>
+      <description>Redis 核心架构、Key/Value 模型、五大数据结构底层实现与常用命令</description>
+    </item>
+    <item>
+      <title>JVM 面试突击</title>
+      <link>https://yaocat55.github.io/posts/jvm/jvminterviewqa/</link>
+      <pubDate>Tue, 18 Oct 2022 05:09:46 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/jvm/jvminterviewqa/</guid>
+      <description>JVM 面试高频考点全面整理，覆盖运行时数据区、类加载机制、垃圾回收算法与收集器、调优工具命令详解、JMM 内存模型与 volatile 等七大部分，面试突击必背。</description>
+    </item>
+    <item>
+      <title>Spring Boot 面试突击</title>
+      <link>https://yaocat55.github.io/posts/spring/springbootinterviewqa/</link>
+      <pubDate>Mon, 17 Oct 2022 04:06:46 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/spring/springbootinterviewqa/</guid>
+      <description>Spring Boot 面试高频考点全面整理，覆盖基础概念、核心注解、自动配置原理、事务管理、Bean 生命周期等十一大模块，面试突击必背。</description>
+    </item>
+    <item>
+      <title>Spring Boot Starter 封装实践报告</title>
+      <link>https://yaocat55.github.io/posts/spring/springbootstarterpractice/</link>
+      <pubDate>Fri, 14 Oct 2022 13:24:34 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/spring/springbootstarterpractice/</guid>
+      <description>从理解 Spring Boot 自动装配原理出发，手把手实践封装一个自定义 Starter，实现方法耗时自动记录功能</description>
+    </item>
+    <item>
+      <title>开发常用 100 条 Linux 指令全解析</title>
+      <link>https://yaocat55.github.io/posts/linux/linuxcommands100/</link>
+      <pubDate>Fri, 14 Oct 2022 08:16:55 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/linux/linuxcommands100/</guid>
+      <description>按系统信息、文件操作、文本处理、进程管理、内存CPU、磁盘IO、网络、用户权限、系统服务等10大分类，详解100条开发常用Linux指令的输出参数含义与服务器状态解读。</description>
+    </item>
+    <item>
+      <title>高并发企业自营电商小程序系统架构设计</title>
+      <link>https://yaocat55.github.io/posts/architecture/ecommercesystemarchitecture/</link>
+      <pubDate>Thu, 13 Oct 2022 09:06:46 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/architecture/ecommercesystemarchitecture/</guid>
+      <description>从需求分析、业务建模、系统架构到部署监控，全面讲解高并发企业自营B2C电商小程序的设计方案，涵盖库存分片扣减、支付回调幂等、数据一致性保障等核心难点。</description>
+    </item>
+    <item>
+      <title>Spring Cloud Alibaba 微服务中间件体系概念解析</title>
+      <link>https://yaocat55.github.io/posts/springcloud/springcloudalibabamicroservice/</link>
+      <pubDate>Tue, 11 Oct 2022 08:16:21 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springcloud/springcloudalibabamicroservice/</guid>
+      <description>从单体拆分到微服务的真实踩坑经历出发，逐层拆解 Spring Cloud Alibaba 六大核心组件：Gateway、Sentinel、Dubbo/Feign、Nacos、RocketMQ、Seata。不讲源码，只讲每个组件干什么、不干什么、什么时候用、什么时候别用，附带完整决策树和实战链路。</description>
+    </item>
+    <item>
+      <title>WSL2 Docker 数据持久化</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/wsldockerdatapersistence/</link>
+      <pubDate>Mon, 10 Oct 2022 03:19:10 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/wsldockerdatapersistence/</guid>
+      <description>诊断并修复 WSL2 中 docker-desktop-data 实例缺失导致 wsl --shutdown 后 Docker 容器和镜像全部丢失的问题，涵盖架构原理、复现步骤、根因分析和完整解决方案。</description>
+    </item>
+    <item>
+      <title>一次性讲明白 Filter、Interceptor、RequestAdvice、ResponseAdvice</title>
+      <link>https://yaocat55.github.io/posts/spring/filterinterceptoradvice/</link>
+      <pubDate>Sun, 09 Oct 2022 09:43:26 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/spring/filterinterceptoradvice/</guid>
+      <description>彻底搞清楚 Filter、Interceptor、RequestAdvice、ResponseAdvice 四个组件的执行位置、前后顺序和日常开发中的实际用途。</description>
+    </item>
+    <item>
+      <title>学会够用就行</title>
+      <link>https://yaocat55.github.io/posts/career/techlearninganxiety/</link>
+      <pubDate>Sat, 08 Oct 2022 09:43:26 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/career/techlearninganxiety/</guid>
+      <description>面对微服务生态中无穷无尽的技术栈，接受够用就行不是放弃，而是把有限的精力聚焦在真正重要的事情上。</description>
+    </item>
+    <item>
+      <title>Spring Boot 开发中的上下文</title>
+      <link>https://yaocat55.github.io/posts/spring/springbootcontextclasses/</link>
+      <pubDate>Fri, 07 Oct 2022 09:43:26 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/spring/springbootcontextclasses/</guid>
+      <description>Spring Boot 高频核心上下文类全解析：RequestContextHolder、SecurityContextHolder、TransactionSynchronizationManager、ApplicationContext 等，含完整实战代码与常见踩坑</description>
+    </item>
+    <item>
+      <title>数据库迁移实战</title>
+      <link>https://yaocat55.github.io/posts/database/databasemigration/</link>
+      <pubDate>Thu, 06 Oct 2022 07:49:23 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/database/databasemigration/</guid>
+      <description>从停机迁移、双写、CDC 到零停机方案，涵盖数据一致性校验、回滚策略与 gh-ost/Canal/Debezium 等工具选型</description>
+    </item>
+    <item>
+      <title>CoAP 受限应用协议</title>
+      <link>https://yaocat55.github.io/posts/iot/coapprotocol/</link>
+      <pubDate>Wed, 05 Oct 2022 03:01:01 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/iot/coapprotocol/</guid>
+      <description>从二进制报文格式到 CON/NON 通信模型，再到 Observe 观察者模式，配合真实数据包拆解与 MQTT 对比</description>
+    </item>
+    <item>
+      <title>从 Docker Compose 到 Kind</title>
+      <link>https://yaocat55.github.io/posts/kubernetes/kindwslmigration/</link>
+      <pubDate>Tue, 04 Oct 2022 02:28:51 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/kubernetes/kindwslmigration/</guid>
+      <description>从零开始在 WSL 上安装 Kind，用实际项目将 Docker Compose 迁移到 Kubernetes 的完整新手教程</description>
+    </item>
+    <item>
+      <title>从单体到微服务</title>
+      <link>https://yaocat55.github.io/posts/architecture/monolithtomicroservices/</link>
+      <pubDate>Mon, 03 Oct 2022 01:08:09 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/architecture/monolithtomicroservices/</guid>
+      <description>从拆分决策、业务边界分析、服务通信到中间件选型的全链路指南</description>
+    </item>
+    <item>
+      <title>JUC 在中间件中的应用</title>
+      <link>https://yaocat55.github.io/posts/concurrency/jucinmiddleware/</link>
+      <pubDate>Sun, 02 Oct 2022 10:09:51 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/jucinmiddleware/</guid>
+      <description>从 Tomcat 到 RocketMQ，逐一剖析线程池与 JUC 集合在主流中间件中的实际应用与源码</description>
+    </item>
+    <item>
+      <title>MQTT 协议</title>
+      <link>https://yaocat55.github.io/posts/iot/mqttfundamentals/</link>
+      <pubDate>Sat, 01 Oct 2022 03:55:15 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/iot/mqttfundamentals/</guid>
+      <description>从角色体系到 QoS 分级，全面讲解 MQTT 协议的核心概念、Broker 设计原理与实际应用</description>
+    </item>
+    <item>
+      <title>Spring Boot 日志</title>
+      <link>https://yaocat55.github.io/posts/spring/springbootloggingguide/</link>
+      <pubDate>Fri, 30 Sep 2022 02:42:58 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/spring/springbootloggingguide/</guid>
+      <description>从打点位置到线上排查，全面掌握 Spring Boot 日志系统的使用与原理</description>
+    </item>
+    <item>
+      <title>云服务器选型实战</title>
+      <link>https://yaocat55.github.io/posts/hands-on/cloudserversizing/</link>
+      <pubDate>Thu, 29 Sep 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/hands-on/cloudserversizing/</guid>
+      <description>以阿里云 ECS 为例，深入掌握新项目上云时带宽、CPU 核心数、内存容量的科学估算方法论，含完整公式、Mermaid 决策流程与典型项目模板</description>
+    </item>
+    <item>
+      <title>API 响应封装</title>
+      <link>https://yaocat55.github.io/posts/springmvc/apiresponsedesignpattern/</link>
+      <pubDate>Mon, 26 Sep 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springmvc/apiresponsedesignpattern/</guid>
+      <description>深入解析商城项目中 API 统一响应封装的完整设计：从 ApiResult 数据结构到 GlobalApiResultHandler 自动包装，再到全局异常处理与分页响应，逐层拆解一个工业级项目的真实方案</description>
+    </item>
+    <item>
+      <title>Servlet 网络编程</title>
+      <link>https://yaocat55.github.io/posts/servlet/servletprogrammingguide/</link>
+      <pubDate>Sun, 25 Sep 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/servlet/servletprogrammingguide/</guid>
+      <description>从零开始掌握 Servlet 网络编程：RESTful API、过滤器链、监听器、Tomcat 部署，为深入 Spring MVC 源码打好基础</description>
+    </item>
+    <item>
+      <title>Long类型ID前端精度丢失</title>
+      <link>https://yaocat55.github.io/posts/longidprecisionloss/</link>
+      <pubDate>Sun, 25 Sep 2022 07:54:50 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/longidprecisionloss/</guid>
+      <description>后端返回的雪花算法Long型ID因JavaScript Number采用IEEE 754双精度浮点导致精度丢失，本文从根因出发给出Jackson全局序列化&#43;前后端协同的完整方案</description>
+    </item>
+    <item>
+      <title>Spring MVC 常用注解</title>
+      <link>https://yaocat55.github.io/posts/springmvc/springmvcannotationsguide/</link>
+      <pubDate>Sat, 24 Sep 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springmvc/springmvcannotationsguide/</guid>
+      <description>从企业级生产环境出发，全面覆盖 Spring MVC 常用注解的用法、参数、实战场景与踩坑经验</description>
+    </item>
+    <item>
+      <title>OAuth 2.0 &#43; JWT 单点登录</title>
+      <link>https://yaocat55.github.io/posts/springsecurity/oauth2jwtssoimplementation/</link>
+      <pubDate>Thu, 22 Sep 2022 12:36:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springsecurity/oauth2jwtssoimplementation/</guid>
+      <description>从浏览器、业务系统、认证中心三方交互视角出发，逐帧拆解 OAuth 2.0 授权码&#43;PKCE 完整流程，配合 Spring Security 完整代码实战，实现基于 OAuth 2.0&#43;JWT 的单点登录系统</description>
+    </item>
+    <item>
+      <title>SSO 与 JWT&#43;Redis 的定位差异</title>
+      <link>https://yaocat55.github.io/posts/springsecurity/ssovsjwtredisauth/</link>
+      <pubDate>Wed, 21 Sep 2022 10:32:38 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springsecurity/ssovsjwtredisauth/</guid>
+      <description>厘清JWT、Redis&#43;JWT、SSO三者的本质区别：JWT是Token格式、Redis&#43;JWT是单服务的Token管理策略、SSO是跨服务的统一认证架构，三者处于不同抽象层次</description>
+    </item>
+    <item>
+      <title>JWT 与双令牌机制详解</title>
+      <link>https://yaocat55.github.io/posts/springsecurity/jwtdualtokenguide/</link>
+      <pubDate>Tue, 20 Sep 2022 09:42:16 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springsecurity/jwtdualtokenguide/</guid>
+      <description>从Session会话的分布式痛点切入，深入讲解JWT的三段式结构、签名验证原理、Java代码实现，以及AccessToken&#43;RefreshToken双令牌机制的设计思想和完整代码</description>
+    </item>
+    <item>
+      <title>JWT &#43; Redis 双令牌鉴权实战</title>
+      <link>https://yaocat55.github.io/posts/springsecurity/jwtredishybridauth/</link>
+      <pubDate>Mon, 19 Sep 2022 08:42:45 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springsecurity/jwtredishybridauth/</guid>
+      <description>深入对比纯JWT、纯Redis&#43;Token、JWT&#43;Redis混合三种鉴权方案，给出基于JJWT&#43;Redis&#43;SpringSecurity的完整生产级实现，解决Token主动失效这一核心痛点</description>
+    </item>
+    <item>
+      <title>Spring Security &#43; JWT 企业级鉴权实战</title>
+      <link>https://yaocat55.github.io/posts/springsecurity/springsecurityjwtauthguide/</link>
+      <pubDate>Sun, 18 Sep 2022 07:00:19 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/springsecurity/springsecurityjwtauthguide/</guid>
+      <description>从教程版起步，逐步替换为真实商城项目源码：JJWT&#43;Redis双key Token方案、@NoLogin自动扫描、Filter异常桥接、User→Role→Menu三表联查权限、RSA传输加密&#43;短信双认证&#43;异地登录检测的完整登录流程</description>
+    </item>
+    <item>
+      <title>Spring Boot企业开发高频注解完全指南</title>
+      <link>https://yaocat55.github.io/posts/spring/springboothighfrequencyannotations/</link>
+      <pubDate>Sat, 17 Sep 2022 05:57:12 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/spring/springboothighfrequencyannotations/</guid>
+      <description>企业级Spring Boot开发中真正高频使用的Spring注解大全，不含SpringMVC和SpringSecurity，涵盖IoC/DI、AOP、事务、缓存、异步、JPA、测试等全场景</description>
+    </item>
+    <item>
+      <title>NIO 性能调优</title>
+      <link>https://yaocat55.github.io/posts/io/nioperformancetuning/</link>
+      <pubDate>Fri, 16 Sep 2022 09:15:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/nioperformancetuning/</guid>
+      <description>从文件传输 CPU 100% 问题切入，用 DrawIO 硬件数据流图对比传统 I/O 与零拷贝的差异，讲解 sendfile/DMA scatter-gather 原理、直接内存分配与释放机制，以及线上句柄泄露、NIO 空轮询、直接内存溢出三大问题的排查方法。</description>
+    </item>
+    <item>
+      <title>Netty</title>
+      <link>https://yaocat55.github.io/posts/io/netty/</link>
+      <pubDate>Thu, 15 Sep 2022 09:15:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/netty/</guid>
+      <description>从原生 NIO 四大痛点切入，深入 Netty 的 Reactor 线程模型、Pipeline 责任链机制、ByteBuf 自动扩容原理，配合 Echo/时间/群聊/HTTP 四个完整示例，展示如何用成熟框架替代原生 NIO 实现生产级网络编程。</description>
+    </item>
+    <item>
+      <title>Java NIO</title>
+      <link>https://yaocat55.github.io/posts/io/javanio/</link>
+      <pubDate>Wed, 14 Sep 2022 09:05:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/javanio/</guid>
+      <description>从 epoll 红黑树与就绪列表的内核机制出发，用 C 语言示例验证多路复用原理，再深入 Java NIO 的 Buffer、Channel、Selector 三大核心及底层对应关系，完整掌握单线程管理成千上万连接的技术全貌。</description>
+    </item>
+    <item>
+      <title>Linux IO 模型</title>
+      <link>https://yaocat55.github.io/posts/io/linuxiomodels/</link>
+      <pubDate>Tue, 13 Sep 2022 15:28:58 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/linuxiomodels/</guid>
+      <description>阻塞、非阻塞、多路复用、信号驱动、异步 IO 五大模型。通过 Mermaid 图解与 C API 示例，从操作系统原理层面掌握 IO 的本质</description>
+    </item>
+    <item>
+      <title>RandomAccessFile 文件指针与任意位置读写</title>
+      <link>https://yaocat55.github.io/posts/io/randomaccessfile/</link>
+      <pubDate>Mon, 12 Sep 2022 15:12:46 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/randomaccessfile/</guid>
+      <description>掌握文件指针、任意位置读写、多线程分段下载原理与实现</description>
+    </item>
+    <item>
+      <title>Java IO 进阶</title>
+      <link>https://yaocat55.github.io/posts/io/datastreamandserialization/</link>
+      <pubDate>Fri, 09 Sep 2022 14:50:18 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/datastreamandserialization/</guid>
+      <description>Java IO 进阶：掌握 DataInputStream/DataOutputStream 读写基本类型、PrintStream/PrintWriter 打印流、以及对象序列化与反序列化的核心用法与常见陷阱</description>
+    </item>
+    <item>
+      <title>Java IO 编码与桥接</title>
+      <link>https://yaocat55.github.io/posts/io/javaencodingandbridge/</link>
+      <pubDate>Fri, 09 Sep 2022 14:46:44 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/javaencodingandbridge/</guid>
+      <description>掌握 ASCII、GBK、UTF-8 编码原理，学会用 InputStreamReader/OutputStreamWriter 彻底解决中文乱码问题</description>
+    </item>
+    <item>
+      <title>Java IO 缓冲流与装饰器模式</title>
+      <link>https://yaocat55.github.io/posts/io/bufferedstreamanddecorator/</link>
+      <pubDate>Fri, 09 Sep 2022 14:21:50 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/bufferedstreamanddecorator/</guid>
+      <description>剖析缓冲流（BufferedInputStream / BufferedOutputStream / BufferedReader / BufferedWriter）的原理、性能对比与装饰器设计模式</description>
+    </item>
+    <item>
+      <title>Java IO API 基础入门</title>
+      <link>https://yaocat55.github.io/posts/io/javaioapibasics/</link>
+      <pubDate>Wed, 07 Sep 2022 14:21:50 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/io/javaioapibasics/</guid>
+      <description>Java IO API 基础入门，涵盖 File 类、字节流（FileInputStream/FileOutputStream）与字符流（FileReader/FileWriter）的核心用法与常见陷阱</description>
+    </item>
+    <item>
+      <title>Phaser 可重用动态线程同步屏障</title>
+      <link>https://yaocat55.github.io/posts/concurrency/phaser/</link>
+      <pubDate>Wed, 07 Sep 2022 11:51:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/phaser/</guid>
+      <description>从多阶段并行计算的同步困境出发，逐层拆解 Phaser 的 64 位状态字打包、双 Treiber 栈线程编排机制、arrive/advance/register 核心流程，以及与 CountDownLatch/CyclicBarrier 的对比。</description>
+    </item>
+    <item>
+      <title>JUC 源码阅读路线图</title>
+      <link>https://yaocat55.github.io/posts/concurrency/jucsourcereadingguide/</link>
+      <pubDate>Tue, 06 Sep 2022 09:00:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/jucsourcereadingguide/</guid>
+      <description>一份面向源码阅读者的 JUC 完整导读路线图。覆盖 LockSupport、AQS、ReentrantLock、Semaphore、CountDownLatch、CyclicBarrier、ConcurrentHashMap、ThreadPoolExecutor、ThreadLocal 等 18 个组件的 JDK 位置、推荐阅读顺序、函数调用链、重点方法与设计思想。</description>
+    </item>
+    <item>
+      <title>CyclicBarrier 可循环屏障</title>
+      <link>https://yaocat55.github.io/posts/concurrency/cyclicbarrier/</link>
+      <pubDate>Mon, 05 Sep 2022 09:30:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/cyclicbarrier/</guid>
+      <description>从多线程分片计算等所有人到齐的场景出发，逐层拆解 CyclicBarrier 的六大核心字段、dowait() 完整调用链、Generation 代际机制、broken 状态触发条件，以及与 CountDownLatch 的关键差异。</description>
+    </item>
+    <item>
+      <title>ThreadLocal 线程池上下文传递</title>
+      <link>https://yaocat55.github.io/posts/concurrency/threadlocal/</link>
+      <pubDate>Mon, 05 Sep 2022 09:15:00 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/threadlocal/</guid>
+      <description>从线程池环境下父子线程传值失败的真实场景出发，逐层拆解 ThreadLocal 三层架构、InheritableThreadLocal 源码实现与三大缺陷（线程池失效、浅拷贝、静态传递），以及 TransmittableThreadLocal 如何通过 capture/replay/restore 机制在源码层面解决这些问题。</description>
+    </item>
+    <item>
+      <title>ScheduledThreadPoolExecutor 定时调度增强</title>
+      <link>https://yaocat55.github.io/posts/concurrency/scheduledthreadpoolexecutor/</link>
+      <pubDate>Sun, 04 Sep 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/scheduledthreadpoolexecutor/</guid>
+      <description>深入 ScheduledThreadPoolExecutor：从 DelayedWorkQueue 自建二叉堆、ScheduledFutureTask 三态周期模型（period&amp;gt;0/=0/&amp;lt;0）、delayedExecute/reExecutePeriodic 双通道调度，到 scheduleAtFixedRate 与 scheduleWithFixedDelay 的底层源码差异，以及 Spring @Scheduled 整合实战全解析。</description>
+    </item>
+    <item>
+      <title>CompletableFuture 异步编排</title>
+      <link>https://yaocat55.github.io/posts/concurrency/completablefuture/</link>
+      <pubDate>Sat, 03 Sep 2022 08:52:40 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/completablefuture/</guid>
+      <description>从 Future 的阻塞痛点出发，深入拆解 CompletableFuture 的内部数据结构（Completion 链表）、异步编排原理、核心源码调用链，并梳理其在 Spring、RocketMQ、Netty 等中间件中的实际应用。</description>
+    </item>
+    <item>
+      <title>ThreadPoolExecutor 源码解析</title>
+      <link>https://yaocat55.github.io/posts/concurrency/threadpoolexecutor/</link>
+      <pubDate>Fri, 02 Sep 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/threadpoolexecutor/</guid>
+      <description>从线程创建开销切入，深入 ThreadPoolExecutor：Worker 类 AQS 实现、ctl 位运算、生命周期状态机、execute/addWorker/runWorker/getTask/processWorkerExit/tryTerminate 完整调用链、四种拒绝策略源码逐行解析，以及阿里巴巴规范、动态线程池框架与参数调优困难分析。</description>
+    </item>
+    <item>
+      <title>ForkJoinPool 源码深度解析</title>
+      <link>https://yaocat55.github.io/posts/concurrency/forkjoinpool/</link>
+      <pubDate>Fri, 02 Sep 2022 08:29:29 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/forkjoinpool/</guid>
+      <description>从分治算法和工作窃取的设计思想切入，逐层拆解 ForkJoinPool 的核心数据结构（ctl 64 位控制字 &#43; WorkQueue 双端队列 &#43; ForkJoinTask 状态机）、外部提交与子任务 fork 的完整调用链、scan 工作窃取算法、awaitJoin/helpStealer/tryCompensate 任务转让机制，以及与 ThreadPoolExecutor 的本质区别。</description>
+    </item>
+    <item>
+      <title>BlockingQueue 设计解析：四组方法语义、锁机制分化与生产者-消费者模型的工程实践</title>
+      <link>https://yaocat55.github.io/posts/concurrency/blockingqueue/</link>
+      <pubDate>Wed, 31 Aug 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/blockingqueue/</guid>
+      <description>从接口设计哲学出发，逐层深入 BlockingQueue 的核心实现类、底层锁机制与线程协作模式，包括 ArrayBlockingQueue 单锁双 Condition、LinkedBlockingQueue 双锁分离与级联通知、以及各实现在线程池中的应用</description>
+    </item>
+    <item>
+      <title>FutureTask 源码深度解析</title>
+      <link>https://yaocat55.github.io/posts/concurrency/futuretask/</link>
+      <pubDate>Wed, 31 Aug 2022 08:29:29 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/futuretask/</guid>
+      <description>从 Runnable 无返回值的问题切入，逐层拆解 FutureTask 的类继承体系、7 种状态的转换逻辑、CAS 无锁状态机、run/get/awaitDone 的完整调用链、Treiber 栈的等待队列实现，以及与 CompletableFuture 的对比和使用注意事项。</description>
+    </item>
+    <item>
+      <title>ConcurrentLinkedQueue</title>
+      <link>https://yaocat55.github.io/posts/concurrency/concurrentlinkedqueue/</link>
+      <pubDate>Sun, 28 Aug 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/concurrentlinkedqueue/</guid>
+      <description>从高并发消息传递场景切入，深入 ConcurrentLinkedQueue 源码：Node 的 volatile 字段与 CAS 原子操作、基于 Michael-Scott 算法的无锁入队/出队流程、HOPS 延迟更新策略的性能权衡、以及 size() O(n) 遍历与弱一致性的使用代价。</description>
+    </item>
+    <item>
+      <title>ConcurrentHashMap 深度解析：数据结构、线程安全与扩容机制</title>
+      <link>https://yaocat55.github.io/posts/concurrency/concurrenthashmap/</link>
+      <pubDate>Sat, 27 Aug 2022 14:18:39 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/concurrenthashmap/</guid>
+      <description>从数据结构到线程安全底层实现，深入解析 ConcurrentHashMap 的核心机制，包括 CAS、synchronized 锁粒度、sizeCtl 多义字段、多线程协同扩容 transfer 流程以及日常高频 API 用法。</description>
+    </item>
+    <item>
+      <title>CopyOnWriteArrayList 源码深度解析</title>
+      <link>https://yaocat55.github.io/posts/concurrency/copyonwritearraylist/</link>
+      <pubDate>Sat, 27 Aug 2022 08:29:29 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/copyonwritearraylist/</guid>
+      <description>从 CopyOnWriteArrayList 的设计理念入手，逐层拆解 volatile 数组 &#43; ReentrantLock 的并发安全架构、写时复制的源码实现、COWIterator 快照迭代器的工作机制，以及与 Vector 的对比和使用注意事项。</description>
+    </item>
+    <item>
+      <title>Semaphore 源码解析</title>
+      <link>https://yaocat55.github.io/posts/concurrency/semaphore/</link>
+      <pubDate>Fri, 26 Aug 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/semaphore/</guid>
+      <description>从限流场景切入，深入 Semaphore 源码：AQS 共享模式的 state 许可计数、公平/非公平获取的完整调用链、setHeadAndPropagate 传播唤醒机制、drainPermits 与 reducePermits 的内部实现，以及与 CountDownLatch、CyclicBarrier、ReentrantLock 的全维度对比。</description>
+    </item>
+    <item>
+      <title>CountDownLatch 设计思想解析：一次性的共享门闩为什么这样设计</title>
+      <link>https://yaocat55.github.io/posts/concurrency/countdownlatch/</link>
+      <pubDate>Fri, 26 Aug 2022 08:47:41 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/countdownlatch/</guid>
+      <description>从设计哲学角度解析 CountDownLatch：为什么是一次性的、为什么用共享模式、state 单向递减的设计约束，以及与 CyclicBarrier 的设计取舍对比</description>
+    </item>
+    <item>
+      <title>ReentrantReadWriteLock 深度解析：从读多写少场景到底层 state 拆分与锁降级</title>
+      <link>https://yaocat55.github.io/posts/concurrency/reentrantreadwritelock/</link>
+      <pubDate>Thu, 25 Aug 2022 08:47:41 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/reentrantreadwritelock/</guid>
+      <description>深入解析 ReentrantReadWriteLock 的使用场景、state 高低位拆分设计、读写锁获取与释放源码、锁降级与锁升级的阻塞原理</description>
+    </item>
+    <item>
+      <title>ReentrantLock 源码解析</title>
+      <link>https://yaocat55.github.io/posts/concurrency/reentrantlock/</link>
+      <pubDate>Wed, 24 Aug 2022 11:30:03 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/reentrantlock/</guid>
+      <description>从使用场景切入，深入 ReentrantLock 源码：AQS 的 CLH 队列结构、公平/非公平锁的完整调用链、可重入性的 state 累加机制、Condition 条件变量的 await/signal 流程，以及与 synchronized 的全维度对比。</description>
+    </item>
+    <item>
+      <title>AQS 深度解析：同步队列、条件队列与 state 的底层运作机制</title>
+      <link>https://yaocat55.github.io/posts/concurrency/aqsdeepanalysis/</link>
+      <pubDate>Tue, 23 Aug 2022 08:47:41 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/aqsdeepanalysis/</guid>
+      <description>深入解析 AQS 的 CLH 同步队列、Condition 条件队列、state 在衍生组件中的作用，以及高并发下的链表端断裂问题</description>
+    </item>
+    <item>
+      <title>LockSupport 深度解析：从 wait/notify 的痛点到底层 park/unpark 实现</title>
+      <link>https://yaocat55.github.io/posts/concurrency/locksupport/</link>
+      <pubDate>Mon, 22 Aug 2022 08:47:41 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/locksupport/</guid>
+      <description>深入解析 LockSupport 的设计原理、permit 机制、底层 UNSAFE.park 实现，以及与 wait/notify 的对比和 AQS 中的实际应用</description>
+    </item>
+    <item>
+      <title>CAS 从硬件到 Java：MESI 视角下的原子操作与 12 个原子类</title>
+      <link>https://yaocat55.github.io/posts/concurrency/cas/</link>
+      <pubDate>Sun, 21 Aug 2022 08:47:41 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/cas/</guid>
+      <description>从 i&#43;&#43; 的多线程问题出发，用 Mermaid 图解展示两个 CPU 核心同时写入同一缓存行时 MESI 协议的完整交互过程，解释为什么需要 CAS（lock cmpxchg）作为硬件级的原子操作。然后逐一讲解 Java 原子类体系中 12 个类的基本用法和应用场景。</description>
+    </item>
+    <item>
+      <title>synchronized 锁升级机制：从对象头到重量级锁的完整路径</title>
+      <link>https://yaocat55.github.io/posts/concurrency/synchronizedlockupgrade/</link>
+      <pubDate>Sat, 20 Aug 2022 07:53:12 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/synchronizedlockupgrade/</guid>
+      <description>synchronized 在 JDK 6 之后经历偏向锁→轻量级锁→重量级锁的升级路径。本文从 Mark Word 的位布局出发，用 Mermaid 图解展示每一级锁的数据结构、加锁/解锁的完整操作序列、以及锁状态转换的触发条件，结合 JOL 工具验证每个阶段的 Mark Word 变化，最后给出日常开发中的高频用法。</description>
+    </item>
+    <item>
+      <title>volatile 如何填补 MESI 的两个缺口：Store Buffer 与 Invalidate Queue</title>
+      <link>https://yaocat55.github.io/posts/concurrency/volatile/</link>
+      <pubDate>Fri, 19 Aug 2022 07:09:33 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/volatile/</guid>
+      <description>Store Buffer 和 Invalidate Queue 是 MESI 协议的两个性能缺口，它们导致多线程写入无法即时可见。volatile 通过内存屏障填补这两个缺口，以约定的方式在 Java 语言层提供跨线程可见性。本文从 CPU 缓存结构出发，详解 volatile 的完整工作机制、四种内存屏障的含义，以及实际开发中的应用场景。</description>
+    </item>
+    <item>
+      <title>JMM 如何借鉴 MESI：Java 内存模型的概念引入</title>
+      <link>https://yaocat55.github.io/posts/concurrency/jmmintroduction/</link>
+      <pubDate>Thu, 18 Aug 2022 06:26:41 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/jmmintroduction/</guid>
+      <description>MESI 在硬件层解决了缓存一致性问题，但留下了三个缺口——Store Buffer、Invalidate Queue、指令重排序。JMM 在 Java 语言层以软件契约的方式填补了这些缺口。本文以 MESI 为参照，引入 JMM 的核心概念和关键字。</description>
+    </item>
+    <item>
+      <title>MESI 缓存一致性协议</title>
+      <link>https://yaocat55.github.io/posts/concurrency/mesiandjmm/</link>
+      <pubDate>Thu, 18 Aug 2022 05:51:34 +0000</pubDate>
+      <guid>https://yaocat55.github.io/posts/concurrency/mesiandjmm/</guid>
+      <description>从 CPU 缓存层级、缓存行结构、MESI 四种状态转换、总线监听机制，到 Store Buffer 与 Invalidate Queue 如何导致内存可见性问题，以及伪共享的成因、检测与修复。结合 Linux 内核与 HotSpot 源码佐证。</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,1024 @@
+<!doctype html><html lang=zh dir=auto data-theme=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>从 Docker Compose 到 Kind | CatBlog</title><meta name=keywords content="容器技术,实践教程,Kubernetes"><meta name=description content="从零开始在 WSL 上安装 Kind，用实际项目将 Docker Compose 迁移到 Kubernetes 的完整新手教程"><meta name=author content="yaomingye"><link rel=canonical href=https://yaocat55.github.io/posts/kubernetes/kindwslmigration/><meta name=google-site-verification content="XYZabc"><meta name=yandex-verification content="XYZabc"><meta name=msvalidate.01 content="XYZabc"><link crossorigin=anonymous href=/assets/css/stylesheet.4231ed8c43b49b68f480ce67364acb41ef220ab5844a7ec154aee32b184404bf.css integrity rel="preload stylesheet" as=style><link rel=icon href=https://yaocat55.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://yaocat55.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://yaocat55.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://yaocat55.github.io/apple-touch-icon.png><link rel=mask-icon href=https://yaocat55.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=zh href=https://yaocat55.github.io/posts/kubernetes/kindwslmigration/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51);color-scheme:dark}.list{background:var(--theme)}.toc{background:var(--entry)}}</style></noscript><script>localStorage.getItem("pref-theme")==="dark"?document.querySelector("html").dataset.theme="dark":localStorage.getItem("pref-theme")==="light"?document.querySelector("html").dataset.theme="light":window.matchMedia("(prefers-color-scheme: dark)").matches?document.querySelector("html").dataset.theme="dark":document.querySelector("html").dataset.theme="light"</script><link rel=preconnect href=https://fonts.loli.net><link rel=preconnect href=https://fonts.loli.net crossorigin><link href="https://fonts.loli.net/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css><script defer src=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js></script><script>(function(){if(window._katexInitialized)return;window._katexInitialized=!0;function e(){var e=document.createElement("script");e.src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js",e.onload=function(){typeof renderMathInElement!="undefined"&&renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})},document.head.appendChild(e)}document.addEventListener("DOMContentLoaded",e)})()</script><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script><script>(function(){if(window._mermaidInitialized)return;window._mermaidInitialized=!0;function e(){if(document.getElementsByClassName("mermaid").length===0)return;mermaid.initialize({startOnLoad:!0,theme:"base",securityLevel:"loose",themeVariables:{background:"transparent",primaryColor:getComputedStyle(document.body).getPropertyValue("--theme").trim()||"#5c6bc0",primaryBorderColor:getComputedStyle(document.body).getPropertyValue("--secondary").trim()||"#90a4ae",primaryTextColor:getComputedStyle(document.body).getPropertyValue("--primary").trim()||"#212529",lineColor:getComputedStyle(document.body).getPropertyValue("--tertiary").trim()||"#b0bec5",secondaryColor:getComputedStyle(document.body).getPropertyValue("--code-bg").trim()||"#f5f5f5"}})}document.addEventListener("DOMContentLoaded",e)})()</script><style>.mermaid,.zoomable-img-container{background:0 0!important;display:flex;justify-content:center;align-items:center;cursor:zoom-in;position:relative;border:1px solid var(--border);border-radius:8px;margin:1.5rem 0;overflow:hidden;width:100%;max-width:100%;transition:width .45s cubic-bezier(.25,1,.5,1),margin .45s cubic-bezier(.25,1,.5,1),box-shadow .3s ease,border-color .3s ease}.zoomable-img-container img{width:auto;max-width:100%;height:auto;display:block;transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid svg{transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid.is-expanded,.zoomable-img-container.is-expanded{width:92vw!important;max-width:92vw!important;margin-left:calc(50% - 46vw)!important;margin-right:calc(50% - 46vw)!important;margin-top:2.5rem!important;margin-bottom:2.5rem!important;cursor:zoom-out;border-color:var(--theme)!important;z-index:999;display:flex!important;justify-content:flex-start!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;padding:30px 40px!important;box-sizing:border-box!important;background:var(--code-bg,#1e1e1e)!important;box-shadow:0 0 0 5e3px rgba(0,0,0,.65),0 20px 50px rgba(0,0,0,.5)!important}.mermaid.is-expanded::-webkit-scrollbar,.zoomable-img-container.is-expanded::-webkit-scrollbar{height:8px!important;display:block!important}.mermaid.is-expanded::-webkit-scrollbar-thumb,.zoomable-img-container.is-expanded::-webkit-scrollbar-thumb{background:var(--theme,#5c6bc0)!important;border-radius:4px!important}.mermaid.is-expanded::-webkit-scrollbar-track,.zoomable-img-container.is-expanded::-webkit-scrollbar-track{background:rgba(255,255,255,.1)!important;border-radius:4px!important}.zoomable-img-container.is-expanded img{width:auto!important;min-width:100%!important;max-width:none!important;height:auto!important;display:block;margin:0!important}.mermaid.is-expanded svg{width:auto!important;max-width:none!important;height:auto!important;display:block!important;margin:0!important}.mermaid:not(.is-expanded):hover,.zoomable-img-container:not(.is-expanded):hover{box-shadow:0 4px 12px rgba(0,0,0,8%);border-color:var(--theme)!important}.mermaid:not(.is-expanded)::before,.zoomable-img-container:not(.is-expanded)::before{content:"点击展开 🔍";position:absolute;top:10px;right:10px;background:var(--theme,#5c6bc0);color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;opacity:0;transition:opacity .2s ease;z-index:5;pointer-events:none}.mermaid:not(.is-expanded):hover::before,.zoomable-img-container:not(.is-expanded):hover::before{opacity:.9}.mermaid.is-expanded::before,.zoomable-img-container.is-expanded::before{display:none!important}</style><style>@media screen and (min-width:1280px){.toc{position:fixed;right:calc(50% + 400px);top:120px;width:280px;max-height:80vh;overflow-y:auto;background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:15px;font-size:14px}.toc .inner{margin:0;padding:0}.toc summary{list-style:none;cursor:default;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:5px}.toc summary::-webkit-details-marker{display:none}}@media screen and (max-width:1279px){.toc{margin-bottom:20px}}</style><script>(function(){if(window._imageZoomInitialized)return;window._imageZoomInitialized=!0;function e(e){for(var t=e.parentElement;t&&t!==document.body;){if(t.classList&&(t.classList.contains("profile")||t.classList.contains("profile-img")))return!0;if(t.classList&&t.classList.contains("avatar"))return!0;t=t.parentElement}return!!(e.classList&&(e.classList.contains("avatar")||e.classList.contains("profile-img")))||!!e.closest(".profile")}function t(){var t="article img, .post-content img, .content img, main img";document.querySelectorAll(t).forEach(function(t){if(e(t))return;if(t.closest(".toc")||t.closest("nav")||t.closest("header")||t.closest("footer"))return;if(t.complete&&t.naturalWidth>0&&t.naturalWidth<80)return;if(t.parentElement&&t.parentElement.classList&&t.parentElement.classList.contains("zoomable-img-container"))return;var n=document.createElement("div");n.className="zoomable-img-container",t.parentNode.insertBefore(n,t),n.appendChild(t)})}function n(){if(window._zoomEventsBound)return;window._zoomEventsBound=!0,document.body.addEventListener("click",function(e){var t,n,o,i,a,r,s=document.querySelector(".is-expanded");if(s){s.classList.contains("mermaid")&&(t=s.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),s.classList.remove("is-expanded");return}n=e.target.closest(".zoomable-img-container, .mermaid"),n&&(e.preventDefault(),e.stopPropagation(),n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth||(t.dataset.origWidth=t.getAttribute("width")||""),t.dataset.origStyle||(t.dataset.origStyle=t.getAttribute("style")||""),o=t.getAttribute("viewBox"),o?(i=o.split(" "),i.length===4&&(a=parseFloat(i[2]),a>800?(r=a*1.15,t.style.setProperty("width",r+"px","important"),t.style.setProperty("min-width",r+"px","important")):t.style.setProperty("width","100%","important"))):t.style.setProperty("width","1500px","important"))),n.classList.add("is-expanded"),n.scrollWidth<=n.clientWidth?n.style.setProperty("justify-content","center","important"):(n.style.setProperty("justify-content","flex-start","important"),n.scrollLeft=0))}),document.addEventListener("keydown",function(e){if(e.key==="Escape"){var t,n=document.querySelector(".is-expanded");n&&(n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),n.classList.remove("is-expanded"))}})}document.addEventListener("DOMContentLoaded",function(){t(),n()})})()</script><meta property="og:url" content="https://yaocat55.github.io/posts/kubernetes/kindwslmigration/"><meta property="og:site_name" content="CatBlog"><meta property="og:title" content="从 Docker Compose 到 Kind"><meta property="og:description" content="从零开始在 WSL 上安装 Kind，用实际项目将 Docker Compose 迁移到 Kubernetes 的完整新手教程"><meta property="og:locale" content="zh"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2022-10-04T02:28:51+00:00"><meta property="article:modified_time" content="2022-10-04T02:28:51+00:00"><meta property="article:tag" content="容器技术"><meta property="article:tag" content="实践教程"><meta property="article:tag" content="Kubernetes"><meta property="og:image" content="https://yaocat55.github.io/images/avatar.jpg"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://yaocat55.github.io/images/avatar.jpg"><meta name=twitter:title content="从 Docker Compose 到 Kind"><meta name=twitter:description content="从零开始在 WSL 上安装 Kind，用实际项目将 Docker Compose 迁移到 Kubernetes 的完整新手教程"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"文章","item":"https://yaocat55.github.io/posts/"},{"@type":"ListItem","position":2,"name":"从 Docker Compose 到 Kind","item":"https://yaocat55.github.io/posts/kubernetes/kindwslmigration/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"从 Docker Compose 到 Kind","name":"从 Docker Compose 到 Kind","description":"从零开始在 WSL 上安装 Kind，用实际项目将 Docker Compose 迁移到 Kubernetes 的完整新手教程","keywords":["容器技术","实践教程","Kubernetes"],"articleBody":"☸️ 从 Docker Compose 到 Kind：在 WSL 上用 Kind 入门 Kubernetes 全指南 📌 一、问题切入：你已经会用 Docker Compose，然后呢 假设你在 WSL（Windows Subsystem for Linux，Windows 内置的 Linux 子系统）上维护着一个项目， docker-compose.yml 里定义了 nginx、应用服务、Redis、MySQL 四个容器：\nversion: \"3.8\" services: nginx: image: nginx:1.25 ports: [\"80:80\"] volumes: [\"./nginx.conf:/etc/nginx/nginx.conf:ro\"] app: build: ./app ports: [\"5000:5000\"] environment: REDIS_HOST: redis MYSQL_HOST: mysql depends_on: [redis, mysql] redis: image: redis:7-alpine mysql: image: mysql:8 environment: MYSQL_ROOT_PASSWORD: secret docker compose up -d 一键启动。但当你需要面对以下需求时，Compose 开始显得吃力：\n应用服务需要根据 CPU 负载 自动扩缩容 （高峰期 5 个副本，低峰 1 个） 某个副本挂了需要 自动重启 + 流量自动切走 需要 滚动更新 （逐个替换旧版本容器，不中断服务） 多个项目共享同一个 Redis 集群，需要 配置统一管理 这些问题就是 Kubernetes（简称 K8s，容器编排平台）解决的领域。但 K8s 的学习曲线出了名的陡峭——minikube 要装虚拟机、k3s 有多余的 systemd 依赖、Docker Desktop 收费。 Kind（Kubernetes in Docker） 就是最适合新手在本地入门 K8s 的工具。\nflowchart LR %% ========================================== %% 样式定义 %% ========================================== classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold; classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold; classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121; ROOT[本地 K8s 学习工具选型] ROOT --\u003e B1(Minikube) B1 --\u003e B1A[\"需要 VirtualBox/VM 驱动\"] B1 --\u003e B1B[\"资源占用高 2 ~ 4GB\"] B1 --\u003e B1C[\"功能最完整\"] ROOT --\u003e B2(Kind) B2 --\u003e B2A[\"只需 Docker 即可运行\"] B2 --\u003e B2B[\"资源占用低约1GB\"] B2 --\u003e B2C[\"多节点集群秒级创建\"] ROOT --\u003e B3(k3s) B3 --\u003e B3A[\"需要 systemd 或脚本安装\"] B3 --\u003e B3B[\"适合边缘/ARM设备\"] B3 --\u003e B3C[\"裁剪了部分非核心功能\"] ROOT --\u003e B4(Docker Desktop K8s) B4 --\u003e B4A[\"个人免费，企业收费\"] B4 --\u003e B4B[\"与 Docker 深度集成\"] B4 --\u003e B4C[\"版本更新可能破坏配置\"] class ROOT root; class B1,B2,B3,B4 branch; class B1A,B1B,B1C,B2A,B2B,B2C,B3A,B3B,B3C,B4A,B4B,B4C leaf; 🛠️ 1.1 Kind 解决了什么 Kind 的原理很简单： 它把 K8s 的每个节点（control-plane / worker）都跑在 Docker 容器里。 你本机安装了 Docker，Kind 就用 Docker 容器模拟一个完整的 K8s 集群。\n核心优势：\n零额外依赖 ：只要本机有 Docker，就能跑 Kind 多节点 ：一个命令创建 1 个 control-plane + 3 个 worker 的集群 秒级创建/销毁 ： kind create cluster 约 30 秒完成， kind delete cluster 瞬间清理 与 WSL 深度兼容 ：WSL 2 自带 Linux 内核 + Docker 支持，Kind 运行体验接近原生 Linux 🔍 二、环境准备：在 WSL 上安装 Kind 🛠️ 2.1 前置条件 组件 最低版本 作用 WSL WSL 2 提供 Linux 内核，容器运行的基础 Docker 24.0+ 运行 Kind 创建的节点容器 kubectl 1.28+ 与 K8s 集群交互的命令行工具 Kind 0.20+ 创建和管理本地 K8s 集群 步骤一：确认 WSL 版本\nwsl --version # 预期输出：WSL 版本 2.x.x 如果是 WSL 1，执行升级：\nwsl --update wsl --set-default-version 2 步骤二：在 WSL 内安装 Docker\nKind 依赖 Docker 运行节点容器。在 WSL 终端（Ubuntu/Debian）内执行：\n# 卸载旧版本（如果有） sudo apt remove docker docker-engine docker.io containerd runc # 安装依赖 sudo apt update sudo apt install -y ca-certificates curl gnupg # 添加 Docker 官方 GPG 密钥 sudo install -m 0755 -d /etc/apt/keyrings curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg # 添加 Docker APT 源 echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \\ https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | \\ sudo tee /etc/apt/sources.list.d/docker.list \u003e /dev/null # 安装 Docker sudo apt update sudo apt install -y docker-ce docker-ce-cli containerd.io # 将当前用户加入 docker 组（避免每次都要 sudo） sudo usermod -aG docker $USER 重新打开 WSL 终端使 docker 组生效，验证安装：\ndocker run --rm hello-world # 预期输出：Hello from Docker! 步骤三：安装 kubectl\ncurl -LO \"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\" sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl rm kubectl kubectl version --client # 预期输出：Client Version: v1.28.x 步骤四：安装 Kind\n[ $(uname -m) = x86_64 ] \u0026\u0026 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.24.0/kind-linux-amd64 chmod +x ./kind sudo mv ./kind /usr/local/bin/kind kind version # 预期输出：kind v0.24.0 🛠️ 2.2 安装全流程一览 flowchart TD %% ========================================== %% 样式定义 %% ========================================== classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold; classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121; classDef verify fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold; START([开始]) --\u003e CHECK_WSL{确认 WSL 2 就绪？} CHECK_WSL --\u003e|否| UPGRADE_WSL[升级到 WSL 2wsl --update] UPGRADE_WSL --\u003e CHECK_WSL CHECK_WSL --\u003e|是| INSTALL_DOCKER[安装 Docker Engine] INSTALL_DOCKER --\u003e VERIFY_DOCKER[\"验证：docker run hello-world\"] VERIFY_DOCKER --\u003e INSTALL_KUBECTL[安装 kubectl] INSTALL_KUBECTL --\u003e VERIFY_KUBECTL[\"验证：kubectl version\"] VERIFY_KUBECTL --\u003e INSTALL_KIND[安装 Kind] INSTALL_KIND --\u003e VERIFY_KIND[\"验证：kind version\"] VERIFY_KIND --\u003e DONE([环境就绪]) class START,DONE startEnd; class CHECK_WSL process; class UPGRADE_WSL,INSTALL_DOCKER,INSTALL_KUBECTL,INSTALL_KIND process; class VERIFY_DOCKER,VERIFY_KUBECTL,VERIFY_KIND verify; ⚙️ 三、第一个 Kind 集群 🖥️ 3.1 创建单节点集群 kind create cluster --name my-first-cluster Kind 默认行为：\n拉取 kindest/node 镜像（约 500MB，含 K8s 核心二进制 + containerd） 启动一个 Docker 容器作为 K8s 节点（control-plane 角色） 在容器内初始化 K8s 控制面组件（kube-apiserver / controller-manager / scheduler / etcd） 将 kubectl 的 kubeconfig 指向新集群 # 查看集群状态 kubectl cluster-info # 预期输出： # Kubernetes control plane is running at https://127.0.0.1:xxxxx # CoreDNS is running at https://127.0.0.1:xxxxx/api/v1/... kubectl get nodes # NAME STATUS ROLES AGE VERSION # my-first-cluster-control-plane Ready control-plane 30s v1.28.x 🖥️ 3.2 创建多节点集群（模拟生产环境） 单节点只能学基本概念。多节点才能体验调度（Scheduling）、污点容忍（Taint/Toleration）、跨节点服务发现等高级特性。\n创建 kind-config.yaml ：\nkind: Cluster apiVersion: kind.x-k8s.io/v1alpha4 nodes: - role: control-plane - role: worker - role: worker - role: worker kind create cluster --name multi-node --config kind-config.yaml # 验证多节点 kubectl get nodes # NAME STATUS ROLES AGE VERSION # multi-node-control-plane Ready control-plane 45s v1.28.x # multi-node-worker Ready 30s v1.28.x # multi-node-worker2 Ready 28s v1.28.x # multi-node-worker3 Ready 25s v1.28.x 📦 3.3 Kind 节点容器的真面目 Kind 的每个\"节点\"本质上就是一个 Docker 容器。可以切换到 multi-node 集群后查看：\ndocker ps --format \"table {{.Names}}\\t{{.Image}}\\t{{.Status}}\" # 预期输出： # NAMES IMAGE STATUS # multi-node-control-plane kindest/node:v1.28.0 Up 2 minutes # multi-node-worker kindest/node:v1.28.0 Up 2 minutes # multi-node-worker2 kindest/node:v1.28.0 Up 2 minutes # multi-node-worker3 kindest/node:v1.28.0 Up 2 minutes 这就是 Kind 区别于 minikube 的核心设计 ：不引入虚拟机，直接用 Docker 容器模拟 K8s 节点。每个容器内部跑了 containerd（容器运行时）、kubelet（节点代理）、以及对应角色的 K8s 组件。\nflowchart TD %% ========================================== %% 样式定义 %% ========================================== classDef host fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold; classDef docker fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold; classDef containers fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121; classDef apps fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold; subgraph HOST [\"🖥️ WSL 2 / Linux 宿主机\"] DOCKER[🐳 Docker Daemon] subgraph CP [\"control-plane (Docker 容器)\"] API[kube-apiserver] ETCD[etcd] SCHED[kube-scheduler] CM[kube-controller-manager] KL1[kubelet] CR1[containerd] end subgraph W1 [\"worker (Docker 容器)\"] KL2[kubelet] CR2[containerd] subgraph PODS1 [\"用户 Pod\"] APP1[nginx] APP2[app :5000] end end subgraph W2 [\"worker2 (Docker 容器)\"] KL3[kubelet] CR3[containerd] end end DOCKER -.-\u003e|管理| CP DOCKER -.-\u003e|管理| W1 DOCKER -.-\u003e|管理| W2 CR2 -.-\u003e|运行| PODS1 class HOST host; class DOCKER docker; class CP,W1,W2 containers; class APP1,APP2 apps; 📊 四、K8s 核心概念：用 Kind 逐个验证 K8s 有几十种资源类型，但新手只需要掌握 8 个核心概念就能完成 80% 的工作，这些概念在任何云厂商的 K8s 服务中完全通用：\nflowchart LR %% ========================================== %% 样式定义 %% ========================================== classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold; classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold; classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121; ROOT[K8s 核心概念分层掌握这8个概念即掌握80%] ROOT --\u003e L1(工作负载层) L1 --\u003e L1A[\"Pod最小调度单元\"] L1 --\u003e L1B[\"Deployment副本管理、滚动更新、回滚\"] ROOT --\u003e L2(网络层) L2 --\u003e L2A[\"Service固定虚拟IP + DNS + 负载均衡\"] L2 --\u003e L2B[\"IngressHTTP路由、域名、TLS终止\"] ROOT --\u003e L3(配置层) L3 --\u003e L3A[\"ConfigMap非敏感配置\"] L3 --\u003e L3B[\"Secret密码、密钥等敏感信息\"] ROOT --\u003e L4(存储层) L4 --\u003e L4A[\"PV/PVC持久化存储、解耦申请与供给\"] ROOT --\u003e L5(运维层) L5 --\u003e L5A[\"健康检查livenessProbe + readinessProbe\"] L5 --\u003e L5B[\"滚动更新/回滚零停机部署\"] class ROOT root; class L1,L2,L3,L4,L5 branch; class L1A,L1B,L2A,L2B,L3A,L3B,L4A,L5A,L5B leaf; 📦 4.1 Pod（容器组） Pod 是 K8s 的最小调度单元（K8s 中最小的可部署单位）。一个 Pod 可以包含 1 个或多个共享网络和 IPC 的容器。\n与 Docker Compose 的类比 ：Docker Compose 中每个 services 下的条目是一个独立容器。K8s 中 Pod 是容器的\"包装\"，大多数情况下一个 Pod 只跑一个容器（与应用服务一一对应）。\n创建 pod-nginx.yaml ：\napiVersion: v1 kind: Pod metadata: name: nginx-pod labels: app: nginx spec: containers: - name: nginx image: nginx:1.25 ports: - containerPort: 80 应用并验证：\nkubectl apply -f pod-nginx.yaml kubectl get pods # NAME READY STATUS RESTARTS AGE # nginx-pod 1/1 Running 0 10s kubectl describe pod nginx-pod # 查看 Pod 详细信息 kubectl logs nginx-pod # 查看容器日志 kubectl exec -it nginx-pod -- /bin/bash # 进入容器 🔄 4.2 Deployment（部署） Deployment 管理 Pod 的副本数量、声明式更新和回滚。 它是比裸 Pod 更高一层的抽象 ——你不会在生产环境直接创建 Pod，而是创建 Deployment，让 Deployment 管理 Pod。\n创建 deployment-nginx.yaml ：\napiVersion: apps/v1 kind: Deployment metadata: name: nginx-deploy spec: replicas: 3 selector: matchLabels: app: nginx template: metadata: labels: app: nginx spec: containers: - name: nginx image: nginx:1.25 ports: - containerPort: 80 验证核心能力：\nkubectl apply -f deployment-nginx.yaml # 1. 副本数管理——自动创建了 3 个 Pod kubectl get pods -l app=nginx # NAME READY STATUS RESTARTS AGE # nginx-deploy-5d4b8c7f9-abc12 1/1 Running 0 20s # nginx-deploy-5d4b8c7f9-def34 1/1 Running 0 20s # nginx-deploy-5d4b8c7f9-ghi56 1/1 Running 0 20s # 2. 自愈能力——手动删除一个 Pod，Deployment 立即重建 kubectl delete pod nginx-deploy-5d4b8c7f9-abc12 kubectl get pods -l app=nginx # 立即看到新 Pod 被创建 # 3. 滚动更新——更新镜像版本，逐个替换 Pod kubectl set image deployment/nginx-deploy nginx=nginx:1.26 kubectl rollout status deployment/nginx-deploy # 4. 回滚——更新失败了可以回退 kubectl rollout undo deployment/nginx-deploy 🌐 4.3 Service（服务发现 + 负载均衡） Pod 的 IP 会随着 Pod 的重建而变化（Pod 被删除再重建时，IP 会改变）。Service 为一组 Pod 提供 固定的虚拟 IP（ClusterIP）和 DNS 名称 ，并自动做负载均衡。\n创建 service-nginx.yaml ：\napiVersion: v1 kind: Service metadata: name: nginx-svc spec: selector: app: nginx ports: - port: 80 targetPort: 80 type: ClusterIP 验证：\nkubectl apply -f service-nginx.yaml kubectl get svc nginx-svc # NAME TYPE CLUSTER-IP EXTERNAL-IP PORT(S) AGE # nginx-svc ClusterIP 10.96.123.45 80/TCP 5s # 从集群内部访问（通过临时 Pod 测试） kubectl run test --rm -it --image=busybox -- wget -qO- http://nginx-svc # 预期输出：nginx 欢迎页 HTML 关键点 ： selector: app: nginx 告诉 Service\"把流量转发到所有带 app: nginx 标签的 Pod\"。Service 用 Label Selector（标签选择器）关联 Pod，而不是硬编码 IP。\n🔐 4.4 ConfigMap + Secret（配置管理） Docker Compose 中，环境变量直接写在 docker-compose.yml 的 environment 字段下。在 K8s 中，配置被抽取到 ConfigMap 和 Secret 中，Pod 通过环境变量或挂载文件引用。\n创建 configmap-app.yaml ：\napiVersion: v1 kind: ConfigMap metadata: name: app-config data: REDIS_HOST: \"redis-svc\" MYSQL_HOST: \"mysql-svc\" LOG_LEVEL: \"debug\" --- apiVersion: v1 kind: Secret metadata: name: app-secret type: Opaque stringData: MYSQL_PASSWORD: \"secret123\" REDIS_PASSWORD: \"\" 创建引用 ConfigMap 和 Secret 的 Deployment：\napiVersion: apps/v1 kind: Deployment metadata: name: app-with-config spec: replicas: 1 selector: matchLabels: app: myapp template: metadata: labels: app: myapp spec: containers: - name: app image: myapp:latest envFrom: - configMapRef: name: app-config - secretRef: name: app-secret kubectl apply -f configmap-app.yaml kubectl get configmap app-config kubectl get secret app-secret kubectl describe configmap app-config # 查看配置内容 🚪 4.5 Ingress（HTTP 路由 + 域名） Service 的 ClusterIP 只在集群内部可达， NodePort 需要占用宿主机端口（30000 ~ 32767）且不支持域名路由。 Ingress 是 K8s 原生的七层负载均衡 ，提供 HTTP/HTTPS 路由、基于域名的虚拟主机、TLS 终止。\nKind 需要额外安装 Ingress 控制器。推荐 ingress-nginx （一个基于 Nginx 的 Ingress Controller）：\n# 在 Kind 集群上部署 ingress-nginx（预配置 Kind 兼容的 NodePort） kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml # 等待就绪 kubectl wait --namespace ingress-nginx \\ --for=condition=ready pod \\ --selector=app.kubernetes.io/component=controller \\ --timeout=120s 创建 ingress-app.yaml ：\napiVersion: networking.k8s.io/v1 kind: Ingress metadata: name: app-ingress annotations: nginx.ingress.kubernetes.io/rewrite-target: / spec: ingressClassName: nginx rules: - host: app.local http: paths: - path: / pathType: Prefix backend: service: name: app-svc port: number: 5000 - host: api.app.local http: paths: - path: /api pathType: Prefix backend: service: name: app-svc port: number: 5000 验证（在 WSL 终端内测试，或配 hosts 文件）：\nkubectl apply -f ingress-app.yaml kubectl get ingress # NAME CLASS HOSTS ADDRESS PORTS # app-ingress nginx app.local,api.app.local localhost 80 # 测试 Ingress 路由 curl -H \"Host: app.local\" http://localhost/ curl -H \"Host: api.app.local\" http://localhost/api Ingress 解决了 Service 无法做到的事 ：同一个 80 端口，通过 Host 头路由到不同的后端服务或路径。生产环境中，Ingress Controller 通常对接云厂商的 LoadBalancer，自动创建公网 IP。\n💾 4.6 PV/PVC（持久化存储） Pod 重启，容器内的数据就没了——这是设计如此。 要持久化数据（比如 MySQL 的数据文件），需要 PV（PersistentVolume，集群级别的存储资源）和 PVC（PersistentVolumeClaim，用户对存储的申请）。\nflowchart LR %% ========================================== %% 样式定义 %% ========================================== classDef producer fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold; classDef consumer fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold; classDef bridge fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold; ADMIN[\"管理员创建 PV定义：存储类型、容量、路径\"] --\u003e POOL[(存储池)] POOL --\u003e MATCH[\"K8s 根据容量和访问模式自动匹配 PV 与 PVC\"] USER[\"开发者创建 PVC声明：需要 10Gi RWO 存储\"] --\u003e MATCH MATCH --\u003e POD[\"Pod 引用 PVC挂载到容器路径\"] POD --\u003e DATA[(\"数据持久化Pod 被删数据仍在\")] class ADMIN producer; class USER consumer; class MATCH bridge; 在 Kind 中演示 PV/PVC。创建 pv-mysql.yaml ：\n--- # 存储管理员：创建 PV apiVersion: v1 kind: PersistentVolume metadata: name: mysql-pv spec: capacity: storage: 1Gi accessModes: - ReadWriteOnce persistentVolumeReclaimPolicy: Retain hostPath: path: /data/mysql # Kind 节点容器内的路径 --- # 开发者：创建 PVC，声明需要 1Gi apiVersion: v1 kind: PersistentVolumeClaim metadata: name: mysql-pvc spec: accessModes: - ReadWriteOnce resources: requests: storage: 1Gi 在 Deployment 中引用 PVC（替换之前的 hostPath 临时方案）：\nspec: containers: - name: mysql image: mysql:8 volumeMounts: - name: mysql-data mountPath: /var/lib/mysql volumes: - name: mysql-data persistentVolumeClaim: claimName: mysql-pvc 验证持久化：\nkubectl apply -f pv-mysql.yaml kubectl get pv # STATUS: Bound——PVC 已自动绑定 PV kubectl get pvc # STATUS: Bound # 验证数据不丢：写数据 → 删 Pod → 新 Pod 自动创建 → 数据还在 kubectl exec -it mysql-xxx -- mysql -e \"CREATE DATABASE testdb;\" kubectl delete pod mysql-xxx kubectl get pods # Deployment 自动重建 Pod kubectl exec -it mysql-new-xxx -- mysql -e \"SHOW DATABASES;\" # testdb 还在 PV/PVC 的核心设计思想 ：存储的 供给 （管理员创建 PV）和 消费 （开发者创建 PVC）解耦。同一份 YAML 在本地 Kind 用 hostPath ，上了云把 PV 改成云硬盘（阿里云 NAS/云盘），PVC 和 Deployment 的 YAML 一行不用改。\n💓 4.7 健康检查（LivenessProbe + ReadinessProbe） K8s 的健康检查分两种探针（Probe），作用完全不同：\n探针类型 作用 检查失败后的行为 典型场景 livenessProbe （存活探针） 容器是否\"活着\" 重启容器 死锁、内存泄漏、进程崩溃 readinessProbe （就绪探针） 容器是否\"准备好接收流量\" 从 Service 摘除 启动预热、依赖服务未就绪、连接池耗尽 startupProbe （启动探针） 容器是否\"已完成启动\" 阻塞其他探针 慢启动应用（Java 应用冷启动 30s+） 创建 deployment-with-probes.yaml ：\napiVersion: apps/v1 kind: Deployment metadata: name: app-health spec: replicas: 2 selector: matchLabels: app: health-app template: metadata: labels: app: health-app spec: containers: - name: app image: myapp:latest ports: - containerPort: 5000 startupProbe: # 启动探针——容器启动后等 10s 再开始检查 httpGet: path: /healthz port: 5000 initialDelaySeconds: 10 failureThreshold: 30 # 最多等 30×10=300s periodSeconds: 10 livenessProbe: # 存活探针——/healthz 返回非 200 则重启 httpGet: path: /healthz port: 5000 periodSeconds: 15 failureThreshold: 3 # 连续 3 次失败 = 45s 后重启 readinessProbe: # 就绪探针——/ready 返回非 200 则停止转发流量 httpGet: path: /ready port: 5000 periodSeconds: 5 failureThreshold: 2 # 连续 2 次失败 = 10s 后摘除 验证：\nkubectl apply -f deployment-with-probes.yaml # 查看探针状态 kubectl describe pod -l app=health-app | grep -A5 \"Liveness\\|Readiness\\|Startup\" # 模拟故障：让 /healthz 返回 500 kubectl exec -it app-health-xxx -- curl -X POST http://localhost:5000/simulate/crash # 观察 Pod 被重启 kubectl get pods -w # RESTARTS 列从 0 变成 1 Docker Compose 的 healthcheck 只检查存活 。K8s 多出来的 readinessProbe 是滚动更新的关键——只有当新 Pod readiness 就绪后，旧 Pod 才会被终止，确保用户请求不中断。\n🔄 4.8 滚动更新与回滚（零停机部署） 滚动更新（Rolling Update）是 K8s 最核心的生产特性之一：更新镜像版本时， 逐个替换 Pod，保持指定数量的 Pod 始终可用 。\nsequenceDiagram %% ========================================== %% 样式定义 %% ========================================== participant U as 用户 participant D as Deployment participant O as 旧ReplicaSet participant N as 新ReplicaSet participant S as Service U-\u003e\u003eD: kubectl set image\\nnginx=nginx:1.26 D-\u003e\u003eN: 创建新 ReplicaSet N-\u003e\u003eN: 启动 1 个新 Pod Note over N: 等待 readinessProbe 通过 N--\u003e\u003eS: 新 Pod 就绪，注册到 Service D-\u003e\u003eO: 缩容旧 ReplicaSet −1 个 Pod Note over O: 旧 Pod 收到 SIGTERM优雅退出 O--\u003e\u003eS: 旧 Pod 从 Service 摘除 N-\u003e\u003eN: 继续启动第 2 个新 Pod Note over N: 等待 readinessProbe 通过 D-\u003e\u003eO: 缩容旧 ReplicaSet −1 个 Pod Note over D: 逐个替换，直到全部完成 滚动更新策略在 Deployment 的 spec.strategy 中配置：\nspec: replicas: 3 strategy: type: RollingUpdate rollingUpdate: maxSurge: 1 # 更新期间最多额外创建 1 个 Pod（峰值 4 个） maxUnavailable: 0 # 更新期间至少保持 3 个 Pod 可用（零中断） 实操演示：\n# 部署 nginx:1.25 的 3 个副本 kubectl create deployment nginx-rollout --image=nginx:1.25 --replicas=3 # 触发滚动更新（另一个终端 watch Pod 状态） kubectl get pods -w \u0026 # 更新镜像 kubectl set image deployment/nginx-rollout nginx=nginx:1.26 kubectl rollout status deployment/nginx-rollout # 预期输出：deployment \"nginx-rollout\" successfully rolled out # 查看更新历史 kubectl rollout history deployment/nginx-rollout # REVISION CHANGE-CAUSE # 1 # 2 # 回滚到上一个版本 kubectl rollout undo deployment/nginx-rollout kubectl rollout status deployment/nginx-rollout # 回滚到指定版本 kubectl rollout undo deployment/nginx-rollout --to-revision=1 # 暂停/恢复——灰度发布的基础 kubectl rollout pause deployment/nginx-rollout # 暂停更新 kubectl set image deployment/nginx-rollout nginx=nginx:1.27 kubectl rollout resume deployment/nginx-rollout # 恢复，一次性应用变更 滚动更新 + readlinessProbe 的组合 是零停机部署的完整方案：新 Pod 必须通过就绪检查才接收流量，旧 Pod 在流量切走后才被终止。\nflowchart TD %% ========================================== %% 样式定义 %% ========================================== classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold; classDef ok fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold; classDef fail fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold; classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121; START([触发滚动更新]) --\u003e NEW_POD[\"创建新版本 Pod\"] NEW_POD --\u003e PROBE{\"readinessProbe\\n连续通过？\"} PROBE --\u003e|否| RETRY[\"继续等待\\n最多 failureThreshold 次\"] RETRY --\u003e PROBE PROBE --\u003e|是| ADD_SVC[\"新 Pod 注册到 Service\\n开始接收生产流量\"] ADD_SVC --\u003e DRAIN[\"旧 Pod 从 Service 摘除\\n等待已有连接处理完\"] DRAIN --\u003e TERM[\"发送 SIGTERM 终止旧 Pod\"] TERM --\u003e NEXT{\"所有副本\\n更新完毕？\"} NEXT --\u003e|否| NEW_POD NEXT --\u003e|是| DONE([滚动更新完成]) class START,DONE startEnd; class PROBE,NEXT ok; class RETRY fail; class NEW_POD,ADD_SVC,DRAIN,TERM process; 🛠️ 4.9 概念对比：Docker Compose vs K8s 概念 Docker Compose Kubernetes 说明 容器单元 services 下的每个条目 Pod（可含多个容器） K8s 多一层抽象 副本管理 deploy: replicas: 3 （Compose v3） Deployment replicas: 3 K8s 功能更完善（HPA 自动扩缩） 服务发现 通过 service-name 自动 DNS Service + CoreDNS 两者类似 配置管理 环境变量写在 compose 文件里 ConfigMap / Secret K8s 配置与工作负载分离 网络 默认 bridge 网络 CNI 插件（Calico/Flannel） K8s 网络模型更灵活 存储 命名卷（named volume） PersistentVolume / PersistentVolumeClaim K8s 抽象层级更多 健康检查 healthcheck livenessProbe / readinessProbe K8s 区分存活和就绪探针 滚动更新 docker compose up -d --no-deps Deployment 原生滚动更新 K8s 更自动化 🛠️ 五、实战迁移：Docker Compose → Kind 这是本篇的核心环节：把开篇那个 docker-compose.yml （nginx + app + redis + mysql）完整迁移到 Kind 集群中。\nflowchart TD %% ========================================== %% 样式定义 %% ========================================== classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold; classDef compose fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold; classDef k8s fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold; classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121; subgraph COMPOSE [\"Docker Compose 原项目\"] C1[\"nginxports: 80:80volumes: ./nginx.conf\"] C2[\"appbuild: ./appports: 5000:5000env: REDIS_HOST\"] C3[\"redisimage: redis:7-alpine\"] C4[\"mysqlimage: mysql:8env: MYSQL_ROOT_PASSWORD\"] end subgraph K8S [\"Kubernetes 迁移后\"] K1[\"nginx Deployment+ nginx Service (NodePort: 30080)+ nginx ConfigMap\"] K2[\"app Deployment (replicas: 3)+ app Service (ClusterIP)\"] K3[\"redis Deployment+ redis Service (ClusterIP)\"] K4[\"mysql StatefulSet+ mysql Service (ClusterIP)+ mysql Secret\"] end C1 --\u003e|映射为| K1 C2 --\u003e|映射为| K2 C3 --\u003e|映射为| K3 C4 --\u003e|映射为| K4 class C1,C2,C3,C4 compose; class K1,K2,K3,K4 k8s; 🖥️ 5.1 第一步：创建集群并映射端口 Kind 需要在创建时声明宿主机端口映射，这样后续才能从 Windows 浏览器访问 K8s 内的 nginx。\n创建 kind-migration.yaml ：\nkind: Cluster apiVersion: kind.x-k8s.io/v1alpha4 nodes: - role: control-plane extraPortMappings: - containerPort: 30080 hostPort: 80 protocol: TCP kind create cluster --name migration --config kind-migration.yaml kubectl get nodes 🌐 5.2 第二步：MySQL（有状态服务） 数据库有状态——挂掉重启后必须保留数据。K8s 中 StatefulSet 比 Deployment 更适合有状态服务（提供稳定的网络标识和持久化存储）。这里为简化先使用 Deployment ，仅用 hostPath 临时演示。\n创建 mysql.yaml ：\napiVersion: v1 kind: Secret metadata: name: mysql-secret type: Opaque stringData: root-password: \"secret123\" --- apiVersion: v1 kind: Service metadata: name: mysql-svc spec: selector: app: mysql ports: - port: 3306 targetPort: 3306 --- apiVersion: apps/v1 kind: Deployment metadata: name: mysql spec: replicas: 1 selector: matchLabels: app: mysql template: metadata: labels: app: mysql spec: containers: - name: mysql image: mysql:8 env: - name: MYSQL_ROOT_PASSWORD valueFrom: secretKeyRef: name: mysql-secret key: root-password ports: - containerPort: 3306 🔢 5.3 第三步：Redis 创建 redis.yaml ：\napiVersion: v1 kind: Service metadata: name: redis-svc spec: selector: app: redis ports: - port: 6379 targetPort: 6379 --- apiVersion: apps/v1 kind: Deployment metadata: name: redis spec: replicas: 1 selector: matchLabels: app: redis template: metadata: labels: app: redis spec: containers: - name: redis image: redis:7-alpine ports: - containerPort: 6379 🌐 5.4 第四步：应用服务 创建 app.yaml （核心——这里演示 ConfigMap 如何替代 Docker Compose 的 environment ）：\napiVersion: v1 kind: ConfigMap metadata: name: app-config data: REDIS_HOST: \"redis-svc\" MYSQL_HOST: \"mysql-svc\" --- apiVersion: v1 kind: Service metadata: name: app-svc spec: selector: app: myapp ports: - port: 5000 targetPort: 5000 --- apiVersion: apps/v1 kind: Deployment metadata: name: app spec: replicas: 3 selector: matchLabels: app: myapp template: metadata: labels: app: myapp spec: containers: - name: app image: myapp:latest ports: - containerPort: 5000 envFrom: - configMapRef: name: app-config env: - name: MYSQL_PASSWORD valueFrom: secretKeyRef: name: mysql-secret key: root-password 关键变化对照 ：Docker Compose 中的 environment: REDIS_HOST: redis 变成了 ConfigMap 中的 REDIS_HOST: \"redis-svc\" 。 redis （Compose service name）变成 redis-svc （K8s Service 名称作为 DNS 名），这是迁移的核心思路—— 把 Docker Compose 的服务名替换为 K8s Service 的 DNS 名 。\n🚪 5.5 第五步：Nginx（对外流量入口） K8s 中 Service 的 type: NodePort 将 Service 端口映射到节点宿主机的某个端口（30000 ~ 32767）。配合 Kind 的 extraPortMappings （hostPort 80 → containerPort 30080），实现 localhost:80 → nginx Service → nginx Pod 的链路。\n创建 nginx-k8s.yaml ：\napiVersion: v1 kind: ConfigMap metadata: name: nginx-config data: nginx.conf: | events { worker_connections 1024; } http { upstream app_backend { server app-svc:5000; } server { listen 80; location / { proxy_pass http://app_backend; } } } --- apiVersion: v1 kind: Service metadata: name: nginx-svc spec: type: NodePort selector: app: nginx ports: - port: 80 targetPort: 80 nodePort: 30080 --- apiVersion: apps/v1 kind: Deployment metadata: name: nginx spec: replicas: 1 selector: matchLabels: app: nginx template: metadata: labels: app: nginx spec: containers: - name: nginx image: nginx:1.25 ports: - containerPort: 80 volumeMounts: - name: nginx-config-vol mountPath: /etc/nginx/nginx.conf subPath: nginx.conf volumes: - name: nginx-config-vol configMap: name: nginx-config Compose 到 K8s 的关键映射 ：\nCompose 写法 K8s 对应 说明 volumes: ./nginx.conf:/etc/nginx/nginx.conf ConfigMap + Volume 挂载 配置文件不再是宿主机文件，而是集群内的 ConfigMap 资源 upstream app_backend { server app:5000; } upstream app_backend { server app-svc:5000; } 服务名从 Compose 服务名改为 K8s Service DNS 名 ports: \"80:80\" Service NodePort 30080 + Kind extraPortMappings Compose 直接映射宿主机端口，K8s 通过 Service+NodePort 再映射 🔄 5.6 第六步：一键部署所有资源 所有 YAML 文件放在同一目录下：\nls *.yaml # app.yaml mysql.yaml nginx-k8s.yaml redis.yaml kubectl apply -f . # 验证所有资源 kubectl get all # NAME READY STATUS RESTARTS AGE # pod/app-5d4b8c7f9-abc12 1/1 Running 0 30s # pod/app-5d4b8c7f9-def34 1/1 Running 0 30s # pod/app-5d4b8c7f9-ghi56 1/1 Running 0 30s # pod/mysql-7c8d9f6-xyz78 1/1 Running 0 25s # pod/nginx-8b9c6d5-asd45 1/1 Running 0 20s # pod/redis-9d8c7b6-pqr90 1/1 Running 0 28s # # NAME TYPE CLUSTER-IP EXTERNAL-IP PORT(S) # service/app-svc ClusterIP 10.96.100.1 5000/TCP # service/mysql-svc ClusterIP 10.96.100.2 3306/TCP # service/nginx-svc NodePort 10.96.100.3 80:30080/TCP # service/redis-svc ClusterIP 10.96.100.4 6379/TCP # # NAME READY UP-TO-DATE AVAILABLE AGE # deployment.apps/app 3/3 3 3 30s # deployment.apps/mysql 1/1 1 1 25s # deployment.apps/nginx 1/1 1 1 20s # deployment.apps/redis 1/1 1 1 28s 在浏览器访问 http://localhost ，流量路径为：\n浏览器 → WSL localhost:80 → Kind 容器 30080 → nginx Service NodePort → nginx Pod → app Service ClusterIP → app Pod (其中一个副本) sequenceDiagram %% ========================================== %% 样式定义 %% ========================================== participant B as 浏览器 participant H as WSL宿主机:80 participant K as Kind容器:30080 participant NS as nginx Service participant NP as nginx Pod participant AS as app Service participant AP as app Pod B-\u003e\u003eH: GET http://localhost/ H-\u003e\u003eK: extraPortMappingshostPort:80 → containerPort:30080 K-\u003e\u003eNS: NodePort 30080 转发 NS-\u003e\u003eNP: 负载均衡到 nginx Pod NP-\u003e\u003eAS: proxy_pass http://app-svc:5000 AS-\u003e\u003eAP: 负载均衡到 app Pod(3副本之一) AP--\u003e\u003eNP: HTTP 200 响应 NP--\u003e\u003eNS: 返回 NS--\u003e\u003eK: 返回 K--\u003e\u003eH: 返回 H--\u003e\u003eB: 返回 📌 5.7 清理 kind delete cluster --name migration # 所有 Docker 节点容器被删除，磁盘空间立即释放 📋 六、日常 Kind 操作速查 操作 命令 说明 创建集群 kind create cluster --name xxx 默认单节点 创建多节点 kind create cluster --config kind.yaml 通过配置文件定义节点拓扑 查看集群列表 kind get clusters 显示所有集群 切换 kubectl 上下文 kubectl cluster-info --context kind-xxx Kind 自动注册 kubeconfig 加载本地镜像 kind load docker-image myapp:latest --name xxx 将本机构建的镜像加载到 Kind 节点 删除集群 kind delete cluster --name xxx 删除集群和所有节点容器 查看节点容器 docker ps --filter \"name=xxx\" 底层还是 Docker 🔧 七、K8s 学习三阶段路线 K8s 的学习常被过度复杂化——很多人一上来就买云服务、配 Terraform、研究 Service Mesh，结果基础没打牢，反而被云厂商的各种概念绕晕。以下三阶段路线能让每一步都有明确的边界。\nflowchart TD %% ========================================== %% 样式定义 %% ========================================== classDef phase1 fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold; classDef phase2 fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#0D47A1,font-weight:bold; classDef phase3 fill:#FFE082,stroke:#F9A825,stroke-width:2px,color:#5D4037,font-weight:bold; classDef detail fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px,color:#212121; subgraph P1 [\"🔵 第一阶段：Kind 学 K8s 核心（本地、免费、零成本）\"] P1A[\"8 大核心概念Pod/Deployment/Service/IngressConfigMap/Secret/PV·PVC健康检查/滚动更新·回滚\"] --\u003e P1B[\"Docker Compose 迁移实战\"] P1B --\u003e P1C[\"产出：能独立将 Compose 项目迁移到 K8s 并运行在生产级配置上\"] end subgraph P2 [\"🟢 第二阶段：云试用（阿里云 ACK 免费 1 个月）\"] P2A[\"体验云特性托管日志/云监控/负载均衡自动伸缩/云盘持久化\"] --\u003e P2B[\"对比 Kind 的差异哪些是 K8s 原生哪些是云厂商封装\"] P2B --\u003e P2C[\"产出：理解云 K8s 只是K8s 核心 + 云基础设施的一层封装\"] end subgraph P3 [\"🟡 第三阶段：公司生产环境\"] P3A[\"已有理论基础 + 云体验\"] --\u003e P3B[\"直接上手干活CI·CD 流水线/Helm Chart监控告警/安全策略\"] P3C[\"到这时候，你已经不需要从零学 K8s 了——只需要学公司特定的工具链\"] end P1 -.-\u003e|掌握 80%| P2 P2 -.-\u003e|1 ~ 2天看清云本质| P3 class P1A,P1B,P1C phase1; class P2A,P2B,P2C phase2; class P3A,P3B,P3C phase3; 🎓 第一阶段：Kind 学 K8s 核心（现在） 目标 ：用 Kind 把 8 大核心概念（Pod / Deployment / Service / Ingress / ConfigMap / Secret / PV·PVC / 健康检查与滚动更新）全部手动实践一遍，把 Docker Compose 项目完整迁移到 K8s 上。\n为什么用 Kind 而不是直接上云 ：\n对比维度 Kind 本地 直接买云 K8s 成本 零 阿里云 ACK 最低约 300 元/月起 创建速度 30 秒 10 ~ 15 分钟（等云资源就绪） 犯错成本 删掉重建，零损失 配错安全组可能导致公网暴露 学习聚焦 纯 K8s 概念，没有云概念噪音 要同时学 K8s + SLB + NAS + 日志服务 网络限制 仅本地 需要公网/VPC 配置 Kind 不是用来模拟\"云环境\"的，而是用来模拟\"K8s 核心\"的。 学 K8s 核心，用 Kind 是最快、最省钱的方式。\n当你把 Deployment 的滚动更新、Ingress 的域名路由、PV/PVC 的存储解耦、健康检查的两种探针全部在 Kind 上亲手跑过一遍后， 这 80% 的知识在任何云厂商的 K8s 服务中完全通用 。\n☁️ 第二阶段：开免费试用，体验\"云特性\" 目标 ：用一个云 K8s 免费试用账号（如阿里云 ACK 新用户 1 个月免费），体验 K8s 核心之外的\"云层\"。\n要体验的内容 ：\n云特性 Kind 能做到吗？ 云上如何体验 托管控制面 否（Kind 的控制面也在容器里） ACK 免费试用，控制面由阿里云维护，你只看到 kubeconfig 云负载均衡（SLB） 否（Kind 用 NodePort） 创建 type: LoadBalancer 的 Service，自动分配公网 IP 云盘持久化 可以（hostPath 模拟） PV 的 storageClassName 改为 alicloud-disk-ssd ，自动创建云盘 托管日志（SLS） 否 在 ACK 控制台一键开启，所有容器 stdout 自动投递到日志服务 云监控 否 ACK 自带节点/Pod 级别的 CPU/内存/网络监控面板 弹性伸缩（HPA + CA） HPA 可练（metrics-server），CA 不行 ACK 配置 HPA 策略 + 节点自动伸缩，压测观察自动扩容 第二阶段通常 1 ~ 2 天 就能摸清楚。因为核心逻辑（Deployment 怎么扩缩、Service 怎么负载均衡、Ingress 怎么路由）你已经在第一阶段用 Kind 跑通了。云上只是把 hostPath 换成云盘、把 NodePort 换成 LoadBalancer、把 kubectl logs 换成云日志控制台。\n第二阶段的关键认知 ：\nflowchart LR %% ========================================== %% 样式定义 %% ========================================== classDef core fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold; classDef cloud fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold; K8S[K8s 核心概念Pod/Deployment/ServiceIngress/PV·PVC/探针你在 Kind 上已掌握] --\u003e C1[阿里云 ACK] K8S --\u003e C2[腾讯云 TKE] K8S --\u003e C3[Google GKE] K8S --\u003e C4[AWS EKS] C1 -.-\u003e|云厂商封装层| CA[\"• 托管控制面• SLB 负载均衡• 云盘/对象存储• 日志/监控服务\"] C2 -.-\u003e|云厂商封装层| CB[\"同上名称不同，本质一样\"] C3 -.-\u003e|云厂商封装层| CC[\"同上\"] C4 -.-\u003e|云厂商封装层| CD[\"同上\"] class K8S core; class C1,C2,C3,C4 cloud; 云 K8s 服务 = K8s 核心 + 云基础设施封装 。你把核心学扎实了，切换云厂商只是换个 YAML 注解、换个 StorageClass 名字的问题。\n🚀 第三阶段：公司买单，上生产 到这一步，你已经有了 Kind 打下的理论基础和云试用的实操经验。入职后面对公司的 K8s 生产环境，你的状态是：\n不用从零学 K8s ，因为你已经在 Kind 上把所有核心概念跑过一遍 不用从头学云 ，因为你已经在免费试用中见过了云负载均衡、云盘、托管日志 只需要学公司特定的工具链 ：Helm Chart 怎么写、CI/CD 流水线怎么配、Prometheus 告警规则怎么定义、安全策略（PodSecurityPolicy/NetworkPolicy）怎么设置 这些工具链具体到每家公司都不一样——但 K8s 核心 API 不会变 。 kubectl get pods 、 kubectl describe deployment 、 kubectl logs 在任何环境（Kind / ACK / GKE / EKS）下的输出含义完全一致。\n📦 八、总结 flowchart LR %% ========================================== %% 样式定义 %% ========================================== classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold; classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold; classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121; classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold; ROOT[Kind 学习 K8s 总结] ROOT --\u003e B1(Kind 的定位) B1 --\u003e B1A[\"不是模拟云环境\"] B1 --\u003e B1B[\"是模拟 K8s 核心\"] ROOT --\u003e B2(8 大核心概念) B2 --\u003e B2A[\"Pod/Deployment/Service\"] B2 --\u003e B2B[\"Ingress/ConfigMap/Secret\"] B2 --\u003e B2C[\"PV·PVC/健康检查·滚动更新\"] ROOT --\u003e B3(三阶段路线) B3 --\u003e B3A[\"① Kind 打基础（现在）\"] B3 --\u003e B3B[\"② 云试用 1 个月（进阶）\"] B3 --\u003e B3C[\"③ 公司生产（工作后）\"] class ROOT root; class B1,B2,B3 branch; class B1A,B1B,B2A,B2B,B2C,B3A,B3B,B3C leaf; 三个核心理念 ：\nKind 不是用来模拟\"云环境\"的，而是用来模拟\"K8s 核心\"的 。学 K8s 核心，用 Kind 是最快、最省钱、最正确的方式 学\"云服务\"，用云厂商的免费试用 。当你在 Kind 上把 Deployment、Service、Ingress、PV/PVC 玩得滚瓜烂熟，再开一个免费试用的云 K8s 集群，你会发现云上只是多了一层基础设施封装——1 ~ 2 天就搞定了 K8s 核心概念在任何云上完全通用 。 kubectl 命令的输出含义、YAML 的 apiVersion 和 kind 字段、Deployment 的滚动更新策略——这些在 Kind、ACK、GKE、EKS 上完全一致。把核心打扎实，切换云厂商只是换个注解、换个 StorageClass 名字的问题 ","wordCount":"3713","inLanguage":"zh","image":"https://yaocat55.github.io/images/avatar.jpg","datePublished":"2022-10-04T02:28:51Z","dateModified":"2022-10-04T02:28:51Z","author":{"@type":"Person","name":"yaomingye"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://yaocat55.github.io/posts/kubernetes/kindwslmigration/"},"publisher":{"@type":"Organization","name":"CatBlog","logo":{"@type":"ImageObject","url":"https://yaocat55.github.io/favicon.ico"}}}</script><link rel=preconnect href=https://fonts.loli.net><link rel=preconnect href=https://fonts.loli.net crossorigin><link href="https://fonts.loli.net/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css><script defer src=https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js></script><script>(function(){if(window._katexInitialized)return;window._katexInitialized=!0;function e(){var e=document.createElement("script");e.src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js",e.onload=function(){typeof renderMathInElement!="undefined"&&renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1}]})},document.head.appendChild(e)}document.addEventListener("DOMContentLoaded",e)})()</script><script src=https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js></script><script>(function(){if(window._mermaidInitialized)return;window._mermaidInitialized=!0;function e(){if(document.getElementsByClassName("mermaid").length===0)return;mermaid.initialize({startOnLoad:!0,theme:"base",securityLevel:"loose",themeVariables:{background:"transparent",primaryColor:getComputedStyle(document.body).getPropertyValue("--theme").trim()||"#5c6bc0",primaryBorderColor:getComputedStyle(document.body).getPropertyValue("--secondary").trim()||"#90a4ae",primaryTextColor:getComputedStyle(document.body).getPropertyValue("--primary").trim()||"#212529",lineColor:getComputedStyle(document.body).getPropertyValue("--tertiary").trim()||"#b0bec5",secondaryColor:getComputedStyle(document.body).getPropertyValue("--code-bg").trim()||"#f5f5f5"}})}document.addEventListener("DOMContentLoaded",e)})()</script><style>.mermaid,.zoomable-img-container{background:0 0!important;display:flex;justify-content:center;align-items:center;cursor:zoom-in;position:relative;border:1px solid var(--border);border-radius:8px;margin:1.5rem 0;overflow:hidden;width:100%;max-width:100%;transition:width .45s cubic-bezier(.25,1,.5,1),margin .45s cubic-bezier(.25,1,.5,1),box-shadow .3s ease,border-color .3s ease}.zoomable-img-container img{width:auto;max-width:100%;height:auto;display:block;transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid svg{transition:all .45s cubic-bezier(.25,1,.5,1)}.mermaid.is-expanded,.zoomable-img-container.is-expanded{width:92vw!important;max-width:92vw!important;margin-left:calc(50% - 46vw)!important;margin-right:calc(50% - 46vw)!important;margin-top:2.5rem!important;margin-bottom:2.5rem!important;cursor:zoom-out;border-color:var(--theme)!important;z-index:999;display:flex!important;justify-content:flex-start!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important;padding:30px 40px!important;box-sizing:border-box!important;background:var(--code-bg,#1e1e1e)!important;box-shadow:0 0 0 5e3px rgba(0,0,0,.65),0 20px 50px rgba(0,0,0,.5)!important}.mermaid.is-expanded::-webkit-scrollbar,.zoomable-img-container.is-expanded::-webkit-scrollbar{height:8px!important;display:block!important}.mermaid.is-expanded::-webkit-scrollbar-thumb,.zoomable-img-container.is-expanded::-webkit-scrollbar-thumb{background:var(--theme,#5c6bc0)!important;border-radius:4px!important}.mermaid.is-expanded::-webkit-scrollbar-track,.zoomable-img-container.is-expanded::-webkit-scrollbar-track{background:rgba(255,255,255,.1)!important;border-radius:4px!important}.zoomable-img-container.is-expanded img{width:auto!important;min-width:100%!important;max-width:none!important;height:auto!important;display:block;margin:0!important}.mermaid.is-expanded svg{width:auto!important;max-width:none!important;height:auto!important;display:block!important;margin:0!important}.mermaid:not(.is-expanded):hover,.zoomable-img-container:not(.is-expanded):hover{box-shadow:0 4px 12px rgba(0,0,0,8%);border-color:var(--theme)!important}.mermaid:not(.is-expanded)::before,.zoomable-img-container:not(.is-expanded)::before{content:"点击展开 🔍";position:absolute;top:10px;right:10px;background:var(--theme,#5c6bc0);color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;opacity:0;transition:opacity .2s ease;z-index:5;pointer-events:none}.mermaid:not(.is-expanded):hover::before,.zoomable-img-container:not(.is-expanded):hover::before{opacity:.9}.mermaid.is-expanded::before,.zoomable-img-container.is-expanded::before{display:none!important}</style><style>@media screen and (min-width:1280px){.toc{position:fixed;right:calc(50% + 400px);top:120px;width:280px;max-height:80vh;overflow-y:auto;background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:15px;font-size:14px}.toc .inner{margin:0;padding:0}.toc summary{list-style:none;cursor:default;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:5px}.toc summary::-webkit-details-marker{display:none}}@media screen and (max-width:1279px){.toc{margin-bottom:20px}}</style><script>(function(){if(window._imageZoomInitialized)return;window._imageZoomInitialized=!0;function e(e){for(var t=e.parentElement;t&&t!==document.body;){if(t.classList&&(t.classList.contains("profile")||t.classList.contains("profile-img")))return!0;if(t.classList&&t.classList.contains("avatar"))return!0;t=t.parentElement}return!!(e.classList&&(e.classList.contains("avatar")||e.classList.contains("profile-img")))||!!e.closest(".profile")}function t(){var t="article img, .post-content img, .content img, main img";document.querySelectorAll(t).forEach(function(t){if(e(t))return;if(t.closest(".toc")||t.closest("nav")||t.closest("header")||t.closest("footer"))return;if(t.complete&&t.naturalWidth>0&&t.naturalWidth<80)return;if(t.parentElement&&t.parentElement.classList&&t.parentElement.classList.contains("zoomable-img-container"))return;var n=document.createElement("div");n.className="zoomable-img-container",t.parentNode.insertBefore(n,t),n.appendChild(t)})}function n(){if(window._zoomEventsBound)return;window._zoomEventsBound=!0,document.body.addEventListener("click",function(e){var t,n,o,i,a,r,s=document.querySelector(".is-expanded");if(s){s.classList.contains("mermaid")&&(t=s.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),s.classList.remove("is-expanded");return}n=e.target.closest(".zoomable-img-container, .mermaid"),n&&(e.preventDefault(),e.stopPropagation(),n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth||(t.dataset.origWidth=t.getAttribute("width")||""),t.dataset.origStyle||(t.dataset.origStyle=t.getAttribute("style")||""),o=t.getAttribute("viewBox"),o?(i=o.split(" "),i.length===4&&(a=parseFloat(i[2]),a>800?(r=a*1.15,t.style.setProperty("width",r+"px","important"),t.style.setProperty("min-width",r+"px","important")):t.style.setProperty("width","100%","important"))):t.style.setProperty("width","1500px","important"))),n.classList.add("is-expanded"),n.scrollWidth<=n.clientWidth?n.style.setProperty("justify-content","center","important"):(n.style.setProperty("justify-content","flex-start","important"),n.scrollLeft=0))}),document.addEventListener("keydown",function(e){if(e.key==="Escape"){var t,n=document.querySelector(".is-expanded");n&&(n.classList.contains("mermaid")&&(t=n.querySelector("svg"),t&&(t.dataset.origWidth?t.setAttribute("width",t.dataset.origWidth):t.removeAttribute("width"),t.dataset.origStyle?t.setAttribute("style",t.dataset.origStyle):t.removeAttribute("style"))),n.classList.remove("is-expanded"))}})}document.addEventListener("DOMContentLoaded",function(){t(),n()})})()</script></head><body id=top><header class=header><nav class=header-nav><div class=logo><a href=https://yaocat55.github.io/ accesskey=h title="CatBlog (Alt + H)">CatBlog</a><div class=logo-switches><button id=theme-toggle class=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu class=menu><li><a href=https://yaocat55.github.io/posts/ title="📝 文章"><span>📝 文章</span></a></li><li><a href=https://yaocat55.github.io/archives/ title="📂 归档"><span>📂 归档</span></a></li><li><a href=https://yaocat55.github.io/search/ title="🔍 搜索"><span>🔍 搜索</span></a></li><li><a href=https://yaocat55.github.io/tags/ title="🏷️ 标签"><span>🏷️ 标签</span></a></li><li><a href=https://yaocat55.github.io/categories/ title="📁 分类"><span>📁 分类</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><nav class=breadcrumbs role=navigation aria-label=Breadcrumb><a href=https://yaocat55.github.io/>主页</a>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"><polyline points="9 18 15 12 9 6"/></svg>
+<a href=https://yaocat55.github.io/posts/>文章</a></nav><h1 class="post-title entry-hint-parent">从 Docker Compose 到 Kind</h1><div class=post-description>从零开始在 WSL 上安装 Kind，用实际项目将 Docker Compose 迁移到 Kubernetes 的完整新手教程</div><div class=post-meta><span title='2022-10-04 02:28:51 +0000 UTC'>十月 4, 2022</span>&nbsp;·&nbsp;<span>18 分钟</span>&nbsp;·&nbsp;<span>3713 字</span>&nbsp;·&nbsp;<span>yaomingye</span></div></header><details class=toc open><summary accesskey=c title="(Alt + C)"><span class=title>目录</span></summary><div class=inner><nav id=TableOfContents><ul><li><a href=#-一问题切入你已经会用-docker-compose然后呢>📌 一、问题切入：你已经会用 Docker Compose，然后呢</a><ul><li><a href=#-11-kind-解决了什么>🛠️ 1.1 Kind 解决了什么</a></li></ul></li><li><a href=#-二环境准备在-wsl-上安装-kind>🔍 二、环境准备：在 WSL 上安装 Kind</a><ul><li><a href=#-21-前置条件>🛠️ 2.1 前置条件</a></li><li><a href=#-22-安装全流程一览>🛠️ 2.2 安装全流程一览</a></li></ul></li><li><a href=#-三第一个-kind-集群>⚙️ 三、第一个 Kind 集群</a><ul><li><a href=#-31-创建单节点集群>🖥️ 3.1 创建单节点集群</a></li><li><a href=#-32-创建多节点集群模拟生产环境>🖥️ 3.2 创建多节点集群（模拟生产环境）</a></li><li><a href=#-33-kind-节点容器的真面目>📦 3.3 Kind 节点容器的真面目</a></li></ul></li><li><a href=#-四k8s-核心概念用-kind-逐个验证>📊 四、K8s 核心概念：用 Kind 逐个验证</a><ul><li><a href=#-41-pod容器组>📦 4.1 Pod（容器组）</a></li><li><a href=#-42-deployment部署>🔄 4.2 Deployment（部署）</a></li><li><a href=#-43-service服务发现--负载均衡>🌐 4.3 Service（服务发现 + 负载均衡）</a></li><li><a href=#-44-configmap--secret配置管理>🔐 4.4 ConfigMap + Secret（配置管理）</a></li><li><a href=#-45-ingresshttp-路由--域名>🚪 4.5 Ingress（HTTP 路由 + 域名）</a></li><li><a href=#-46-pvpvc持久化存储>💾 4.6 PV/PVC（持久化存储）</a></li><li><a href=#-47-健康检查livenessprobe--readinessprobe>💓 4.7 健康检查（LivenessProbe + ReadinessProbe）</a></li><li><a href=#-48-滚动更新与回滚零停机部署>🔄 4.8 滚动更新与回滚（零停机部署）</a></li><li><a href=#-49-概念对比docker-compose-vs-k8s>🛠️ 4.9 概念对比：Docker Compose vs K8s</a></li></ul></li><li><a href=#-五实战迁移docker-compose--kind>🛠️ 五、实战迁移：Docker Compose → Kind</a><ul><li><a href=#-51-第一步创建集群并映射端口>🖥️ 5.1 第一步：创建集群并映射端口</a></li><li><a href=#-52-第二步mysql有状态服务>🌐 5.2 第二步：MySQL（有状态服务）</a></li><li><a href=#-53-第三步redis>🔢 5.3 第三步：Redis</a></li><li><a href=#-54-第四步应用服务>🌐 5.4 第四步：应用服务</a></li><li><a href=#-55-第五步nginx对外流量入口>🚪 5.5 第五步：Nginx（对外流量入口）</a></li><li><a href=#-56-第六步一键部署所有资源>🔄 5.6 第六步：一键部署所有资源</a></li><li><a href=#-57-清理>📌 5.7 清理</a></li></ul></li><li><a href=#-六日常-kind-操作速查>📋 六、日常 Kind 操作速查</a></li><li><a href=#-七k8s-学习三阶段路线>🔧 七、K8s 学习三阶段路线</a><ul><li><a href=#-第一阶段kind-学-k8s-核心现在>🎓 第一阶段：Kind 学 K8s 核心（现在）</a></li><li><a href=#-第二阶段开免费试用体验云特性>☁️ 第二阶段：开免费试用，体验"云特性"</a></li><li><a href=#-第三阶段公司买单上生产>🚀 第三阶段：公司买单，上生产</a></li></ul></li><li><a href=#-八总结>📦 八、总结</a></li></ul></nav></div></details><div class="post-content md-content"><h1 id=-从-docker-compose-到-kind在-wsl-上用-kind-入门-kubernetes-全指南>☸️ 从 Docker Compose 到 Kind：在 WSL 上用 Kind 入门 Kubernetes 全指南<a hidden class=anchor aria-hidden=true href=#-从-docker-compose-到-kind在-wsl-上用-kind-入门-kubernetes-全指南>#</a></h1><h2 id=-一问题切入你已经会用-docker-compose然后呢>📌 一、问题切入：你已经会用 Docker Compose，然后呢<a hidden class=anchor aria-hidden=true href=#-一问题切入你已经会用-docker-compose然后呢>#</a></h2><p>假设你在 WSL（Windows Subsystem for Linux，Windows 内置的 Linux 子系统）上维护着一个项目， <code>docker-compose.yml</code> 里定义了 nginx、应用服务、Redis、MySQL 四个容器：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;3.8&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>services</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>nginx</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>nginx:1.25</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=s2>&#34;80:80&#34;</span><span class=p>]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=s2>&#34;./nginx.conf:/etc/nginx/nginx.conf:ro&#34;</span><span class=p>]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>app</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>build</span><span class=p>:</span><span class=w> </span><span class=l>./app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=s2>&#34;5000:5000&#34;</span><span class=p>]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>REDIS_HOST</span><span class=p>:</span><span class=w> </span><span class=l>redis</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>MYSQL_HOST</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>depends_on</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>redis, mysql]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>redis</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>redis:7-alpine</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>mysql</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>mysql:8</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>MYSQL_ROOT_PASSWORD</span><span class=p>:</span><span class=w> </span><span class=l>secret</span><span class=w>
+</span></span></span></code></pre></div><p><code>docker compose up -d</code> 一键启动。但当你需要面对以下需求时，Compose 开始显得吃力：</p><ul><li>应用服务需要根据 CPU 负载 <strong>自动扩缩容</strong> （高峰期 5 个副本，低峰 1 个）</li><li>某个副本挂了需要 <strong>自动重启 + 流量自动切走</strong></li><li>需要 <strong>滚动更新</strong> （逐个替换旧版本容器，不中断服务）</li><li>多个项目共享同一个 Redis 集群，需要 <strong>配置统一管理</strong></li></ul><p>这些问题就是 Kubernetes（简称 K8s，容器编排平台）解决的领域。但 K8s 的学习曲线出了名的陡峭——minikube 要装虚拟机、k3s 有多余的 systemd 依赖、Docker Desktop 收费。 <strong>Kind（Kubernetes in Docker）</strong> 就是最适合新手在本地入门 K8s 的工具。</p><pre class=mermaid>flowchart LR
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
+    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
+    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+
+    ROOT[本地 K8s 学习工具选型]
+
+    ROOT --> B1(Minikube)
+    B1 --> B1A["需要 VirtualBox/VM 驱动"]
+    B1 --> B1B["资源占用高 2 ~ 4GB"]
+    B1 --> B1C["功能最完整"]
+
+    ROOT --> B2(Kind)
+    B2 --> B2A["只需 Docker 即可运行"]
+    B2 --> B2B["资源占用低约1GB"]
+    B2 --> B2C["多节点集群秒级创建"]
+
+    ROOT --> B3(k3s)
+    B3 --> B3A["需要 systemd 或脚本安装"]
+    B3 --> B3B["适合边缘/ARM设备"]
+    B3 --> B3C["裁剪了部分非核心功能"]
+
+    ROOT --> B4(Docker Desktop K8s)
+    B4 --> B4A["个人免费，企业收费"]
+    B4 --> B4B["与 Docker 深度集成"]
+    B4 --> B4C["版本更新可能破坏配置"]
+
+    class ROOT root;
+    class B1,B2,B3,B4 branch;
+    class B1A,B1B,B1C,B2A,B2B,B2C,B3A,B3B,B3C,B4A,B4B,B4C leaf;
+</pre><h3 id=-11-kind-解决了什么>🛠️ 1.1 Kind 解决了什么<a hidden class=anchor aria-hidden=true href=#-11-kind-解决了什么>#</a></h3><p>Kind 的原理很简单： <strong>它把 K8s 的每个节点（control-plane / worker）都跑在 Docker 容器里。</strong> 你本机安装了 Docker，Kind 就用 Docker 容器模拟一个完整的 K8s 集群。</p><p>核心优势：</p><ul><li><strong>零额外依赖</strong> ：只要本机有 Docker，就能跑 Kind</li><li><strong>多节点</strong> ：一个命令创建 1 个 control-plane + 3 个 worker 的集群</li><li><strong>秒级创建/销毁</strong> ： <code>kind create cluster</code> 约 30 秒完成， <code>kind delete cluster</code> 瞬间清理</li><li><strong>与 WSL 深度兼容</strong> ：WSL 2 自带 Linux 内核 + Docker 支持，Kind 运行体验接近原生 Linux</li></ul><h2 id=-二环境准备在-wsl-上安装-kind>🔍 二、环境准备：在 WSL 上安装 Kind<a hidden class=anchor aria-hidden=true href=#-二环境准备在-wsl-上安装-kind>#</a></h2><h3 id=-21-前置条件>🛠️ 2.1 前置条件<a hidden class=anchor aria-hidden=true href=#-21-前置条件>#</a></h3><table><thead><tr><th>组件</th><th style=text-align:center>最低版本</th><th>作用</th></tr></thead><tbody><tr><td><strong>WSL</strong></td><td style=text-align:center>WSL 2</td><td>提供 Linux 内核，容器运行的基础</td></tr><tr><td><strong>Docker</strong></td><td style=text-align:center>24.0+</td><td>运行 Kind 创建的节点容器</td></tr><tr><td><strong>kubectl</strong></td><td style=text-align:center>1.28+</td><td>与 K8s 集群交互的命令行工具</td></tr><tr><td><strong>Kind</strong></td><td style=text-align:center>0.20+</td><td>创建和管理本地 K8s 集群</td></tr></tbody></table><p><strong>步骤一：确认 WSL 版本</strong></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>wsl --version
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：WSL 版本 2.x.x</span>
+</span></span></code></pre></div><p>如果是 WSL 1，执行升级：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>wsl --update
+</span></span><span class=line><span class=cl>wsl --set-default-version <span class=m>2</span>
+</span></span></code></pre></div><p><strong>步骤二：在 WSL 内安装 Docker</strong></p><p>Kind 依赖 Docker 运行节点容器。在 WSL 终端（Ubuntu/Debian）内执行：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1>#  卸载旧版本（如果有）</span>
+</span></span><span class=line><span class=cl>sudo apt remove docker docker-engine docker.io containerd runc
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  安装依赖</span>
+</span></span><span class=line><span class=cl>sudo apt update
+</span></span><span class=line><span class=cl>sudo apt install -y ca-certificates curl gnupg
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  添加 Docker 官方 GPG 密钥</span>
+</span></span><span class=line><span class=cl>sudo install -m <span class=m>0755</span> -d /etc/apt/keyrings
+</span></span><span class=line><span class=cl>curl -fsSL https://download.docker.com/linux/ubuntu/gpg <span class=p>|</span> sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  添加 Docker APT 源</span>
+</span></span><span class=line><span class=cl><span class=nb>echo</span> <span class=s2>&#34;deb [arch=</span><span class=k>$(</span>dpkg --print-architecture<span class=k>)</span><span class=s2> signed-by=/etc/apt/keyrings/docker.gpg] \
+</span></span></span><span class=line><span class=cl><span class=s2>  https://download.docker.com/linux/ubuntu </span><span class=k>$(</span>lsb_release -cs<span class=k>)</span><span class=s2> stable&#34;</span> <span class=p>|</span> <span class=se>\
+</span></span></span><span class=line><span class=cl>  sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  安装 Docker</span>
+</span></span><span class=line><span class=cl>sudo apt update
+</span></span><span class=line><span class=cl>sudo apt install -y docker-ce docker-ce-cli containerd.io
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  将当前用户加入 docker 组（避免每次都要 sudo）</span>
+</span></span><span class=line><span class=cl>sudo usermod -aG docker <span class=nv>$USER</span>
+</span></span></code></pre></div><p>重新打开 WSL 终端使 <code>docker</code> 组生效，验证安装：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>docker run --rm hello-world
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：Hello from Docker!</span>
+</span></span></code></pre></div><p><strong>步骤三：安装 kubectl</strong></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>curl -LO <span class=s2>&#34;https://dl.k8s.io/release/</span><span class=k>$(</span>curl -L -s https://dl.k8s.io/release/stable.txt<span class=k>)</span><span class=s2>/bin/linux/amd64/kubectl&#34;</span>
+</span></span><span class=line><span class=cl>sudo install -o root -g root -m <span class=m>0755</span> kubectl /usr/local/bin/kubectl
+</span></span><span class=line><span class=cl>rm kubectl
+</span></span><span class=line><span class=cl>kubectl version --client
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：Client Version: v1.28.x</span>
+</span></span></code></pre></div><p><strong>步骤四：安装 Kind</strong></p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=o>[</span> <span class=k>$(</span>uname -m<span class=k>)</span> <span class=o>=</span> x86_64 <span class=o>]</span> <span class=o>&amp;&amp;</span> curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.24.0/kind-linux-amd64
+</span></span><span class=line><span class=cl>chmod +x ./kind
+</span></span><span class=line><span class=cl>sudo mv ./kind /usr/local/bin/kind
+</span></span><span class=line><span class=cl>kind version
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：kind v0.24.0</span>
+</span></span></code></pre></div><h3 id=-22-安装全流程一览>🛠️ 2.2 安装全流程一览<a hidden class=anchor aria-hidden=true href=#-22-安装全流程一览>#</a></h3><pre class=mermaid>flowchart TD
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
+    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+    classDef verify fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+
+    START([开始]) --> CHECK_WSL{确认 WSL 2 就绪？}
+    CHECK_WSL -->|否| UPGRADE_WSL[升级到 WSL 2<br>wsl --update]
+    UPGRADE_WSL --> CHECK_WSL
+    CHECK_WSL -->|是| INSTALL_DOCKER[安装 Docker Engine]
+    INSTALL_DOCKER --> VERIFY_DOCKER["验证：docker run hello-world"]
+    VERIFY_DOCKER --> INSTALL_KUBECTL[安装 kubectl]
+    INSTALL_KUBECTL --> VERIFY_KUBECTL["验证：kubectl version"]
+    VERIFY_KUBECTL --> INSTALL_KIND[安装 Kind]
+    INSTALL_KIND --> VERIFY_KIND["验证：kind version"]
+    VERIFY_KIND --> DONE([环境就绪])
+
+    class START,DONE startEnd;
+    class CHECK_WSL process;
+    class UPGRADE_WSL,INSTALL_DOCKER,INSTALL_KUBECTL,INSTALL_KIND process;
+    class VERIFY_DOCKER,VERIFY_KUBECTL,VERIFY_KIND verify;
+</pre><h2 id=-三第一个-kind-集群>⚙️ 三、第一个 Kind 集群<a hidden class=anchor aria-hidden=true href=#-三第一个-kind-集群>#</a></h2><h3 id=-31-创建单节点集群>🖥️ 3.1 创建单节点集群<a hidden class=anchor aria-hidden=true href=#-31-创建单节点集群>#</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kind create cluster --name my-first-cluster
+</span></span></code></pre></div><p>Kind 默认行为：</p><ol><li>拉取 <code>kindest/node</code> 镜像（约 500MB，含 K8s 核心二进制 + containerd）</li><li>启动一个 Docker 容器作为 K8s 节点（control-plane 角色）</li><li>在容器内初始化 K8s 控制面组件（kube-apiserver / controller-manager / scheduler / etcd）</li><li>将 <code>kubectl</code> 的 kubeconfig 指向新集群</li></ol><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1>#  查看集群状态</span>
+</span></span><span class=line><span class=cl>kubectl cluster-info
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：</span>
+</span></span><span class=line><span class=cl><span class=c1>#  Kubernetes control plane is running at https://127.0.0.1:xxxxx</span>
+</span></span><span class=line><span class=cl><span class=c1>#  CoreDNS is running at https://127.0.0.1:xxxxx/api/v1/...</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>kubectl get nodes
+</span></span><span class=line><span class=cl><span class=c1>#  NAME                               STATUS   ROLES           AGE   VERSION</span>
+</span></span><span class=line><span class=cl><span class=c1>#  my-first-cluster-control-plane     Ready    control-plane   30s   v1.28.x</span>
+</span></span></code></pre></div><h3 id=-32-创建多节点集群模拟生产环境>🖥️ 3.2 创建多节点集群（模拟生产环境）<a hidden class=anchor aria-hidden=true href=#-32-创建多节点集群模拟生产环境>#</a></h3><p>单节点只能学基本概念。多节点才能体验调度（Scheduling）、污点容忍（Taint/Toleration）、跨节点服务发现等高级特性。</p><p>创建 <code>kind-config.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Cluster</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>kind.x-k8s.io/v1alpha4</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>nodes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>role</span><span class=p>:</span><span class=w> </span><span class=l>control-plane</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>role</span><span class=p>:</span><span class=w> </span><span class=l>worker</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>role</span><span class=p>:</span><span class=w> </span><span class=l>worker</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>role</span><span class=p>:</span><span class=w> </span><span class=l>worker</span><span class=w>
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kind create cluster --name multi-node --config kind-config.yaml
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  验证多节点</span>
+</span></span><span class=line><span class=cl>kubectl get nodes
+</span></span><span class=line><span class=cl><span class=c1>#  NAME                      STATUS   ROLES           AGE   VERSION</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-control-plane  Ready    control-plane   45s   v1.28.x</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-worker         Ready    &lt;none&gt;          30s   v1.28.x</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-worker2        Ready    &lt;none&gt;          28s   v1.28.x</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-worker3        Ready    &lt;none&gt;          25s   v1.28.x</span>
+</span></span></code></pre></div><h3 id=-33-kind-节点容器的真面目>📦 3.3 Kind 节点容器的真面目<a hidden class=anchor aria-hidden=true href=#-33-kind-节点容器的真面目>#</a></h3><p>Kind 的每个"节点"本质上就是一个 Docker 容器。可以切换到 <code>multi-node</code> 集群后查看：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>docker ps --format <span class=s2>&#34;table {{.Names}}\t{{.Image}}\t{{.Status}}&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：</span>
+</span></span><span class=line><span class=cl><span class=c1>#  NAMES                         IMAGE                    STATUS</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-control-plane      kindest/node:v1.28.0     Up 2 minutes</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-worker             kindest/node:v1.28.0     Up 2 minutes</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-worker2            kindest/node:v1.28.0     Up 2 minutes</span>
+</span></span><span class=line><span class=cl><span class=c1>#  multi-node-worker3            kindest/node:v1.28.0     Up 2 minutes</span>
+</span></span></code></pre></div><p><strong>这就是 Kind 区别于 minikube 的核心设计</strong> ：不引入虚拟机，直接用 Docker 容器模拟 K8s 节点。每个容器内部跑了 containerd（容器运行时）、kubelet（节点代理）、以及对应角色的 K8s 组件。</p><pre class=mermaid>flowchart TD
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef host fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
+    classDef docker fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+    classDef containers fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+    classDef apps fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+
+    subgraph HOST ["🖥️ WSL 2 / Linux 宿主机"]
+        DOCKER[🐳 Docker Daemon]
+
+        subgraph CP ["control-plane (Docker 容器)"]
+            API[kube-apiserver]
+            ETCD[etcd]
+            SCHED[kube-scheduler]
+            CM[kube-controller-manager]
+            KL1[kubelet]
+            CR1[containerd]
+        end
+
+        subgraph W1 ["worker (Docker 容器)"]
+            KL2[kubelet]
+            CR2[containerd]
+            subgraph PODS1 ["用户 Pod"]
+                APP1[nginx]
+                APP2[app :5000]
+            end
+        end
+
+        subgraph W2 ["worker2 (Docker 容器)"]
+            KL3[kubelet]
+            CR3[containerd]
+        end
+    end
+
+    DOCKER -.->|管理| CP
+    DOCKER -.->|管理| W1
+    DOCKER -.->|管理| W2
+    CR2 -.->|运行| PODS1
+
+    class HOST host;
+    class DOCKER docker;
+    class CP,W1,W2 containers;
+    class APP1,APP2 apps;
+</pre><h2 id=-四k8s-核心概念用-kind-逐个验证>📊 四、K8s 核心概念：用 Kind 逐个验证<a hidden class=anchor aria-hidden=true href=#-四k8s-核心概念用-kind-逐个验证>#</a></h2><p>K8s 有几十种资源类型，但新手只需要掌握 8 个核心概念就能完成 80% 的工作，这些概念在任何云厂商的 K8s 服务中完全通用：</p><pre class=mermaid>flowchart LR
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
+    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
+    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+
+    ROOT[K8s 核心概念分层<br>掌握这8个概念即掌握80%]
+
+    ROOT --> L1(工作负载层)
+    L1 --> L1A["Pod<br>最小调度单元"]
+    L1 --> L1B["Deployment<br>副本管理、滚动更新、回滚"]
+
+    ROOT --> L2(网络层)
+    L2 --> L2A["Service<br>固定虚拟IP + DNS + 负载均衡"]
+    L2 --> L2B["Ingress<br>HTTP路由、域名、TLS终止"]
+
+    ROOT --> L3(配置层)
+    L3 --> L3A["ConfigMap<br>非敏感配置"]
+    L3 --> L3B["Secret<br>密码、密钥等敏感信息"]
+
+    ROOT --> L4(存储层)
+    L4 --> L4A["PV/PVC<br>持久化存储、解耦申请与供给"]
+
+    ROOT --> L5(运维层)
+    L5 --> L5A["健康检查<br>livenessProbe + readinessProbe"]
+    L5 --> L5B["滚动更新/回滚<br>零停机部署"]
+
+    class ROOT root;
+    class L1,L2,L3,L4,L5 branch;
+    class L1A,L1B,L2A,L2B,L3A,L3B,L4A,L5A,L5B leaf;
+</pre><h3 id=-41-pod容器组>📦 4.1 Pod（容器组）<a hidden class=anchor aria-hidden=true href=#-41-pod容器组>#</a></h3><p>Pod 是 K8s 的最小调度单元（K8s 中最小的可部署单位）。一个 Pod 可以包含 1 个或多个共享网络和 IPC 的容器。</p><p><strong>与 Docker Compose 的类比</strong> ：Docker Compose 中每个 <code>services</code> 下的条目是一个独立容器。K8s 中 Pod 是容器的"包装"，大多数情况下一个 Pod 只跑一个容器（与应用服务一一对应）。</p><p>创建 <code>pod-nginx.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Pod</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-pod</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>nginx:1.25</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span></code></pre></div><p>应用并验证：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f pod-nginx.yaml
+</span></span><span class=line><span class=cl>kubectl get pods
+</span></span><span class=line><span class=cl><span class=c1>#  NAME        READY   STATUS    RESTARTS   AGE</span>
+</span></span><span class=line><span class=cl><span class=c1>#  nginx-pod   1/1     Running   0          10s</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>kubectl describe pod nginx-pod  <span class=c1># 查看 Pod 详细信息</span>
+</span></span><span class=line><span class=cl>kubectl logs nginx-pod          <span class=c1># 查看容器日志</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>exec</span> -it nginx-pod -- /bin/bash  <span class=c1># 进入容器</span>
+</span></span></code></pre></div><h3 id=-42-deployment部署>🔄 4.2 Deployment（部署）<a hidden class=anchor aria-hidden=true href=#-42-deployment部署>#</a></h3><p>Deployment 管理 Pod 的副本数量、声明式更新和回滚。 <strong>它是比裸 Pod 更高一层的抽象</strong> ——你不会在生产环境直接创建 Pod，而是创建 Deployment，让 Deployment 管理 Pod。</p><p>创建 <code>deployment-nginx.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-deploy</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>3</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>nginx:1.25</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span></code></pre></div><p>验证核心能力：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f deployment-nginx.yaml
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  1. 副本数管理——自动创建了 3 个 Pod</span>
+</span></span><span class=line><span class=cl>kubectl get pods -l <span class=nv>app</span><span class=o>=</span>nginx
+</span></span><span class=line><span class=cl><span class=c1>#  NAME                            READY   STATUS    RESTARTS   AGE</span>
+</span></span><span class=line><span class=cl><span class=c1>#  nginx-deploy-5d4b8c7f9-abc12   1/1     Running   0          20s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  nginx-deploy-5d4b8c7f9-def34   1/1     Running   0          20s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  nginx-deploy-5d4b8c7f9-ghi56   1/1     Running   0          20s</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  2. 自愈能力——手动删除一个 Pod，Deployment 立即重建</span>
+</span></span><span class=line><span class=cl>kubectl delete pod nginx-deploy-5d4b8c7f9-abc12
+</span></span><span class=line><span class=cl>kubectl get pods -l <span class=nv>app</span><span class=o>=</span>nginx  <span class=c1># 立即看到新 Pod 被创建</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  3. 滚动更新——更新镜像版本，逐个替换 Pod</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>set</span> image deployment/nginx-deploy <span class=nv>nginx</span><span class=o>=</span>nginx:1.26
+</span></span><span class=line><span class=cl>kubectl rollout status deployment/nginx-deploy
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  4. 回滚——更新失败了可以回退</span>
+</span></span><span class=line><span class=cl>kubectl rollout undo deployment/nginx-deploy
+</span></span></code></pre></div><h3 id=-43-service服务发现--负载均衡>🌐 4.3 Service（服务发现 + 负载均衡）<a hidden class=anchor aria-hidden=true href=#-43-service服务发现--负载均衡>#</a></h3><p>Pod 的 IP 会随着 Pod 的重建而变化（Pod 被删除再重建时，IP 会改变）。Service 为一组 Pod 提供 <strong>固定的虚拟 IP（ClusterIP）和 DNS 名称</strong> ，并自动做负载均衡。</p><p>创建 <code>service-nginx.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>targetPort</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>ClusterIP</span><span class=w>
+</span></span></span></code></pre></div><p>验证：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f service-nginx.yaml
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>kubectl get svc nginx-svc
+</span></span><span class=line><span class=cl><span class=c1>#  NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE</span>
+</span></span><span class=line><span class=cl><span class=c1>#  nginx-svc    ClusterIP   10.96.123.45    &lt;none&gt;        80/TCP    5s</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  从集群内部访问（通过临时 Pod 测试）</span>
+</span></span><span class=line><span class=cl>kubectl run <span class=nb>test</span> --rm -it --image<span class=o>=</span>busybox -- wget -qO- http://nginx-svc
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：nginx 欢迎页 HTML</span>
+</span></span></code></pre></div><p><strong>关键点</strong> ： <code>selector: app: nginx</code> 告诉 Service"把流量转发到所有带 <code>app: nginx</code> 标签的 Pod"。Service 用 Label Selector（标签选择器）关联 Pod，而不是硬编码 IP。</p><h3 id=-44-configmap--secret配置管理>🔐 4.4 ConfigMap + Secret（配置管理）<a hidden class=anchor aria-hidden=true href=#-44-configmap--secret配置管理>#</a></h3><p>Docker Compose 中，环境变量直接写在 <code>docker-compose.yml</code> 的 <code>environment</code> 字段下。在 K8s 中，配置被抽取到 ConfigMap 和 Secret 中，Pod 通过环境变量或挂载文件引用。</p><p>创建 <code>configmap-app.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>ConfigMap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>data</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>REDIS_HOST</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;redis-svc&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>MYSQL_HOST</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;mysql-svc&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>LOG_LEVEL</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;debug&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Secret</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-secret</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>Opaque</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>stringData</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>MYSQL_PASSWORD</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;secret123&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>REDIS_PASSWORD</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;&#34;</span><span class=w>
+</span></span></span></code></pre></div><p>创建引用 ConfigMap 和 Secret 的 Deployment：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-with-config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>myapp</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>myapp</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>myapp:latest</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>envFrom</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>configMapRef</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>secretRef</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-secret</span><span class=w>
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f configmap-app.yaml
+</span></span><span class=line><span class=cl>kubectl get configmap app-config
+</span></span><span class=line><span class=cl>kubectl get secret app-secret
+</span></span><span class=line><span class=cl>kubectl describe configmap app-config  <span class=c1># 查看配置内容</span>
+</span></span></code></pre></div><h3 id=-45-ingresshttp-路由--域名>🚪 4.5 Ingress（HTTP 路由 + 域名）<a hidden class=anchor aria-hidden=true href=#-45-ingresshttp-路由--域名>#</a></h3><p>Service 的 <code>ClusterIP</code> 只在集群内部可达， <code>NodePort</code> 需要占用宿主机端口（30000 ~ 32767）且不支持域名路由。 <strong>Ingress 是 K8s 原生的七层负载均衡</strong> ，提供 HTTP/HTTPS 路由、基于域名的虚拟主机、TLS 终止。</p><p>Kind 需要额外安装 Ingress 控制器。推荐 <code>ingress-nginx</code> （一个基于 Nginx 的 Ingress Controller）：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1>#  在 Kind 集群上部署 ingress-nginx（预配置 Kind 兼容的 NodePort）</span>
+</span></span><span class=line><span class=cl>kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  等待就绪</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>wait</span> --namespace ingress-nginx <span class=se>\
+</span></span></span><span class=line><span class=cl>  --for<span class=o>=</span><span class=nv>condition</span><span class=o>=</span>ready pod <span class=se>\
+</span></span></span><span class=line><span class=cl>  --selector<span class=o>=</span>app.kubernetes.io/component<span class=o>=</span>controller <span class=se>\
+</span></span></span><span class=line><span class=cl>  --timeout<span class=o>=</span>120s
+</span></span></code></pre></div><p>创建 <code>ingress-app.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>networking.k8s.io/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Ingress</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-ingress</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>annotations</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>nginx.ingress.kubernetes.io/rewrite-target</span><span class=p>:</span><span class=w> </span><span class=l>/</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ingressClassName</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>rules</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>host</span><span class=p>:</span><span class=w> </span><span class=l>app.local</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>http</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>paths</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span>- <span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>pathType</span><span class=p>:</span><span class=w> </span><span class=l>Prefix</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>backend</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>service</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>port</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                  </span><span class=nt>number</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>host</span><span class=p>:</span><span class=w> </span><span class=l>api.app.local</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>http</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>paths</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span>- <span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/api</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>pathType</span><span class=p>:</span><span class=w> </span><span class=l>Prefix</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>backend</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>service</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>port</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                  </span><span class=nt>number</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span></code></pre></div><p>验证（在 WSL 终端内测试，或配 hosts 文件）：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f ingress-app.yaml
+</span></span><span class=line><span class=cl>kubectl get ingress
+</span></span><span class=line><span class=cl><span class=c1>#  NAME          CLASS   HOSTS                    ADDRESS      PORTS</span>
+</span></span><span class=line><span class=cl><span class=c1>#  app-ingress   nginx   app.local,api.app.local  localhost    80</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  测试 Ingress 路由</span>
+</span></span><span class=line><span class=cl>curl -H <span class=s2>&#34;Host: app.local&#34;</span> http://localhost/
+</span></span><span class=line><span class=cl>curl -H <span class=s2>&#34;Host: api.app.local&#34;</span> http://localhost/api
+</span></span></code></pre></div><p><strong>Ingress 解决了 Service 无法做到的事</strong> ：同一个 80 端口，通过 <code>Host</code> 头路由到不同的后端服务或路径。生产环境中，Ingress Controller 通常对接云厂商的 LoadBalancer，自动创建公网 IP。</p><h3 id=-46-pvpvc持久化存储>💾 4.6 PV/PVC（持久化存储）<a hidden class=anchor aria-hidden=true href=#-46-pvpvc持久化存储>#</a></h3><p><strong>Pod 重启，容器内的数据就没了——这是设计如此。</strong> 要持久化数据（比如 MySQL 的数据文件），需要 PV（PersistentVolume，集群级别的存储资源）和 PVC（PersistentVolumeClaim，用户对存储的申请）。</p><pre class=mermaid>flowchart LR
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef producer fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+    classDef consumer fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold;
+    classDef bridge fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+
+    ADMIN["管理员创建 PV<br>定义：存储类型、容量、路径"] --> POOL[(存储池)]
+    POOL --> MATCH["K8s 根据容量和访问模式<br>自动匹配 PV 与 PVC"]
+    USER["开发者创建 PVC<br>声明：需要 10Gi RWO 存储"] --> MATCH
+    MATCH --> POD["Pod 引用 PVC<br>挂载到容器路径"]
+    POD --> DATA[("数据持久化<br>Pod 被删数据仍在")]
+
+    class ADMIN producer;
+    class USER consumer;
+    class MATCH bridge;
+</pre><p>在 Kind 中演示 PV/PVC。创建 <code>pv-mysql.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c>#  存储管理员：创建 PV</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>PersistentVolume</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-pv</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>capacity</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>storage</span><span class=p>:</span><span class=w> </span><span class=l>1Gi</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>accessModes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=l>ReadWriteOnce</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>persistentVolumeReclaimPolicy</span><span class=p>:</span><span class=w> </span><span class=l>Retain</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>hostPath</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/data/mysql  </span><span class=w> </span><span class=c># Kind 节点容器内的路径</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c>#  开发者：创建 PVC，声明需要 1Gi</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>PersistentVolumeClaim</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-pvc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>accessModes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=l>ReadWriteOnce</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>resources</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>requests</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>storage</span><span class=p>:</span><span class=w> </span><span class=l>1Gi</span><span class=w>
+</span></span></span></code></pre></div><p>在 Deployment 中引用 PVC（替换之前的 <code>hostPath</code> 临时方案）：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>mysql:8</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>volumeMounts</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-data</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>mountPath</span><span class=p>:</span><span class=w> </span><span class=l>/var/lib/mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-data</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>persistentVolumeClaim</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>claimName</span><span class=p>:</span><span class=w> </span><span class=l>mysql-pvc</span><span class=w>
+</span></span></span></code></pre></div><p>验证持久化：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f pv-mysql.yaml
+</span></span><span class=line><span class=cl>kubectl get pv   <span class=c1># STATUS: Bound——PVC 已自动绑定 PV</span>
+</span></span><span class=line><span class=cl>kubectl get pvc  <span class=c1># STATUS: Bound</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  验证数据不丢：写数据 → 删 Pod → 新 Pod 自动创建 → 数据还在</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>exec</span> -it mysql-xxx -- mysql -e <span class=s2>&#34;CREATE DATABASE testdb;&#34;</span>
+</span></span><span class=line><span class=cl>kubectl delete pod mysql-xxx
+</span></span><span class=line><span class=cl>kubectl get pods  <span class=c1># Deployment 自动重建 Pod</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>exec</span> -it mysql-new-xxx -- mysql -e <span class=s2>&#34;SHOW DATABASES;&#34;</span>  <span class=c1># testdb 还在</span>
+</span></span></code></pre></div><p><strong>PV/PVC 的核心设计思想</strong> ：存储的 <strong>供给</strong> （管理员创建 PV）和 <strong>消费</strong> （开发者创建 PVC）解耦。同一份 YAML 在本地 Kind 用 <code>hostPath</code> ，上了云把 PV 改成云硬盘（阿里云 NAS/云盘），PVC 和 Deployment 的 YAML 一行不用改。</p><h3 id=-47-健康检查livenessprobe--readinessprobe>💓 4.7 健康检查（LivenessProbe + ReadinessProbe）<a hidden class=anchor aria-hidden=true href=#-47-健康检查livenessprobe--readinessprobe>#</a></h3><p>K8s 的健康检查分两种探针（Probe），作用完全不同：</p><table><thead><tr><th>探针类型</th><th>作用</th><th>检查失败后的行为</th><th>典型场景</th></tr></thead><tbody><tr><td><strong>livenessProbe</strong> （存活探针）</td><td>容器是否"活着"</td><td><strong>重启容器</strong></td><td>死锁、内存泄漏、进程崩溃</td></tr><tr><td><strong>readinessProbe</strong> （就绪探针）</td><td>容器是否"准备好接收流量"</td><td><strong>从 Service 摘除</strong></td><td>启动预热、依赖服务未就绪、连接池耗尽</td></tr><tr><td><strong>startupProbe</strong> （启动探针）</td><td>容器是否"已完成启动"</td><td><strong>阻塞其他探针</strong></td><td>慢启动应用（Java 应用冷启动 30s+）</td></tr></tbody></table><p>创建 <code>deployment-with-probes.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-health</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>2</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>health-app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>health-app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>myapp:latest</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>startupProbe</span><span class=p>:</span><span class=w>           </span><span class=c># 启动探针——容器启动后等 10s 再开始检查</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>httpGet</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/healthz</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>initialDelaySeconds</span><span class=p>:</span><span class=w> </span><span class=m>10</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>failureThreshold</span><span class=p>:</span><span class=w> </span><span class=m>30</span><span class=w>  </span><span class=c># 最多等 30×10=300s</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>periodSeconds</span><span class=p>:</span><span class=w> </span><span class=m>10</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>livenessProbe</span><span class=p>:</span><span class=w>          </span><span class=c># 存活探针——/healthz 返回非 200 则重启</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>httpGet</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/healthz</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>periodSeconds</span><span class=p>:</span><span class=w> </span><span class=m>15</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>failureThreshold</span><span class=p>:</span><span class=w> </span><span class=m>3</span><span class=w>   </span><span class=c># 连续 3 次失败 = 45s 后重启</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>readinessProbe</span><span class=p>:</span><span class=w>         </span><span class=c># 就绪探针——/ready 返回非 200 则停止转发流量</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>httpGet</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/ready</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>periodSeconds</span><span class=p>:</span><span class=w> </span><span class=m>5</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>failureThreshold</span><span class=p>:</span><span class=w> </span><span class=m>2</span><span class=w>   </span><span class=c># 连续 2 次失败 = 10s 后摘除</span><span class=w>
+</span></span></span></code></pre></div><p>验证：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kubectl apply -f deployment-with-probes.yaml
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  查看探针状态</span>
+</span></span><span class=line><span class=cl>kubectl describe pod -l <span class=nv>app</span><span class=o>=</span>health-app <span class=p>|</span> grep -A5 <span class=s2>&#34;Liveness\|Readiness\|Startup&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  模拟故障：让 /healthz 返回 500</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>exec</span> -it app-health-xxx -- curl -X POST http://localhost:5000/simulate/crash
+</span></span><span class=line><span class=cl><span class=c1>#  观察 Pod 被重启</span>
+</span></span><span class=line><span class=cl>kubectl get pods -w  <span class=c1># RESTARTS 列从 0 变成 1</span>
+</span></span></code></pre></div><p><strong>Docker Compose 的 <code>healthcheck</code> 只检查存活</strong> 。K8s 多出来的 <code>readinessProbe</code> 是滚动更新的关键——只有当新 Pod readiness 就绪后，旧 Pod 才会被终止，确保用户请求不中断。</p><h3 id=-48-滚动更新与回滚零停机部署>🔄 4.8 滚动更新与回滚（零停机部署）<a hidden class=anchor aria-hidden=true href=#-48-滚动更新与回滚零停机部署>#</a></h3><p>滚动更新（Rolling Update）是 K8s 最核心的生产特性之一：更新镜像版本时， <strong>逐个替换 Pod，保持指定数量的 Pod 始终可用</strong> 。</p><pre class=mermaid>sequenceDiagram
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    participant U as 用户
+    participant D as Deployment
+    participant O as 旧ReplicaSet
+    participant N as 新ReplicaSet
+    participant S as Service
+
+    U->>D: kubectl set image\nnginx=nginx:1.26
+    D->>N: 创建新 ReplicaSet
+    N->>N: 启动 1 个新 Pod
+    Note over N: 等待 readinessProbe 通过
+    N-->>S: 新 Pod 就绪，注册到 Service
+    D->>O: 缩容旧 ReplicaSet −1 个 Pod
+    Note over O: 旧 Pod 收到 SIGTERM<br>优雅退出
+    O-->>S: 旧 Pod 从 Service 摘除
+
+    N->>N: 继续启动第 2 个新 Pod
+    Note over N: 等待 readinessProbe 通过
+    D->>O: 缩容旧 ReplicaSet −1 个 Pod
+
+    Note over D: 逐个替换，直到全部完成
+</pre><p>滚动更新策略在 Deployment 的 <code>spec.strategy</code> 中配置：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>3</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>strategy</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>RollingUpdate</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>rollingUpdate</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>maxSurge</span><span class=p>:</span><span class=w> </span><span class=m>1</span><span class=w>        </span><span class=c># 更新期间最多额外创建 1 个 Pod（峰值 4 个）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>maxUnavailable</span><span class=p>:</span><span class=w> </span><span class=m>0</span><span class=w>  </span><span class=c># 更新期间至少保持 3 个 Pod 可用（零中断）</span><span class=w>
+</span></span></span></code></pre></div><p>实操演示：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1>#  部署 nginx:1.25 的 3 个副本</span>
+</span></span><span class=line><span class=cl>kubectl create deployment nginx-rollout --image<span class=o>=</span>nginx:1.25 --replicas<span class=o>=</span><span class=m>3</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  触发滚动更新（另一个终端 watch Pod 状态）</span>
+</span></span><span class=line><span class=cl>kubectl get pods -w <span class=p>&amp;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  更新镜像</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>set</span> image deployment/nginx-rollout <span class=nv>nginx</span><span class=o>=</span>nginx:1.26
+</span></span><span class=line><span class=cl>kubectl rollout status deployment/nginx-rollout
+</span></span><span class=line><span class=cl><span class=c1>#  预期输出：deployment &#34;nginx-rollout&#34; successfully rolled out</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  查看更新历史</span>
+</span></span><span class=line><span class=cl>kubectl rollout <span class=nb>history</span> deployment/nginx-rollout
+</span></span><span class=line><span class=cl><span class=c1>#  REVISION  CHANGE-CAUSE</span>
+</span></span><span class=line><span class=cl><span class=c1>#  1         &lt;none&gt;</span>
+</span></span><span class=line><span class=cl><span class=c1>#  2         &lt;none&gt;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  回滚到上一个版本</span>
+</span></span><span class=line><span class=cl>kubectl rollout undo deployment/nginx-rollout
+</span></span><span class=line><span class=cl>kubectl rollout status deployment/nginx-rollout
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  回滚到指定版本</span>
+</span></span><span class=line><span class=cl>kubectl rollout undo deployment/nginx-rollout --to-revision<span class=o>=</span><span class=m>1</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  暂停/恢复——灰度发布的基础</span>
+</span></span><span class=line><span class=cl>kubectl rollout pause deployment/nginx-rollout   <span class=c1># 暂停更新</span>
+</span></span><span class=line><span class=cl>kubectl <span class=nb>set</span> image deployment/nginx-rollout <span class=nv>nginx</span><span class=o>=</span>nginx:1.27
+</span></span><span class=line><span class=cl>kubectl rollout resume deployment/nginx-rollout  <span class=c1># 恢复，一次性应用变更</span>
+</span></span></code></pre></div><p><strong>滚动更新 + readlinessProbe 的组合</strong> 是零停机部署的完整方案：新 Pod 必须通过就绪检查才接收流量，旧 Pod 在流量切走后才被终止。</p><pre class=mermaid>flowchart TD
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
+    classDef ok fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+    classDef fail fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+
+    START([触发滚动更新]) --> NEW_POD["创建新版本 Pod"]
+    NEW_POD --> PROBE{"readinessProbe\n连续通过？"}
+    PROBE -->|否| RETRY["继续等待\n最多 failureThreshold 次"]
+    RETRY --> PROBE
+    PROBE -->|是| ADD_SVC["新 Pod 注册到 Service\n开始接收生产流量"]
+    ADD_SVC --> DRAIN["旧 Pod 从 Service 摘除\n等待已有连接处理完"]
+    DRAIN --> TERM["发送 SIGTERM 终止旧 Pod"]
+    TERM --> NEXT{"所有副本\n更新完毕？"}
+    NEXT -->|否| NEW_POD
+    NEXT -->|是| DONE([滚动更新完成])
+
+    class START,DONE startEnd;
+    class PROBE,NEXT ok;
+    class RETRY fail;
+    class NEW_POD,ADD_SVC,DRAIN,TERM process;
+</pre><h3 id=-49-概念对比docker-compose-vs-k8s>🛠️ 4.9 概念对比：Docker Compose vs K8s<a hidden class=anchor aria-hidden=true href=#-49-概念对比docker-compose-vs-k8s>#</a></h3><table><thead><tr><th>概念</th><th>Docker Compose</th><th>Kubernetes</th><th>说明</th></tr></thead><tbody><tr><td>容器单元</td><td><code>services</code> 下的每个条目</td><td>Pod（可含多个容器）</td><td>K8s 多一层抽象</td></tr><tr><td>副本管理</td><td><code>deploy: replicas: 3</code> （Compose v3）</td><td>Deployment <code>replicas: 3</code></td><td>K8s 功能更完善（HPA 自动扩缩）</td></tr><tr><td>服务发现</td><td>通过 <code>service-name</code> 自动 DNS</td><td>Service + CoreDNS</td><td>两者类似</td></tr><tr><td>配置管理</td><td>环境变量写在 compose 文件里</td><td>ConfigMap / Secret</td><td>K8s 配置与工作负载分离</td></tr><tr><td>网络</td><td>默认 bridge 网络</td><td>CNI 插件（Calico/Flannel）</td><td>K8s 网络模型更灵活</td></tr><tr><td>存储</td><td>命名卷（named volume）</td><td>PersistentVolume / PersistentVolumeClaim</td><td>K8s 抽象层级更多</td></tr><tr><td>健康检查</td><td><code>healthcheck</code></td><td>livenessProbe / readinessProbe</td><td>K8s 区分存活和就绪探针</td></tr><tr><td>滚动更新</td><td><code>docker compose up -d --no-deps</code></td><td>Deployment 原生滚动更新</td><td>K8s 更自动化</td></tr></tbody></table><h2 id=-五实战迁移docker-compose--kind>🛠️ 五、实战迁移：Docker Compose → Kind<a hidden class=anchor aria-hidden=true href=#-五实战迁移docker-compose--kind>#</a></h2><p>这是本篇的核心环节：把开篇那个 <code>docker-compose.yml</code> （nginx + app + redis + mysql）完整迁移到 Kind 集群中。</p><pre class=mermaid>flowchart TD
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
+    classDef compose fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold;
+    classDef k8s fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+
+    subgraph COMPOSE ["Docker Compose 原项目"]
+        C1["nginx<br>ports: 80:80<br>volumes: ./nginx.conf"]
+        C2["app<br>build: ./app<br>ports: 5000:5000<br>env: REDIS_HOST"]
+        C3["redis<br>image: redis:7-alpine"]
+        C4["mysql<br>image: mysql:8<br>env: MYSQL_ROOT_PASSWORD"]
+    end
+
+    subgraph K8S ["Kubernetes 迁移后"]
+        K1["nginx Deployment<br>+ nginx Service (NodePort: 30080)<br>+ nginx ConfigMap"]
+        K2["app Deployment (replicas: 3)<br>+ app Service (ClusterIP)"]
+        K3["redis Deployment<br>+ redis Service (ClusterIP)"]
+        K4["mysql StatefulSet<br>+ mysql Service (ClusterIP)<br>+ mysql Secret"]
+    end
+
+    C1 -->|映射为| K1
+    C2 -->|映射为| K2
+    C3 -->|映射为| K3
+    C4 -->|映射为| K4
+
+    class C1,C2,C3,C4 compose;
+    class K1,K2,K3,K4 k8s;
+</pre><h3 id=-51-第一步创建集群并映射端口>🖥️ 5.1 第一步：创建集群并映射端口<a hidden class=anchor aria-hidden=true href=#-51-第一步创建集群并映射端口>#</a></h3><p>Kind 需要在创建时声明宿主机端口映射，这样后续才能从 Windows 浏览器访问 K8s 内的 nginx。</p><p>创建 <code>kind-migration.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Cluster</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>kind.x-k8s.io/v1alpha4</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>nodes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>role</span><span class=p>:</span><span class=w> </span><span class=l>control-plane</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>extraPortMappings</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>30080</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>hostPort</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>protocol</span><span class=p>:</span><span class=w> </span><span class=l>TCP</span><span class=w>
+</span></span></span></code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kind create cluster --name migration --config kind-migration.yaml
+</span></span><span class=line><span class=cl>kubectl get nodes
+</span></span></code></pre></div><h3 id=-52-第二步mysql有状态服务>🌐 5.2 第二步：MySQL（有状态服务）<a hidden class=anchor aria-hidden=true href=#-52-第二步mysql有状态服务>#</a></h3><p>数据库有状态——挂掉重启后必须保留数据。K8s 中 <code>StatefulSet</code> 比 <code>Deployment</code> 更适合有状态服务（提供稳定的网络标识和持久化存储）。这里为简化先使用 <code>Deployment</code> ，仅用 <code>hostPath</code> 临时演示。</p><p>创建 <code>mysql.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Secret</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-secret</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>Opaque</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>stringData</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>root-password</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;secret123&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>3306</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>targetPort</span><span class=p>:</span><span class=w> </span><span class=m>3306</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>mysql:8</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>env</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>MYSQL_ROOT_PASSWORD</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>valueFrom</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>secretKeyRef</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-secret</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                  </span><span class=nt>key</span><span class=p>:</span><span class=w> </span><span class=l>root-password</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>3306</span><span class=w>
+</span></span></span></code></pre></div><h3 id=-53-第三步redis>🔢 5.3 第三步：Redis<a hidden class=anchor aria-hidden=true href=#-53-第三步redis>#</a></h3><p>创建 <code>redis.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>redis-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>redis</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>6379</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>targetPort</span><span class=p>:</span><span class=w> </span><span class=m>6379</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>redis</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>redis</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>redis</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>redis</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>redis:7-alpine</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>6379</span><span class=w>
+</span></span></span></code></pre></div><h3 id=-54-第四步应用服务>🌐 5.4 第四步：应用服务<a hidden class=anchor aria-hidden=true href=#-54-第四步应用服务>#</a></h3><p>创建 <code>app.yaml</code> （核心——这里演示 ConfigMap 如何替代 Docker Compose 的 <code>environment</code> ）：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>ConfigMap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>data</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>REDIS_HOST</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;redis-svc&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>MYSQL_HOST</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;mysql-svc&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>myapp</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>targetPort</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>3</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>myapp</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>myapp</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>myapp:latest</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>5000</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>envFrom</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>configMapRef</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>app-config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>env</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>MYSQL_PASSWORD</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>valueFrom</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nt>secretKeyRef</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>mysql-secret</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                  </span><span class=nt>key</span><span class=p>:</span><span class=w> </span><span class=l>root-password</span><span class=w>
+</span></span></span></code></pre></div><p><strong>关键变化对照</strong> ：Docker Compose 中的 <code>environment: REDIS_HOST: redis</code> 变成了 ConfigMap 中的 <code>REDIS_HOST: "redis-svc"</code> 。 <code>redis</code> （Compose service name）变成 <code>redis-svc</code> （K8s Service 名称作为 DNS 名），这是迁移的核心思路—— <strong>把 Docker Compose 的服务名替换为 K8s Service 的 DNS 名</strong> 。</p><h3 id=-55-第五步nginx对外流量入口>🚪 5.5 第五步：Nginx（对外流量入口）<a hidden class=anchor aria-hidden=true href=#-55-第五步nginx对外流量入口>#</a></h3><p>K8s 中 Service 的 <code>type: NodePort</code> 将 Service 端口映射到节点宿主机的某个端口（30000 ~ 32767）。配合 Kind 的 <code>extraPortMappings</code> （hostPort 80 → containerPort 30080），实现 <code>localhost:80 → nginx Service → nginx Pod</code> 的链路。</p><p>创建 <code>nginx-k8s.yaml</code> ：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>ConfigMap</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>data</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>nginx.conf</span><span class=p>:</span><span class=w> </span><span class=p>|</span><span class=sd>
+</span></span></span><span class=line><span class=cl><span class=sd>    events { worker_connections 1024; }
+</span></span></span><span class=line><span class=cl><span class=sd>    http {
+</span></span></span><span class=line><span class=cl><span class=sd>        upstream app_backend {
+</span></span></span><span class=line><span class=cl><span class=sd>            server app-svc:5000;
+</span></span></span><span class=line><span class=cl><span class=sd>        }
+</span></span></span><span class=line><span class=cl><span class=sd>        server {
+</span></span></span><span class=line><span class=cl><span class=sd>            listen 80;
+</span></span></span><span class=line><span class=cl><span class=sd>            location / {
+</span></span></span><span class=line><span class=cl><span class=sd>                proxy_pass http://app_backend;
+</span></span></span><span class=line><span class=cl><span class=sd>            }
+</span></span></span><span class=line><span class=cl><span class=sd>        }
+</span></span></span><span class=line><span class=cl><span class=sd>    }</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Service</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-svc</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>NodePort</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span>- <span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>targetPort</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>nodePort</span><span class=p>:</span><span class=w> </span><span class=m>30080</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nn>---</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=l>apps/v1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class=l>Deployment</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>replicas</span><span class=p>:</span><span class=w> </span><span class=m>1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>selector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>matchLabels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>template</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metadata</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>labels</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>app</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>spec</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>containers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>nginx:1.25</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>containerPort</span><span class=p>:</span><span class=w> </span><span class=m>80</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>volumeMounts</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-config-vol</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>mountPath</span><span class=p>:</span><span class=w> </span><span class=l>/etc/nginx/nginx.conf</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>              </span><span class=nt>subPath</span><span class=p>:</span><span class=w> </span><span class=l>nginx.conf</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-config-vol</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>          </span><span class=nt>configMap</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>nginx-config</span><span class=w>
+</span></span></span></code></pre></div><p><strong>Compose 到 K8s 的关键映射</strong> ：</p><table><thead><tr><th>Compose 写法</th><th>K8s 对应</th><th>说明</th></tr></thead><tbody><tr><td><code>volumes: ./nginx.conf:/etc/nginx/nginx.conf</code></td><td>ConfigMap + Volume 挂载</td><td>配置文件不再是宿主机文件，而是集群内的 ConfigMap 资源</td></tr><tr><td><code>upstream app_backend { server app:5000; }</code></td><td><code>upstream app_backend { server app-svc:5000; }</code></td><td>服务名从 Compose 服务名改为 K8s Service DNS 名</td></tr><tr><td><code>ports: "80:80"</code></td><td>Service NodePort 30080 + Kind extraPortMappings</td><td>Compose 直接映射宿主机端口，K8s 通过 Service+NodePort 再映射</td></tr></tbody></table><h3 id=-56-第六步一键部署所有资源>🔄 5.6 第六步：一键部署所有资源<a hidden class=anchor aria-hidden=true href=#-56-第六步一键部署所有资源>#</a></h3><p>所有 YAML 文件放在同一目录下：</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>ls *.yaml
+</span></span><span class=line><span class=cl><span class=c1>#  app.yaml  mysql.yaml  nginx-k8s.yaml  redis.yaml</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>kubectl apply -f .
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>#  验证所有资源</span>
+</span></span><span class=line><span class=cl>kubectl get all
+</span></span><span class=line><span class=cl><span class=c1>#  NAME                         READY   STATUS    RESTARTS   AGE</span>
+</span></span><span class=line><span class=cl><span class=c1>#  pod/app-5d4b8c7f9-abc12      1/1     Running   0          30s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  pod/app-5d4b8c7f9-def34      1/1     Running   0          30s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  pod/app-5d4b8c7f9-ghi56      1/1     Running   0          30s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  pod/mysql-7c8d9f6-xyz78      1/1     Running   0          25s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  pod/nginx-8b9c6d5-asd45      1/1     Running   0          20s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  pod/redis-9d8c7b6-pqr90      1/1     Running   0          28s</span>
+</span></span><span class=line><span class=cl><span class=c1>#</span>
+</span></span><span class=line><span class=cl><span class=c1>#  NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)</span>
+</span></span><span class=line><span class=cl><span class=c1>#  service/app-svc      ClusterIP   10.96.100.1     &lt;none&gt;        5000/TCP</span>
+</span></span><span class=line><span class=cl><span class=c1>#  service/mysql-svc    ClusterIP   10.96.100.2     &lt;none&gt;        3306/TCP</span>
+</span></span><span class=line><span class=cl><span class=c1>#  service/nginx-svc    NodePort    10.96.100.3     &lt;none&gt;        80:30080/TCP</span>
+</span></span><span class=line><span class=cl><span class=c1>#  service/redis-svc    ClusterIP   10.96.100.4     &lt;none&gt;        6379/TCP</span>
+</span></span><span class=line><span class=cl><span class=c1>#</span>
+</span></span><span class=line><span class=cl><span class=c1>#  NAME                     READY   UP-TO-DATE   AVAILABLE   AGE</span>
+</span></span><span class=line><span class=cl><span class=c1>#  deployment.apps/app      3/3     3            3           30s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  deployment.apps/mysql    1/1     1            1           25s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  deployment.apps/nginx    1/1     1            1           20s</span>
+</span></span><span class=line><span class=cl><span class=c1>#  deployment.apps/redis    1/1     1            1           28s</span>
+</span></span></code></pre></div><p>在浏览器访问 <code>http://localhost</code> ，流量路径为：</p><pre tabindex=0><code>浏览器 → WSL localhost:80 → Kind 容器 30080 → nginx Service NodePort → nginx Pod → app Service ClusterIP → app Pod (其中一个副本)
+</code></pre><pre class=mermaid>sequenceDiagram
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    participant B as 浏览器
+    participant H as WSL宿主机:80
+    participant K as Kind容器:30080
+    participant NS as nginx Service
+    participant NP as nginx Pod
+    participant AS as app Service
+    participant AP as app Pod
+
+    B->>H: GET http://localhost/
+    H->>K: extraPortMappings<br>hostPort:80 → containerPort:30080
+    K->>NS: NodePort 30080 转发
+    NS->>NP: 负载均衡到 nginx Pod
+    NP->>AS: proxy_pass http://app-svc:5000
+    AS->>AP: 负载均衡到 app Pod(3副本之一)
+    AP-->>NP: HTTP 200 响应
+    NP-->>NS: 返回
+    NS-->>K: 返回
+    K-->>H: 返回
+    H-->>B: 返回
+</pre><h3 id=-57-清理>📌 5.7 清理<a hidden class=anchor aria-hidden=true href=#-57-清理>#</a></h3><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>kind delete cluster --name migration
+</span></span><span class=line><span class=cl><span class=c1>#  所有 Docker 节点容器被删除，磁盘空间立即释放</span>
+</span></span></code></pre></div><h2 id=-六日常-kind-操作速查>📋 六、日常 Kind 操作速查<a hidden class=anchor aria-hidden=true href=#-六日常-kind-操作速查>#</a></h2><table><thead><tr><th>操作</th><th>命令</th><th>说明</th></tr></thead><tbody><tr><td>创建集群</td><td><code>kind create cluster --name xxx</code></td><td>默认单节点</td></tr><tr><td>创建多节点</td><td><code>kind create cluster --config kind.yaml</code></td><td>通过配置文件定义节点拓扑</td></tr><tr><td>查看集群列表</td><td><code>kind get clusters</code></td><td>显示所有集群</td></tr><tr><td>切换 kubectl 上下文</td><td><code>kubectl cluster-info --context kind-xxx</code></td><td>Kind 自动注册 kubeconfig</td></tr><tr><td>加载本地镜像</td><td><code>kind load docker-image myapp:latest --name xxx</code></td><td>将本机构建的镜像加载到 Kind 节点</td></tr><tr><td>删除集群</td><td><code>kind delete cluster --name xxx</code></td><td>删除集群和所有节点容器</td></tr><tr><td>查看节点容器</td><td><code>docker ps --filter "name=xxx"</code></td><td>底层还是 Docker</td></tr></tbody></table><h2 id=-七k8s-学习三阶段路线>🔧 七、K8s 学习三阶段路线<a hidden class=anchor aria-hidden=true href=#-七k8s-学习三阶段路线>#</a></h2><p>K8s 的学习常被过度复杂化——很多人一上来就买云服务、配 Terraform、研究 Service Mesh，结果基础没打牢，反而被云厂商的各种概念绕晕。以下三阶段路线能让每一步都有明确的边界。</p><pre class=mermaid>flowchart TD
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef phase1 fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold;
+    classDef phase2 fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#0D47A1,font-weight:bold;
+    classDef phase3 fill:#FFE082,stroke:#F9A825,stroke-width:2px,color:#5D4037,font-weight:bold;
+    classDef detail fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px,color:#212121;
+
+    subgraph P1 ["🔵 第一阶段：Kind 学 K8s 核心（本地、免费、零成本）"]
+        P1A["8 大核心概念<br>Pod/Deployment/Service/Ingress<br>ConfigMap/Secret/PV·PVC<br>健康检查/滚动更新·回滚"] --> P1B["Docker Compose 迁移实战"]
+        P1B --> P1C["产出：能独立将 Compose 项目<br>迁移到 K8s 并运行在生产级配置上"]
+    end
+
+    subgraph P2 ["🟢 第二阶段：云试用（阿里云 ACK 免费 1 个月）"]
+        P2A["体验云特性<br>托管日志/云监控/负载均衡<br>自动伸缩/云盘持久化"] --> P2B["对比 Kind 的差异<br>哪些是 K8s 原生<br>哪些是云厂商封装"]
+        P2B --> P2C["产出：理解云 K8s 只是<br>K8s 核心 + 云基础设施的一层封装"]
+    end
+
+    subgraph P3 ["🟡 第三阶段：公司生产环境"]
+        P3A["已有理论基础 + 云体验"] --> P3B["直接上手干活<br>CI·CD 流水线/Helm Chart<br>监控告警/安全策略"]
+        P3C["到这时候，你已经不需要<br>从零学 K8s 了——只需要<br>学公司特定的工具链"]
+    end
+
+    P1 -.->|掌握 80%| P2
+    P2 -.->|1 ~ 2天看清云本质| P3
+
+    class P1A,P1B,P1C phase1;
+    class P2A,P2B,P2C phase2;
+    class P3A,P3B,P3C phase3;
+</pre><h3 id=-第一阶段kind-学-k8s-核心现在>🎓 第一阶段：Kind 学 K8s 核心（现在）<a hidden class=anchor aria-hidden=true href=#-第一阶段kind-学-k8s-核心现在>#</a></h3><p><strong>目标</strong> ：用 Kind 把 8 大核心概念（Pod / Deployment / Service / Ingress / ConfigMap / Secret / PV·PVC / 健康检查与滚动更新）全部手动实践一遍，把 Docker Compose 项目完整迁移到 K8s 上。</p><p><strong>为什么用 Kind 而不是直接上云</strong> ：</p><table><thead><tr><th>对比维度</th><th>Kind 本地</th><th>直接买云 K8s</th></tr></thead><tbody><tr><td>成本</td><td>零</td><td>阿里云 ACK 最低约 300 元/月起</td></tr><tr><td>创建速度</td><td>30 秒</td><td>10 ~ 15 分钟（等云资源就绪）</td></tr><tr><td>犯错成本</td><td>删掉重建，零损失</td><td>配错安全组可能导致公网暴露</td></tr><tr><td>学习聚焦</td><td>纯 K8s 概念，没有云概念噪音</td><td>要同时学 K8s + SLB + NAS + 日志服务</td></tr><tr><td>网络限制</td><td>仅本地</td><td>需要公网/VPC 配置</td></tr></tbody></table><p><strong>Kind 不是用来模拟"云环境"的，而是用来模拟"K8s 核心"的。</strong> 学 K8s 核心，用 Kind 是最快、最省钱的方式。</p><p>当你把 Deployment 的滚动更新、Ingress 的域名路由、PV/PVC 的存储解耦、健康检查的两种探针全部在 Kind 上亲手跑过一遍后， <strong>这 80% 的知识在任何云厂商的 K8s 服务中完全通用</strong> 。</p><h3 id=-第二阶段开免费试用体验云特性>☁️ 第二阶段：开免费试用，体验"云特性"<a hidden class=anchor aria-hidden=true href=#-第二阶段开免费试用体验云特性>#</a></h3><p><strong>目标</strong> ：用一个云 K8s 免费试用账号（如阿里云 ACK 新用户 1 个月免费），体验 K8s 核心之外的"云层"。</p><p><strong>要体验的内容</strong> ：</p><table><thead><tr><th>云特性</th><th style=text-align:center>Kind 能做到吗？</th><th>云上如何体验</th></tr></thead><tbody><tr><td><strong>托管控制面</strong></td><td style=text-align:center>否（Kind 的控制面也在容器里）</td><td>ACK 免费试用，控制面由阿里云维护，你只看到 kubeconfig</td></tr><tr><td><strong>云负载均衡（SLB）</strong></td><td style=text-align:center>否（Kind 用 NodePort）</td><td>创建 <code>type: LoadBalancer</code> 的 Service，自动分配公网 IP</td></tr><tr><td><strong>云盘持久化</strong></td><td style=text-align:center>可以（hostPath 模拟）</td><td>PV 的 <code>storageClassName</code> 改为 <code>alicloud-disk-ssd</code> ，自动创建云盘</td></tr><tr><td><strong>托管日志（SLS）</strong></td><td style=text-align:center>否</td><td>在 ACK 控制台一键开启，所有容器 stdout 自动投递到日志服务</td></tr><tr><td><strong>云监控</strong></td><td style=text-align:center>否</td><td>ACK 自带节点/Pod 级别的 CPU/内存/网络监控面板</td></tr><tr><td><strong>弹性伸缩（HPA + CA）</strong></td><td style=text-align:center>HPA 可练（metrics-server），CA 不行</td><td>ACK 配置 HPA 策略 + 节点自动伸缩，压测观察自动扩容</td></tr></tbody></table><p>第二阶段通常 <strong>1 ~ 2 天</strong> 就能摸清楚。因为核心逻辑（Deployment 怎么扩缩、Service 怎么负载均衡、Ingress 怎么路由）你已经在第一阶段用 Kind 跑通了。云上只是把 <code>hostPath</code> 换成云盘、把 <code>NodePort</code> 换成 LoadBalancer、把 <code>kubectl logs</code> 换成云日志控制台。</p><p><strong>第二阶段的关键认知</strong> ：</p><pre class=mermaid>flowchart LR
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef core fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold;
+    classDef cloud fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+
+    K8S[K8s 核心概念<br>Pod/Deployment/Service<br>Ingress/PV·PVC/探针<br>你在 Kind 上已掌握] --> C1[阿里云 ACK]
+    K8S --> C2[腾讯云 TKE]
+    K8S --> C3[Google GKE]
+    K8S --> C4[AWS EKS]
+
+    C1 -.->|云厂商封装层| CA["• 托管控制面<br>• SLB 负载均衡<br>• 云盘/对象存储<br>• 日志/监控服务"]
+    C2 -.->|云厂商封装层| CB["同上<br>名称不同，本质一样"]
+    C3 -.->|云厂商封装层| CC["同上"]
+    C4 -.->|云厂商封装层| CD["同上"]
+
+    class K8S core;
+    class C1,C2,C3,C4 cloud;
+</pre><p><strong>云 K8s 服务 = K8s 核心 + 云基础设施封装</strong> 。你把核心学扎实了，切换云厂商只是换个 YAML 注解、换个 StorageClass 名字的问题。</p><h3 id=-第三阶段公司买单上生产>🚀 第三阶段：公司买单，上生产<a hidden class=anchor aria-hidden=true href=#-第三阶段公司买单上生产>#</a></h3><p>到这一步，你已经有了 Kind 打下的理论基础和云试用的实操经验。入职后面对公司的 K8s 生产环境，你的状态是：</p><ul><li><strong>不用从零学 K8s</strong> ，因为你已经在 Kind 上把所有核心概念跑过一遍</li><li><strong>不用从头学云</strong> ，因为你已经在免费试用中见过了云负载均衡、云盘、托管日志</li><li><strong>只需要学公司特定的工具链</strong> ：Helm Chart 怎么写、CI/CD 流水线怎么配、Prometheus 告警规则怎么定义、安全策略（PodSecurityPolicy/NetworkPolicy）怎么设置</li></ul><p>这些工具链具体到每家公司都不一样——但 <strong>K8s 核心 API 不会变</strong> 。 <code>kubectl get pods</code> 、 <code>kubectl describe deployment</code> 、 <code>kubectl logs</code> 在任何环境（Kind / ACK / GKE / EKS）下的输出含义完全一致。</p><h2 id=-八总结>📦 八、总结<a hidden class=anchor aria-hidden=true href=#-八总结>#</a></h2><pre class=mermaid>flowchart LR
+    %% ==========================================
+    %% 样式定义
+    %% ==========================================
+    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
+    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
+    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+
+    ROOT[Kind 学习 K8s 总结]
+
+    ROOT --> B1(Kind 的定位)
+    B1 --> B1A["不是模拟云环境"]
+    B1 --> B1B["是模拟 K8s 核心"]
+
+    ROOT --> B2(8 大核心概念)
+    B2 --> B2A["Pod/Deployment/Service"]
+    B2 --> B2B["Ingress/ConfigMap/Secret"]
+    B2 --> B2C["PV·PVC/健康检查·滚动更新"]
+
+    ROOT --> B3(三阶段路线)
+    B3 --> B3A["① Kind 打基础（现在）"]
+    B3 --> B3B["② 云试用 1 个月（进阶）"]
+    B3 --> B3C["③ 公司生产（工作后）"]
+
+    class ROOT root;
+    class B1,B2,B3 branch;
+    class B1A,B1B,B2A,B2B,B2C,B3A,B3B,B3C leaf;
+</pre><p><strong>三个核心理念</strong> ：</p><ol><li><strong>Kind 不是用来模拟"云环境"的，而是用来模拟"K8s 核心"的</strong> 。学 K8s 核心，用 Kind 是最快、最省钱、最正确的方式</li><li><strong>学"云服务"，用云厂商的免费试用</strong> 。当你在 Kind 上把 Deployment、Service、Ingress、PV/PVC 玩得滚瓜烂熟，再开一个免费试用的云 K8s 集群，你会发现云上只是多了一层基础设施封装——1 ~ 2 天就搞定了</li><li><strong>K8s 核心概念在任何云上完全通用</strong> 。 <code>kubectl</code> 命令的输出含义、YAML 的 <code>apiVersion</code> 和 <code>kind</code> 字段、Deployment 的滚动更新策略——这些在 Kind、ACK、GKE、EKS 上完全一致。把核心打扎实，切换云厂商只是换个注解、换个 StorageClass 名字的问题</li></ol></div><script type=module>
+    
+    var theme = localStorage.getItem("pref-theme") === "dark" ? "dark" : "default";
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: theme === "dark" ? "dark" : "base"
+    });
+  </script><footer class=post-footer><ul class=post-tags><li><a href=https://yaocat55.github.io/tags/%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/>容器技术</a></li><li><a href=https://yaocat55.github.io/tags/%E5%AE%9E%E8%B7%B5%E6%95%99%E7%A8%8B/>实践教程</a></li><li><a href=https://yaocat55.github.io/tags/kubernetes/>Kubernetes</a></li></ul><nav class=paginav><a class=prev href=https://yaocat55.github.io/posts/iot/coapprotocol/><span class=title>« 上一页</span>
+<span>CoAP 受限应用协议</span>
+</a><a class=next href=https://yaocat55.github.io/posts/architecture/monolithtomicroservices/><span class=title>下一页 »</span>
+<span>从单体到微服务</span></a></nav></footer></article></main><footer class=footer><span>© 2022 CatBlog</span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top id=top-link class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey=g><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg></a><style>body .waifu{left:auto!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important}body .waifu-tips{bottom:80px!important;right:20px!important;left:auto!important}</style><script>(function(){if(window._live2dModuleInitialized){console.log("看板娘模块已初始化，跳过");return}if(window._live2dModuleInitialized=!0,typeof window._live2dResourcesLoaded=="undefined"&&(window._live2dResourcesLoaded=!1,window._live2dModelRendered=!1),window._live2dResourcesLoaded){console.log("看板娘资源已加载，跳过");return}const n="https://cdn.jsdelivr.net/gh/letere-gzj/live2d-widget-v3@main",o="https://cdn.jsdelivr.net/gh/yaocat55/Resources@v1.0.7/",e={path:{homePath:"/",modelPath:o,cssPath:n+"/waifu.css",tipsJsonPath:"/waifu-tips.json",tipsJsPath:"/libs/waifu-tips.js",live2dCorePath:n+"/Core/live2dcubismcore.js",live2dSdkPath:n+"/live2d-sdk.js"},tools:["hitokoto","asteroids","express","switch-model","switch-texture","photo","info","quit"],drag:{enable:!0,direction:["x","y"]},switchType:"order"};function t(e,t){return new Promise((n,s)=>{let o;if(t==="css"?(o=document.createElement("link"),o.rel="stylesheet",o.href=e):t==="js"&&(o=document.createElement("script"),o.src=e,o.async=!0),!o)return s("Unknown type: "+t);o.onload=()=>n(e),o.onerror=()=>s(e),document.head.appendChild(o)})}function i(){return new Promise(e=>{document.readyState==="loading"?document.addEventListener("DOMContentLoaded",e):e()})}function s(){if(window._live2dModelRendered)return;if(window._live2dModelRendered=!0,typeof initWidget!="undefined"){initWidget({homePath:e.path.homePath,waifuPath:e.path.tipsJsonPath,cdnPath:e.path.modelPath,tools:e.tools,dragEnable:e.drag.enable,dragDirection:e.drag.direction,switchType:e.switchType});const t=document.createElement("style");t.innerHTML=`
+                #waifu {
+                    position: fixed !important;
+                    right: 20px;
+                    bottom: 0;
+                    left: auto !important;
+                    top: auto !important;
+                    z-index: 9999;
+                }
+                `,document.head.appendChild(t),console.log("✅ Live2D 看板娘加载完成")}else console.warn("initWidget 未定义，500ms 后重试"),setTimeout(s,500)}async function a(){if(window._live2dResourcesLoaded)return!0;if(window._live2dResourcesLoaded=!0,!window.matchMedia("(min-width: 768px)").matches)return!1;await i();try{return await Promise.all([t(e.path.cssPath,"css"),t(e.path.live2dCorePath,"js"),t(e.path.live2dSdkPath,"js")]),await t(e.path.tipsJsPath,"js"),s(),!0}catch(e){return console.error("❌ Live2D 加载失败:",e),!1}}a()})()</script><script>(function(){if(!document.querySelector("#cat-paw-style")){const e=document.createElement("style");e.id="cat-paw-style",e.innerHTML=`
+                .cat-paw {
+                    position: fixed;
+                    pointer-events: none;
+                    z-index: 999999;
+                    font-size: 26px;
+                    user-select: none;
+                    animation: catPawFade 1.8s ease-out forwards;
+                    transform-origin: center;
+                }
+                @keyframes catPawFade {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.4) rotate(var(--rotate));
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: scale(1.1) rotate(var(--rotate));
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translateY(-25px) scale(0.8) rotate(var(--rotate));
+                    }
+                }
+            `,document.head.appendChild(e)}function e(){return document.documentElement.classList.contains("dark")}window._catPawBound||(window._catPawBound=!0,document.body.addEventListener("click",function(t){const n=document.createElement("div");n.className="cat-paw",n.textContent="🐾";const s=(Math.random()*60-30).toFixed(0)+"deg";n.style.setProperty("--rotate",s),n.style.left=t.clientX-10+"px",n.style.top=t.clientY-10+"px",e()?(n.style.color="#9cffb5",n.style.textShadow=`
+                        0 0 8px rgba(156,255,181,.8),
+                        0 0 15px rgba(156,255,181,.6),
+                        0 0 25px rgba(156,255,181,.4)
+                    `):(n.style.color="#2f7d32",n.style.textShadow=`0 0 4px rgba(47,125,50,.15)`),document.body.appendChild(n),setTimeout(()=>n.remove(),1800)}))})()</script><script>let menu=document.getElementById("menu");if(menu){const e=localStorage.getItem("menu-scroll-position");e&&(menu.scrollLeft=parseInt(e,10)),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}}document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var toplink=document.getElementById("top-link");window.onscroll=function(){const e=window.innerHeight;document.body.scrollTop>e||document.documentElement.scrollTop>e?toplink.classList.remove("hidden"):toplink.classList.add("hidden")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{const e=document.querySelector("html");e.dataset.theme==="dark"?(e.dataset.theme="light",localStorage.setItem("pref-theme","light")):(e.dataset.theme="dark",localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="复制";function s(){t.innerHTML="已复制！",setTimeout(()=>{t.innerHTML="复制"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script><style>body .waifu{left:auto!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important}body .waifu-tips{bottom:80px!important;right:20px!important;left:auto!important}</style><script>(function(){if(window._live2dModuleInitialized){console.log("看板娘模块已初始化，跳过");return}if(window._live2dModuleInitialized=!0,typeof window._live2dResourcesLoaded=="undefined"&&(window._live2dResourcesLoaded=!1,window._live2dModelRendered=!1),window._live2dResourcesLoaded){console.log("看板娘资源已加载，跳过");return}const n="https://cdn.jsdelivr.net/gh/letere-gzj/live2d-widget-v3@main",o="https://cdn.jsdelivr.net/gh/yaocat55/Resources@v1.0.7/",e={path:{homePath:"/",modelPath:o,cssPath:n+"/waifu.css",tipsJsonPath:"/waifu-tips.json",tipsJsPath:"/libs/waifu-tips.js",live2dCorePath:n+"/Core/live2dcubismcore.js",live2dSdkPath:n+"/live2d-sdk.js"},tools:["hitokoto","asteroids","express","switch-model","switch-texture","photo","info","quit"],drag:{enable:!0,direction:["x","y"]},switchType:"order"};function t(e,t){return new Promise((n,s)=>{let o;if(t==="css"?(o=document.createElement("link"),o.rel="stylesheet",o.href=e):t==="js"&&(o=document.createElement("script"),o.src=e,o.async=!0),!o)return s("Unknown type: "+t);o.onload=()=>n(e),o.onerror=()=>s(e),document.head.appendChild(o)})}function i(){return new Promise(e=>{document.readyState==="loading"?document.addEventListener("DOMContentLoaded",e):e()})}function s(){if(window._live2dModelRendered)return;if(window._live2dModelRendered=!0,typeof initWidget!="undefined"){initWidget({homePath:e.path.homePath,waifuPath:e.path.tipsJsonPath,cdnPath:e.path.modelPath,tools:e.tools,dragEnable:e.drag.enable,dragDirection:e.drag.direction,switchType:e.switchType});const t=document.createElement("style");t.innerHTML=`
+                #waifu {
+                    position: fixed !important;
+                    right: 20px;
+                    bottom: 0;
+                    left: auto !important;
+                    top: auto !important;
+                    z-index: 9999;
+                }
+                `,document.head.appendChild(t),console.log("✅ Live2D 看板娘加载完成")}else console.warn("initWidget 未定义，500ms 后重试"),setTimeout(s,500)}async function a(){if(window._live2dResourcesLoaded)return!0;if(window._live2dResourcesLoaded=!0,!window.matchMedia("(min-width: 768px)").matches)return!1;await i();try{return await Promise.all([t(e.path.cssPath,"css"),t(e.path.live2dCorePath,"js"),t(e.path.live2dSdkPath,"js")]),await t(e.path.tipsJsPath,"js"),s(),!0}catch(e){return console.error("❌ Live2D 加载失败:",e),!1}}a()})()</script><script>(function(){if(!document.querySelector("#cat-paw-style")){const e=document.createElement("style");e.id="cat-paw-style",e.innerHTML=`
+                .cat-paw {
+                    position: fixed;
+                    pointer-events: none;
+                    z-index: 999999;
+                    font-size: 26px;
+                    user-select: none;
+                    animation: catPawFade 1.8s ease-out forwards;
+                    transform-origin: center;
+                }
+                @keyframes catPawFade {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.4) rotate(var(--rotate));
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: scale(1.1) rotate(var(--rotate));
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translateY(-25px) scale(0.8) rotate(var(--rotate));
+                    }
+                }
+            `,document.head.appendChild(e)}function e(){return document.documentElement.classList.contains("dark")}window._catPawBound||(window._catPawBound=!0,document.body.addEventListener("click",function(t){const n=document.createElement("div");n.className="cat-paw",n.textContent="🐾";const s=(Math.random()*60-30).toFixed(0)+"deg";n.style.setProperty("--rotate",s),n.style.left=t.clientX-10+"px",n.style.top=t.clientY-10+"px",e()?(n.style.color="#9cffb5",n.style.textShadow=`
+                        0 0 8px rgba(156,255,181,.8),
+                        0 0 15px rgba(156,255,181,.6),
+                        0 0 25px rgba(156,255,181,.4)
+                    `):(n.style.color="#2f7d32",n.style.textShadow=`0 0 4px rgba(47,125,50,.15)`),document.body.appendChild(n),setTimeout(()=>n.remove(),1800)}))})()</script><audio id=cat-player preload=metadata></audio><div id=cat-radio><div id=cat-btn>🐱</div><div id=cat-info>Cat Radio</div></div><style>#cat-radio{position:fixed;right:90px;bottom:20px;z-index:99999;display:flex;align-items:center;gap:0;background:rgba(255,255,255,.5);backdrop-filter:blur(20px);border-radius:60px;border:1px solid rgba(255,255,255,.3);box-shadow:0 8px 32px rgba(0,0,0,.1);padding:4px;padding-right:16px}#cat-btn{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#5d9e5a,#3d6b35);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;box-shadow:0 2px 8px rgba(0,0,0,.1);border:none;transition:all .3s ease;color:#fff;margin:0}#cat-btn:hover{transform:scale(1.05)rotate(8deg);background:linear-gradient(135deg,#4a8a47,#2a5522);box-shadow:0 4px 12px rgba(0,0,0,.15)}#cat-info{max-width:220px;padding:0 8px 0 12px;border-radius:0;background:0 0;backdrop-filter:none;font-size:14px;font-family:segoe ui,pingfang sc,microsoft yahei,monospace;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:none;border:none;transition:all .2s ease;color:#2c3e2a;letter-spacing:.5px}html[data-theme=dark] #cat-radio{background:rgba(30,33,35,.5);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,8%);box-shadow:0 8px 32px rgba(0,0,0,.3)}html[data-theme=dark] #cat-btn{background:linear-gradient(135deg,#e6b860,#d4a652);color:#1e2123}html[data-theme=dark] #cat-btn:hover{background:linear-gradient(135deg,#d4a652,#c49a48)}html[data-theme=dark] #cat-info{color:#e8dcc8}@media(max-width:768px){#cat-radio{right:20px;bottom:20px;padding:4px;padding-right:0}#cat-info{display:none}#cat-btn{width:48px;height:48px;font-size:22px}}</style><script>(function(){if(window._musicPlayerInitialized)return;window._musicPlayerInitialized=!0;const n=[{name:"oddloop",file:"/music/oddloop.mp3"},{name:"night dancer",file:"/music/night dancer.mp3"},{name:"夜に駆ける",file:"/music/夜に駆ける.mp3"},{name:"brain rot",file:"/music/brain rot.mp3"},{name:"dehors",file:"/music/dehors.mp3"},{name:"I love you so",file:"/music/I love you so.mp3"},{name:"odoriko",file:"/music/odoriko.mp3"},{name:"tek it",file:"/music/tek it.mp3"}],e=document.getElementById("cat-player"),t=document.getElementById("cat-btn"),c=document.getElementById("cat-info");let s=parseInt(localStorage.getItem("cat-radio-index")||"0");function a(t){s=t,e.src=n[t].file,c.innerHTML="🎵 "+n[t].name,localStorage.setItem("cat-radio-index",t)}function o(){let o=s+1;o>=n.length&&(o=0),a(o),e.play(),t.innerHTML="🎵"}setInterval(()=>{!e.paused&&!isNaN(e.currentTime)&&(localStorage.setItem("cat-radio-time",e.currentTime),localStorage.setItem("cat-radio-playing","true"))},3e3);const i=localStorage.getItem("cat-radio-time"),r=localStorage.getItem("cat-radio-playing")==="true";if(a(s),i&&!isNaN(parseFloat(i))&&(e.currentTime=parseFloat(i)),r){const n=e.play();n!==0[0]&&n.then(()=>{t.innerHTML="🎵"}).catch(()=>{t.innerHTML="🐱",console.log("自动播放被阻止，需要用户点击页面")})}document.addEventListener("visibilitychange",()=>{!document.hidden&&r&&e.paused&&e.play().catch(()=>{})}),t.addEventListener("click",()=>{e.paused?(e.play(),t.innerHTML="🎵"):(e.pause(),t.innerHTML="🐱")}),t.addEventListener("contextmenu",e=>{e.preventDefault(),o()}),e.addEventListener("ended",o),e.addEventListener("error",()=>{console.warn("音频加载失败，尝试下一首"),o()}),window.addEventListener("beforeunload",()=>{!e.paused&&!isNaN(e.currentTime)?(localStorage.setItem("cat-radio-time",e.currentTime),localStorage.setItem("cat-radio-playing","true")):localStorage.setItem("cat-radio-playing","false")}),console.log("🎵 Cat Radio 已启动（断点续播）")})()</script></body></html>
