@@ -38,42 +38,14 @@ cover:
 
 ## 进程内存：4MB vs 512MB 的真相
 
-```html
-<div style="max-width:700px;overflow-x:auto;">
-<table style="border-collapse:collapse;width:100%;text-align:center;">
-<tr style="background:#1E88E5;color:#FFFFFF;">
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">维度</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Go</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">JVM（HotSpot）</th>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">最小内存</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">~2-4MB</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">~50-200MB（含堆 + 元空间）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">内存控制</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">自动， `GOGC` 环境变量</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-Xmx` / `-Xms` + 大量 JVM 参数</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">启动时间</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">毫秒级（AOT 编译）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">秒级（类加载 + 解释执行 + JIT 预热）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">部署产物</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">单一静态二进制（~10-20MB）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">JAR（需要 JRE/JDK 运行时）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">内存占用大头</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">goroutine 栈 + 堆 + GC 元数据</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">堆 + 类元数据 + JIT 代码缓存 + 线程栈</td>
-</tr>
-</table>
-</div>
-```
+| 维度 | Go | JVM（HotSpot） |
+|------|-----|-----------------|
+| 最小内存 | ~2-4MB | ~50-200MB（含堆 + 元空间） |
+| 内存控制 | 自动，`GOGC` 环境变量 | `-Xmx` / `-Xms` + 大量 JVM 参数 |
+| 启动时间 | 毫秒级（AOT 编译） | 秒级（类加载 + 解释执行 + JIT 预热） |
+| 部署产物 | 单一静态二进制（~10-20MB） | JAR（需要 JRE/JDK 运行时） |
+| 内存占用大头 | goroutine 栈 + 堆 + GC 元数据 | 堆 + 类元数据 + JIT 代码缓存 + 线程栈 |
+
 
 Go 进程启动时内存低的原因很简单： <strong>AOT 编译</strong> 出来的二进制是纯机器码，不需要 JVM 那样的类加载、JIT 编译缓存、庞大的运行时元数据。Go 运行时嵌入在每个编译好的二进制中，体积很小。
 
@@ -226,32 +198,12 @@ flowchart TD
 
 ## 内存分配：栈 vs 堆的权衡
 
-```html
-<div style="max-width:700px;overflow-x:auto;">
-<table style="border-collapse:collapse;width:100%;text-align:left;">
-<tr style="background:#1E88E5;color:#FFFFFF;">
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">维度</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Go</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">JVM</th>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">分配方式</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">优先栈分配（逃逸分析）<br/>大对象/逃逸对象走堆</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">所有对象都在堆上<br/>（JIT 逃逸分析可栈上分配标量）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">栈管理</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">动态扩缩（copying stack）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">固定大小（-Xss）或 Virtual Thread 动态</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">堆管理</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">TCMalloc 风格（多 size class）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">TLAB + 分代堆</td>
-</tr>
-</table>
-</div>
-```
+| 维度 | Go | JVM |
+|------|-----|-----|
+| 分配方式 | 优先栈分配（逃逸分析）<br/>大对象/逃逸对象走堆 | 所有对象都在堆上<br/>（JIT 逃逸分析可栈上分配标量） |
+| 栈管理 | 动态扩缩（copying stack） | 固定大小（-Xss）或 Virtual Thread 动态 |
+| 堆管理 | TCMalloc 风格（多 size class） | TLAB + 分代堆 |
+
 
 <strong>Go 逃逸分析</strong> 是减少堆分配的核心机制。编译器在编译时判断一个变量是否"逃逸"出了当前函数的作用域，如果没有逃逸就分配在栈上（函数返回时自动释放，不需要 GC）。
 
@@ -387,57 +339,17 @@ Go 没有元空间的概念。<strong>Go 的类型信息在编译后内化到二
 
 ## 配置对照表
 
-```html
-<div style="max-width:700px;overflow-x:auto;">
-<table style="border-collapse:collapse;width:100%;text-align:left;">
-<tr style="background:#1E88E5;color:#FFFFFF;">
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">配置目的</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">JVM 参数</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Go 配置</th>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">初始堆大小</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-Xms512m`</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">无（自动从 OS 申请）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">最大堆大小</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-Xmx2g`</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`GOMEMLIMIT=2GiB` （Go 1.19+）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">GC 调节</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-XX:+UseG1GC` / `-XX:+UseZGC`</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`GOGC=100` （默认）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">并发线程数</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-XX:ParallelGCThreads=N`</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`GOMAXPROCS` （默认 CPU 核数）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">线程栈大小</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-Xss1m` （默认 ~1MB）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">goroutine 自动扩缩（初始 ~2KB）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">元空间</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-XX:MaxMetaspaceSize=256m`</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">无（类型信息在 data 段）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">GC 日志</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`-Xlog:gc*`</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`GODEBUG=gctrace=1`</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Profile</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">JFR / Async Profiler / Arthas</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">`net/http/pprof` + `go tool pprof`</td>
-</tr>
-</table>
-</div>
-```
+| 配置目的 | JVM 参数 | Go 配置 |
+|---------|---------|--------|
+| 初始堆大小 | `-Xms512m` | 无（自动从 OS 申请） |
+| 最大堆大小 | `-Xmx2g` | `GOMEMLIMIT=2GiB`（Go 1.19+） |
+| GC 调节 | `-XX:+UseG1GC` / `-XX:+UseZGC` | `GOGC=100`（默认） |
+| 并发线程数 | `-XX:ParallelGCThreads=N` | `GOMAXPROCS`（默认 CPU 核数） |
+| 线程栈大小 | `-Xss1m`（默认 ~1MB） | goroutine 自动扩缩（初始 ~2KB） |
+| 元空间 | `-XX:MaxMetaspaceSize=256m` | 无（类型信息在 data 段） |
+| GC 日志 | `-Xlog:gc*` | `GODEBUG=gctrace=1` |
+| Profile | JFR / Async Profiler / Arthas | `net/http/pprof` + `go tool pprof` |
+
 
 ## 总结
 
