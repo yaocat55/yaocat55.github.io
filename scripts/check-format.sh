@@ -13,7 +13,22 @@ fi
 
 FAILED=0
 TMP=$(mktemp)
-trap 'rm -f "$TMP"' EXIT
+FILTERED=$(mktemp)
+trap 'rm -f "$TMP" "$FILTERED"' EXIT
+
+# Strip code blocks to avoid false positives from inline code inside ``` fences
+perl -ne '
+  if (/^```/) {
+    $in_block = !$in_block;
+    print "\n";  # keep line count alignment
+    next;
+  }
+  if ($in_block) {
+    print "\n";  # keep line count alignment
+  } else {
+    print;
+  }
+' "$FILE" > "$FILTERED"
 
 check() {
   local label="$1"
@@ -22,9 +37,9 @@ check() {
   local exclude="${4:-}"
 
   if [ -n "$exclude" ]; then
-    grep -nP "$pattern" "$FILE" | grep -vP "$exclude" > "$TMP" 2>/dev/null || true
+    grep -nP "$pattern" "$FILTERED" | grep -vP "$exclude" > "$TMP" 2>/dev/null || true
   else
-    grep -nP "$pattern" "$FILE" > "$TMP" 2>/dev/null || true
+    grep -nP "$pattern" "$FILTERED" > "$TMP" 2>/dev/null || true
   fi
 
   if [ -s "$TMP" ]; then
