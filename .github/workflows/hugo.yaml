@@ -1,3 +1,38 @@
+name: 部署博客到 GitHub Pages 和 ECS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  # 部署到 GitHub Pages
+  deploy-github:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: 构建 GitHub Pages 版本
+        run: hugo --minify --baseURL "https://${{ github.repository_owner }}.github.io/"
+
+      - name: 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: main
+          force_orphan: false
+
   # 部署到 ECS
   deploy-ecs:
     runs-on: ubuntu-latest
@@ -22,8 +57,8 @@
         run: |
           echo "测试 SSH 密钥格式..."
           echo "${{ secrets.ECS_SSH_KEY }}" > test_key
-          cat test_key | head -n 1
-          cat test_key | tail -n 1
+          head -n 1 test_key
+          tail -n 1 test_key
           wc -l test_key
           rm -f test_key
 
@@ -50,4 +85,5 @@
             sudo systemctl reload nginx
             sudo rm -f /tmp/blog-ecs.tar.gz
           EOF
-          rm -f key
+
+          rm -f key blog-ecs.tar.gz
