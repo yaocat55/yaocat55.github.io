@@ -6,84 +6,98 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  # 部署到 GitHub Pages
-  deploy-github:
+  # 构建
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 拉取代码
+        uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: peaceiris/actions-hugo@v3
+      - name: 安装 Hugo
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
 
       - name: 构建 GitHub Pages 版本
-        run: hugo --minify --baseURL "https://${{ github.repository_owner }}.github.io/"
+        run: hugo --minify --baseURL "https://yaocat55.github.io/"
 
-      - name: 部署到 GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: 上传 GitHub Pages 产物
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          publish_branch: main
-          force_orphan: false
+          path: ./public
+
+      - name: 保存 public 目录供 ECS 使用
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-files
+          path: ./public
+
+  # 部署到 GitHub Pages
+  deploy-github:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   # 部署到 ECS
   deploy-ecs:
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
         with:
-          submodules: true
+          name: public-files
+          path: ./public
 
-      - uses: peaceiris/actions-hugo@v3
+      - name: 重新构建 ECS 版本
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
 
-      - name: 构建 ECS 版本
+      - name: 构建 ECS 版本（覆盖 baseURL）
         run: hugo --minify --baseURL "http://yaocat.cloud"
 
-      - name: 调试 SSH 连接
+      - name: 部署到 ECS
         env:
           ECS_HOST: ${{ secrets.ECS_HOST }}
           ECS_USERNAME: ${{ secrets.ECS_USERNAME }}
           ECS_PORT: ${{ secrets.ECS_PORT }}
         run: |
-          echo "测试 SSH 密钥格式..."
-          echo "${{ secrets.ECS_SSH_KEY }}" > test_key
-          head -n 1 test_key
-          tail -n 1 test_key
-          wc -l test_key
-          rm -f test_key
-
-      - name: 打包并部署到 ECS
-        env:
-          ECS_HOST: ${{ secrets.ECS_HOST }}
-          ECS_USERNAME: ${{ secrets.ECS_USERNAME }}
-          ECS_PORT: ${{ secrets.ECS_PORT }}
-        run: |
+          # 打包
           tar -czf blog-ecs.tar.gz -C public .
-          echo "${{ secrets.ECS_SSH_KEY }}" > key && chmod 600 key
 
-          # 测试 SSH 连接
-          echo "测试 SSH 连接..."
-          ssh -v -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST} "echo 'SSH 连接成功'"
+          # 创建密钥文件
+          echo "${{ secrets.ECS_SSH_KEY }}" > key
+          chmod 600 key
 
-          # 如果连接成功，继续部署
+          # 上传到服务器
           scp -o StrictHostKeyChecking=no -P ${ECS_PORT} -i key blog-ecs.tar.gz ${ECS_USERNAME}@${ECS_HOST}:/tmp/
-          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST} << 'EOF'
-            sudo mkdir -p /var/www/blog-new
-            sudo tar -xzf /tmp/blog-ecs.tar.gz -C /var/www/blog-new/
-            sudo rm -rf /var/www/blog-current
-            sudo mv /var/www/blog-new /var/www/blog-current
-            sudo systemctl reload nginx
+
+          # 远程部署
+          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST} 'bash -s' << 'EOF'
+            set -e
+            sudo mkdir -p /var/www/blog
+            sudo tar -xzf /tmp/blog-ecs.tar.gz -C /var/www/blog/
+            sudo chmod -R 755 /var/www/blog
+            sudo systemctl reload nginx || true
             sudo rm -f /tmp/blog-ecs.tar.gz
+            echo "✅ ECS 部署完成"
           EOF
 
+          # 清理
           rm -f key blog-ecs.tar.gz
