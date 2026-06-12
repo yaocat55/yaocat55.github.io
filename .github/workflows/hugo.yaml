@@ -9,137 +9,61 @@ permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  # 部署到 GitHub Pages
+  deploy-github:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: 安装 Hugo
-        uses: peaceiris/actions-hugo@v3
+      - uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
 
       - name: 构建 GitHub Pages 版本
-        run: |
-          # 覆盖配置文件中的 baseURL，构建 GitHub Pages 版本
-          hugo --minify --baseURL "https://${{ github.repository_owner }}.github.io/" --destination public-github
-
-          # 验证构建
-          echo "✅ GitHub Pages 构建完成"
-          ls -la public-github/
-
-      - name: 构建 ECS 版本
-        run: |
-          # 构建 ECS 版本（使用独立的 baseURL）
-          hugo --minify --baseURL "http://yaocat.cloud" --destination public-ecs
-
-          # 验证构建
-          echo "✅ ECS 构建完成"
-          ls -la public-ecs/
+        run: hugo --minify --baseURL "https://${{ github.repository_owner }}.github.io/"
 
       - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public-github
+          publish_dir: ./public
           publish_branch: gh-pages
           force_orphan: true
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Deploy to GitHub Pages: ${{ github.event.head_commit.message }}'
 
-      - name: 打包 ECS 文件
+  # 部署到 ECS
+  deploy-ecs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: 构建 ECS 版本
+        run: hugo --minify --baseURL "http://yaocat.cloud"
+
+      - name: 打包并部署到 ECS
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_USERNAME: ${{ secrets.ECS_USERNAME }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
         run: |
-          tar -czf blog-ecs.tar.gz -C public-ecs .
-          echo "📦 打包完成: $(ls -lh blog-ecs.tar.gz)"
-
-      - name: 部署到 ECS
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.ECS_HOST }}
-          username: ${{ secrets.ECS_USERNAME }}
-          port: ${{ secrets.ECS_PORT }}
-          key: ${{ secrets.ECS_SSH_KEY }}
-          source: "blog-ecs.tar.gz"
-          target: "/tmp/"
-          strip_components: 0
-
-      - name: 远程解压并配置 Nginx
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.ECS_HOST }}
-          username: ${{ secrets.ECS_USERNAME }}
-          port: ${{ secrets.ECS_PORT }}
-          key: ${{ secrets.ECS_SSH_KEY }}
-          script: |
-            set -e
-
-            # 创建新版本目录
-            TIMESTAMP=$(date +%Y%m%d%H%M%S)
-            NEW_DIR="/var/www/blog-${TIMESTAMP}"
-            CURRENT_LINK="/var/www/blog-current"
-
-            echo "📁 创建目录: ${NEW_DIR}"
-            sudo mkdir -p "${NEW_DIR}"
-
-            echo "📦 解压文件"
-            sudo tar -xzf /tmp/blog-ecs.tar.gz -C "${NEW_DIR}/"
-            sudo chmod -R 755 "${NEW_DIR}"
-
-            # 验证部署
-            if [ ! -f "${NEW_DIR}/index.html" ]; then
-              echo "❌ 错误: index.html 不存在"
-              exit 1
-            fi
-
-            # 更新软链接
-            sudo ln -sfn "${NEW_DIR}" "${CURRENT_LINK}"
-
-            # 配置 Nginx
-            cat <<EOF | sudo tee /etc/nginx/sites-available/blog > /dev/null
-            server {
-                listen 80;
-                server_name yaocat.cloud;
-                root ${CURRENT_LINK};
-                index index.html;
-
-                location / {
-                    try_files \$uri \$uri/ =404;
-                }
-
-                location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|webp|mp4)$ {
-                    expires 30d;
-                    add_header Cache-Control "public, immutable";
-                }
-            }
-            EOF
-
-            # 启用站点
-            sudo ln -sf /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/
-
-            # 重载 Nginx
-            sudo nginx -t && sudo systemctl reload nginx
-
-            # 清理旧版本（保留最近5个）
-            cd /var/www && ls -dt blog-20* 2>/dev/null | tail -n +6 | sudo xargs -r rm -rf
-
-            # 清理临时文件
+          tar -czf blog-ecs.tar.gz -C public .
+          echo "${{ secrets.ECS_SSH_KEY }}" > key && chmod 600 key
+          scp -o StrictHostKeyChecking=no -P ${ECS_PORT} -i key blog-ecs.tar.gz ${ECS_USERNAME}@${ECS_HOST}:/tmp/
+          ssh -o StrictHostKeyChecking=no -p ${ECS_PORT} -i key ${ECS_USERNAME}@${ECS_HOST}} << 'EOF'
+            sudo mkdir -p /var/www/blog-new
+            sudo tar -xzf /tmp/blog-ecs.tar.gz -C /var/www/blog-new/
+            sudo rm -rf /var/www/blog-current
+            sudo mv /var/www/blog-new /var/www/blog-current
+            sudo systemctl reload nginx
             sudo rm -f /tmp/blog-ecs.tar.gz
-
-            echo "✅ 部署成功！版本: ${TIMESTAMP}"
-            echo "🌐 访问: http://yaocat.cloud"
-
-      - name: 部署状态总结
-        if: always()
-        run: |
-          echo "## 🚀 部署完成" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| 目标 | 地址 | 状态 |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| GitHub Pages | https://${{ github.repository_owner }}.github.io | ✅ 已部署 |" >> $GITHUB_STEP_SUMMARY
-          echo "| ECS | http://yaocat.cloud | ✅ 已部署 |" >> $GITHUB_STEP_SUMMARY
+          EOF
+          rm -f key
