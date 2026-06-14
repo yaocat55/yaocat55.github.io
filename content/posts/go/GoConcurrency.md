@@ -77,7 +77,7 @@ func queryWithTimeout() {
 
 <div style="margin-bottom:16px">
 <div style="background:#FFE082;color:#5D4037;padding:8px 12px;font-weight:bold;border-left:4px solid #FFB300">操作系统线程（OS Thread）</div>
-<div style="padding:8px 12px;background:#F5F5F5;border:1px solid #BDBDBD;border-top:0">
+<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
 <strong>调度者</strong>：操作系统内核<br/>
 <strong>栈大小</strong>：固定 ~1MB（Linux 默认 8MB 虚拟空间）<br/>
 <strong>切换成本</strong>：用户态 ↔ 内核态上下文切换，约 1 ~ 10μs<br/>
@@ -88,7 +88,7 @@ func queryWithTimeout() {
 
 <div style="margin-bottom:16px">
 <div style="background:#E1BEE7;color:#4A148C;padding:8px 12px;font-weight:bold;border-left:4px solid #7B1FA2">无栈协程（Stackless Coroutine）</div>
-<div style="padding:8px 12px;background:#F5F5F5;border:1px solid #BDBDBD;border-top:0">
+<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
 <strong>调度者</strong>：编译器/状态机（用户态）<br/>
 <strong>栈大小</strong>：无独立栈，局部变量存储在堆上的状态对象中<br/>
 <strong>切换成本</strong>：函数返回+状态机跳转，约几十 ns<br/>
@@ -99,7 +99,7 @@ func queryWithTimeout() {
 
 <div style="margin-bottom:16px">
 <div style="background:#C8E6C9;color:#1B5E20;padding:8px 12px;font-weight:bold;border-left:4px solid #388E3C">有栈协程（Stackful Coroutine）<strong>（← Goroutine 在此）</strong></div>
-<div style="padding:8px 12px;background:#F5F5F5;border:1px solid #BDBDBD;border-top:0">
+<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
 <strong>调度者</strong>：Go 运行时（用户态 GMP 调度器）<br/>
 <strong>栈大小</strong>：初始 ~2KB，动态扩缩容（最大可达 1GB）<br/>
 <strong>切换成本</strong>：用户态寄存器保存/恢复，约 200ns<br/>
@@ -111,7 +111,7 @@ func queryWithTimeout() {
 
 <div style="margin-bottom:16px">
 <div style="background:#FFCCBC;color:#BF360C;padding:8px 12px;font-weight:bold;border-left:4px solid #E64A19">Java 虚拟线程（Virtual Thread，Java 21+）</div>
-<div style="padding:8px 12px;background:#F5F5F5;border:1px solid #BDBDBD;border-top:0">
+<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
 <strong>调度者</strong>：JVM（用户态 ForkJoinPool 调度）<br/>
 <strong>栈大小</strong>：初始 ~200 字节（堆上存储，按需分配）<br/>
 <strong>切换成本</strong>：用户态，约 200ns ~ 1μs<br/>
@@ -129,19 +129,19 @@ func queryWithTimeout() {
 ```mermaid
 flowchart TD
     subgraph JavaPlatform["☕ Java 平台线程 vs 虚拟线程"]
-        JT["平台线程 Platform Thread<br/>1:1 映射 OS 线程<br/>栈：~1MB<br/>切换：内核态"]
-        JVT["虚拟线程 Virtual Thread<br/>M:N 映射 OS 线程<br/>栈：堆上动态分配<br/>切换：用户态（unmount/remount）"]
-        JVT2["阻塞时自动 unmount<br/>释放 OS 线程给其他 Virtual Thread<br/>由 ForkJoinPool 承载"]
+        JT["平台线程 Platform Thread\n1:1 映射 OS 线程\n栈：~1MB\n切换：内核态"]
+        JVT["虚拟线程 Virtual Thread\nM:N 映射 OS 线程\n栈：堆上动态分配\n切换：用户态（unmount/remount）"]
+        JVT2["阻塞时自动 unmount\n释放 OS 线程给其他 Virtual Thread\n由 ForkJoinPool 承载"]
     end
     
     subgraph GoPlatform["🐹 Go goroutine"]
-        GG["goroutine<br/>M:N 映射 OS 线程<br/>栈：~2KB 起始，动态扩缩<br/>切换：用户态 GMP 调度"]
-        GG2["GMP 模型：<br/>G = goroutine<br/>M = OS 线程<br/>P = 逻辑处理器"]
-        GG3["Go 1.14+ 异步抢占<br/>CPU 密集型不会饿死其他协程"]
+        GG["goroutine\nM:N 映射 OS 线程\n栈：~2KB 起始，动态扩缩\n切换：用户态 GMP 调度"]
+        GG2["GMP 模型：\nG = goroutine\nM = OS 线程\nP = 逻辑处理器"]
+        GG3["Go 1.14+ 异步抢占\nCPU 密集型不会饿死其他协程"]
     end
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     
     class JT,JVT,GG root
     class JVT2,GG2,GG3 leaf
@@ -207,7 +207,7 @@ close(ch)
 <div style="display:flex;gap:16px">
 <div style="flex:1;border:2px solid #E64A19;border-radius:8px;overflow:hidden">
 <div style="background:#E64A19;color:#FFFFFF;padding:8px 12px;font-weight:bold">无缓冲（同步）</div>
-<div style="padding:12px;background:#FFF3E0">
+<div style="padding:12px;background:#FFF3E0;color:#1e2a16">
 <code>ch := make(chan int)</code><br/><br/>
 <strong>发送方</strong> 阻塞直到 <strong>接收方</strong> 就绪<br/>
 <strong>接收方</strong> 阻塞直到 <strong>发送方</strong> 发送<br/><br/>
@@ -216,7 +216,7 @@ close(ch)
 </div>
 <div style="flex:1;border:2px solid #388E3C;border-radius:8px;overflow:hidden">
 <div style="background:#388E3C;color:#FFFFFF;padding:8px 12px;font-weight:bold">有缓冲（异步）</div>
-<div style="padding:12px;background:#E8F5E9">
+<div style="padding:12px;background:#E8F5E9;color:#1e2a16">
 <code>ch := make(chan int, 10)</code><br/><br/>
 <strong>发送方</strong> 缓冲未满时不阻塞<br/>
 <strong>接收方</strong> 缓冲为空时阻塞<br/><br/>
@@ -318,19 +318,19 @@ var result = CompletableFuture.anyOf(f1, f2)
 
 ```mermaid
 flowchart TD
-    Select["📡 select 多路复用"] --> Case1["case <-ch1<br/>ch1 可读？"]
-    Select --> Case2["case <-ch2<br/>ch2 可读？"]
-    Select --> Case3["case <-timeout<br/>超时了？"]
-    Select --> Default["default<br/>都不行，直接跳过"]
+    Select["📡 select 多路复用"] --> Case1["case <-ch1\nch1 可读？"]
+    Select --> Case2["case <-ch2\nch2 可读？"]
+    Select --> Case3["case <-timeout\n超时了？"]
+    Select --> Default["default\n都不行，直接跳过"]
     
     Case1 --> Action1["执行 ch1 分支"]
     Case2 --> Action2["执行 ch2 分支"]
     Case3 --> Action3["执行超时分支"]
     Default --> Action4["执行 default"]
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     
     class Select root
     class Case1,Case2,Case3,Default branch
@@ -350,9 +350,9 @@ goroutine 的调度由 Go 运行时的 <strong>GMP 模型</strong> 负责：
 ```mermaid
 flowchart TD
     subgraph GMP["🔧 GMP 调度模型"]
-        P1["P0（逻辑处理器）"] --> LRQ1["本地 G 队列<br/>[G1→G2→G3]"]
-        P2["P1（逻辑处理器）"] --> LRQ2["本地 G 队列<br/>[G4→G5]"]
-        GRQ["全局 G 队列<br/>[G6→G7→G8]"]
+        P1["P0（逻辑处理器）"] --> LRQ1["本地 G 队列\n[G1→G2→G3]"]
+        P2["P1（逻辑处理器）"] --> LRQ2["本地 G 队列\n[G4→G5]"]
+        GRQ["全局 G 队列\n[G6→G7→G8]"]
     end
     
     M1["M0（OS 线程）"] -.->|绑定| P1
@@ -361,13 +361,13 @@ flowchart TD
     LRQ1 -.->|调度| M1
     LRQ2 -.->|调度| M2
     
-    P1 -.->|work stealing<br/>本地队列空了| P2
+    P1 -.->|work stealing\n本地队列空了| P2
     P1 -.->|从全局队列取| GRQ
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
     
     class P1,P2 branch
     class M1,M2 root

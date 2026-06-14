@@ -44,16 +44,22 @@ AQS 的核心契约只有一条：子类只需实现 `tryAcquire` / `tryRelease`
 
 ```mermaid
 flowchart LR
-    root((AQS<br/>AbstractQueuedSynchronizer))
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+    root((AQS\nAbstractQueuedSynchronizer))
     root --> EX[独占模式]
     EX --> RL[ReentrantLock]
-    EX --> RW[ReentrantReadWriteLock<br/>写锁部分]
+    EX --> RW[ReentrantReadWriteLock\n写锁部分]
     root --> SH[共享模式]
     SH --> SM[Semaphore]
     SH --> CL[CountDownLatch]
-    SH --> RW2[ReentrantReadWriteLock<br/>读锁部分]
+    SH --> RW2[ReentrantReadWriteLock\n读锁部分]
     root --> EXSH[独占+共享]
-    EXSH --> RW3[ReentrantReadWriteLock<br/>完整实现]
+    EXSH --> RW3[ReentrantReadWriteLock\n完整实现]
+
+class CL,EX,EXSH,RL,RW,RW2,RW3,SH,SM process;
+class root startEnd;
 ```
 
 ## 🧱 Node 数据结构：队列的构建单元
@@ -101,12 +107,12 @@ stateDiagram-v2
     state "CONDITION (-2)" as COND
     state "PROPAGATE (-3)" as PROP
 
-    INIT --> SIGNAL : 后继节点 park 前<br/>将前驱设为 SIGNAL
+    INIT --> SIGNAL : 后继节点 park 前\n将前驱设为 SIGNAL
     INIT --> CANCEL : 超时/中断
     SIGNAL --> CANCEL : 超时/中断
     COND --> CANCEL : 超时/中断
-    COND --> INIT : 从条件队列转入同步队列<br/>（signal 时重置为 0）
-    SIGNAL --> PROPAGATE : 共享模式释放时<br/>（setHeadAndPropagate）
+    COND --> INIT : 从条件队列转入同步队列\n（signal 时重置为 0）
+    SIGNAL --> PROPAGATE : 共享模式释放时\n（setHeadAndPropagate）
 ```
 
 | 状态 | 值 | 含义 | 触发时机 |
@@ -121,22 +127,37 @@ stateDiagram-v2
 
 ### 🏗️ 队列结构
 
+每个 Node 内部装着 5 个关键字段，head/tail 是 AQS 的两个指针——`head` 指向哨兵节点（已获取锁），`tail` 指向队尾：
+
 ```mermaid
-flowchart TD
-    subgraph AQS[AQS 实例]
-        HEAD[head<br/>哨兵节点]
-        TAIL[tail<br/>尾节点]
-    end
-    HEAD --> N1["Node 1<br/>waitStatus=SIGNAL<br/>thread=T2"]
-    N1 --> N2["Node 2<br/>waitStatus=SIGNAL<br/>thread=T3"]
-    N2 --> N3["Node 3<br/>waitStatus=0<br/>thread=T4"]
-    N3 --> NULL[null]
-    N1 -.->|prev| HEAD
-    N2 -.->|prev| N1
-    N3 -.->|prev| N2
-    HEAD -.->|next| N1
-    N1 -.->|next| N2
-    N2 -.->|next| N3
+flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef pointer fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+classDef sentinel fill:#2e1065,stroke:#a855f7,stroke-width:2.5px,color:#f8fafc,font-weight:bold;
+classDef waiter fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef signal fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
+classDef cancelled fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+
+    HEAD["[AQS.head]"] -.->|"指向"| DUMMY
+    TAIL["[AQS.tail]"] -.->|"指向"| T4
+
+    DUMMY["[哨兵节点 (已获取锁)]\n─────────────\nprev = null\nnext = →\nwaitStatus = 0\nthread = null"]
+    T2["[Node - 等待者 T2]\n─────────────\nprev = ←\nnext = →\nwaitStatus = SIGNAL(-1)\nthread = T2"]
+    T3["[Node - 等待者 T3]\n─────────────\nprev = ←\nnext = →\nwaitStatus = SIGNAL(-1)\nthread = T3"]
+    T4["[Node - 等待者 T4]\n─────────────\nprev = ←\nnext = null\nwaitStatus = 0\nthread = T4"]
+
+    DUMMY -- "next →" --> T2
+    T2 -- "next →" --> T3
+    T3 -- "next →" --> T4
+
+    T2 -. "prev ←" .-> DUMMY
+    T3 -. "prev ←" .-> T2
+    T4 -. "prev ←" .-> T3
+
+class HEAD,TAIL pointer;
+class DUMMY sentinel;
+class T2,T4 waiter;
+class T3 signal;
 ```
 
 `head` 指向的节点是 **哨兵节点** （dummy node），它的 `thread` 字段为 `null`，代表已经获取到锁的线程。真正等待的线程从 `head.next` 开始排列。
@@ -180,7 +201,7 @@ sequenceDiagram
 
     Note over AQS: tail → null（队列为空）
 
-    T2->>AQS: enq(): 初始化队列<br/>创建哨兵节点
+    T2->>AQS: enq(): 初始化队列\n创建哨兵节点
     AQS-->>T2: tail → 哨兵
     T2->>AQS: addWaiter(): node.prev = tail
     T2->>AQS: CAS(tail, oldTail, node)
@@ -191,7 +212,7 @@ sequenceDiagram
     Note over AQS: tail → T3的节点
     T3->>T3: oldTail.next = T3的节点
 
-    Note over AQS: T2的 next 可能还是 null<br/>但从 tail 沿 prev 能走到 T2
+    Note over AQS: T2的 next 可能还是 null\n但从 tail 沿 prev 能走到 T2
 ```
 
 ### ➡️ 出队操作：setHead
@@ -225,21 +246,27 @@ protected final boolean compareAndSetState(int expect, int update) {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
     subgraph RL[ReentrantLock]
-        RL_S["state = 0: 未锁定<br/>state = 1: 已锁定<br/>state > 1: 重入次数"]
+        RL_S["state = 0: 未锁定\nstate = 1: 已锁定\nstate > 1: 重入次数"]
     end
     subgraph SM[Semaphore]
-        SM_S["state = permits<br/>初始化时指定许可数<br/>acquire: state--<br/>release: state++"]
+        SM_S["state = permits\n初始化时指定许可数\nacquire: state--\nrelease: state++"]
     end
     subgraph CL[CountDownLatch]
-        CL_S["state = count<br/>初始化时指定倒数次数<br/>countDown: state--<br/>await: 等待 state=0"]
+        CL_S["state = count\n初始化时指定倒数次数\ncountDown: state--\nawait: 等待 state=0"]
     end
     subgraph RW[ReentrantReadWriteLock]
-        RW_S["高16位: 读锁持有计数<br/>低16位: 写锁重入计数<br/>state != 0 && 低16位=0: 被读锁持有"]
+        RW_S["高16位: 读锁持有计数\n低16位: 写锁重入计数\nstate != 0 && 低16位=0: 被读锁持有"]
     end
     subgraph CB[CyclicBarrier]
-        CB_S["并非直接继承 AQS<br/>内部用 ReentrantLock + Condition<br/>而不是自定义 state"]
+        CB_S["并非直接继承 AQS\n内部用 ReentrantLock + Condition\n而不是自定义 state"]
     end
+
+class CB_S condition;
+class CB,CL,CL_S,RL,RL_S,RW,RW_S,SM,SM_S process;
 ```
 
 ### 📐 state 在 ReentrantLock 中的使用（独占模式）
@@ -352,7 +379,7 @@ sequenceDiagram
                     AQS-->>T1: 返回（获取到锁）
                 end
             end
-            AQS->>AQS: shouldParkAfterFailedAcquire<br/>将前驱 waitStatus 设为 SIGNAL
+            AQS->>AQS: shouldParkAfterFailedAcquire\n将前驱 waitStatus 设为 SIGNAL
             AQS->>LS: parkAndCheckInterrupt()
             Note over T1: 线程阻塞在这里
         end
@@ -459,10 +486,10 @@ private void setHeadAndPropagate(Node node, int propagate) {
 
 ```mermaid
 sequenceDiagram
-    participant T1 as 线程T1<br/>释放许可
+    participant T1 as 线程T1\n释放许可
     participant AQS as AQS
-    participant T2 as 线程T2<br/>等待许可
-    participant T3 as 线程T3<br/>等待许可
+    participant T2 as 线程T2\n等待许可
+    participant T3 as 线程T3\n等待许可
 
     T1->>AQS: releaseShared(1)
     AQS->>AQS: tryReleaseShared → state++
@@ -483,22 +510,50 @@ sequenceDiagram
 
 AQS 的内部类 `ConditionObject` 实现了 `Condition` 接口。每个 ConditionObject 维护一条独立的 **条件队列** （单向链表）：
 
+对比两张队列：同步队列是<strong>双向链表</strong>（prev + next），条件队列是<strong>单向链表</strong>（仅 nextWaiter）。注意条件队列中的节点 `prev` 和 `next` 字段全是 null——它们还没入队竞争锁：
+
 ```mermaid
 flowchart TD
-    subgraph SYNC[同步队列 CLH]
-        H[head 哨兵] --> N1[Node T2<br/>waitStatus=0]
-        N1 --> N2[Node T3<br/>waitStatus=SIGNAL]
-        TAIL[tail] --> N2
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef pointer fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+classDef sentinel fill:#2e1065,stroke:#a855f7,stroke-width:2.5px,color:#f8fafc,font-weight:bold;
+classDef waiter fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condNode fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe;
+classDef syncArea fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef condArea fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;
+
+    subgraph SYNC["同步队列 CLH — 双向链表 (prev + next)"]
+        S_HEAD["[AQS.head]"] -.-> S1
+        S_TAIL["[AQS.tail]"] -.-> S3
+        S1["[哨兵节点]\n─────────\nprev = null\nthread = null\nwaitStatus = 0\nnext →"]
+        S2["[Node - 等待 T2]\n─────────\nprev ←\nthread = T2\nwaitStatus = SIGNAL\nnext →"]
+        S3["[Node - 等待 T3]\n─────────\nprev ←\nthread = T3\nwaitStatus = 0\nnext = null"]
+        S1 -- "next" --> S2 -- "next" --> S3
+        S2 -. "prev" .-> S1
+        S3 -. "prev" .-> S2
     end
-    subgraph COND[条件队列 Condition]
-        FW[firstWaiter] --> CN1["Node T5<br/>waitStatus=CONDITION<br/>nextWaiter→"]
-        CN1 --> CN2["Node T6<br/>waitStatus=CONDITION<br/>nextWaiter→"]
-        CN2 --> CN3["Node T7<br/>waitStatus=CONDITION<br/>nextWaiter→"]
-        LW[lastWaiter] --> CN3
+
+    subgraph COND["条件队列 — 单向链表 (仅 nextWaiter)"]
+        FW["[firstWaiter]"] -.-> C1
+        LW["[lastWaiter]"] -.-> C4
+        C1["[Node - 等待 T5]\n─────────\nprev = null\nthread = T5\nwaitStatus = CONDITION(-2)\nnextWaiter →"]
+        C2["[Node - 等待 T6]\n─────────\nprev = null\nthread = T6\nwaitStatus = CONDITION(-2)\nnextWaiter →"]
+        C3["[Node - 等待 T7]\n─────────\nprev = null\nthread = T7\nwaitStatus = CONDITION(-2)\nnextWaiter →"]
+        C4["[Node - 等待 T8]\n─────────\nprev = null\nthread = T8\nwaitStatus = CONDITION(-2)\nnextWaiter = null"]
+        C1 -- "nextWaiter" --> C2 -- "nextWaiter" --> C3 -- "nextWaiter" --> C4
     end
+
+    C2 -. "signal() 转移到同步队列\n(enq 入队 → prev/next 被赋值)" .-> SYNC
+
+class S_HEAD,S_TAIL,FW,LW pointer;
+class S1 sentinel;
+class S2,S3 waiter;
+class C1,C2,C3,C4 condNode;
+class SYNC syncArea;
+class COND condArea;
 ```
 
-条件队列是一个 **单向链表** （仅用 `nextWaiter` 链接），节点 `waitStatus` 固定为 `CONDITION(-2)`。同步队列则是一个 **双向链表** （`prev` + `next`）。
+条件队列的 `firstWaiter` / `lastWaiter` 相当于同步队列的 `head` / `tail`，但只维护单向指针。关键区别：条件队列中的节点 <strong>`prev` 和 `next` 都是 null</strong>——它此时不属于同步队列。直到 `signal()` 被调用，节点才通过 `enq()` 进入同步队列尾部，`prev`/`next` 被赋值，`waitStatus` 从 CONDITION 改为 0。
 
 ```java
 public class ConditionObject implements Condition {
@@ -587,7 +642,7 @@ sequenceDiagram
     Cond->>SyncQ: enq(node) 加入同步队列队尾
     Note over SyncQ: 节点现在在同步队列中
 
-    Note over Holder: 持有者释放锁后<br/>同步队列中的节点被唤醒<br/>从 await() 返回，重新获取锁
+    Note over Holder: 持有者释放锁后\n同步队列中的节点被唤醒\n从 await() 返回，重新获取锁
 ```
 
 ### ⬆️ signal 转移过程中的并发安全问题
@@ -649,9 +704,9 @@ private void cancelAcquire(Node node) {
 
 ```mermaid
 sequenceDiagram
-    participant A as 节点A<br/>等待被释放
-    participant B as 节点B<br/>超时取消中
-    participant C as 节点C<br/>正常等待
+    participant A as 节点A\n等待被释放
+    participant B as 节点B\n超时取消中
+    participant C as 节点C\n正常等待
 
     Note over B: cancelAcquire(B)
     B->>B: pred = A（有效前驱）
@@ -667,7 +722,7 @@ sequenceDiagram
 
     Note over C: C 在 acquireQueued 自旋
     C->>C: 检查前驱 → 跳过 B（跳过取消节点）
-    Note over C: 通过 prev 向前找有效节点<br/>不依赖 next 指针
+    Note over C: 通过 prev 向前找有效节点\n不依赖 next 指针
 ```
 
 **关键保护机制** ：
@@ -806,22 +861,30 @@ class ConnectionPool {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
     subgraph STRUCT[核心数据结构]
-        ST[state: volatile int<br/>同步状态 子类定义语义]
-        CLH[CLH 同步队列<br/>双向链表 prev+next<br/>FIFO 先到先得]
-        COND[Condition 条件队列<br/>单向链表 nextWaiter<br/>每个 ConditionObject 一条]
+        ST[state: volatile int\n同步状态 子类定义语义]
+        CLH[CLH 同步队列\n双向链表 prev+next\nFIFO 先到先得]
+        COND[Condition 条件队列\n单向链表 nextWaiter\n每个 ConditionObject 一条]
     end
     subgraph MODE[两种模式]
-        EX[独占模式<br/>ReentrantLock 写锁]
-        SH[共享模式<br/>Semaphore CountDownLatch<br/>唤醒传播 PROPAGATE]
+        EX[独占模式\nReentrantLock 写锁]
+        SH[共享模式\nSemaphore CountDownLatch\n唤醒传播 PROPAGATE]
     end
     subgraph SAFE[并发安全机制]
-        CAS[CAS 操作<br/>入队 出队 waitStatus]
-        PREV[prev 保证可追溯<br/>next 尽力而为]
-        TAILSCAN[从 tail 向前扫描<br/>unparkSuccessor]
+        CAS[CAS 操作\n入队 出队 waitStatus]
+        PREV[prev 保证可追溯\nnext 尽力而为]
+        TAILSCAN[从 tail 向前扫描\nunparkSuccessor]
     end
     STRUCT --> MODE
     MODE --> SAFE
+
+class CLH,COND condition;
+class STRUCT,TAILSCAN data;
+class CAS,EX,MODE,PREV,SAFE,SH,ST process;
 ```
 
 | 核心问题 | 答案 |

@@ -337,8 +337,8 @@ predicates:
 
 ```mermaid
 flowchart TD
-    classDef match fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef fail fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef match fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef fail fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     REQ[请求到达] --> P1{Path=/api/users/**?}
     P1 -- "不匹配" --> F1[跳过此 Route]

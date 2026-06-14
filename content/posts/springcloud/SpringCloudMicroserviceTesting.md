@@ -38,21 +38,21 @@ flowchart TD
     subgraph Top[🔺 测试金字塔：越往上越慢、越贵、越少]
 
         subgraph L5[⏱️ 端到端测试]
-            E2E[🌐 E2E测试<br/>全链路验证<br/>数量：极少]
+            E2E[🌐 E2E测试\n全链路验证\n数量：极少]
         end
 
         subgraph L4[🔗 契约/集成测试]
-            CONTRACT[📋 契约测试<br/>Feign/Dubbo接口契约<br/>数量：少量]
-            INTEG[🔧 Service集成测试<br/>Spring容器+真实DB/Redis<br/>数量：适中]
+            CONTRACT[📋 契约测试\nFeign/Dubbo接口契约\n数量：少量]
+            INTEG[🔧 Service集成测试\nSpring容器+真实DB/Redis\n数量：适中]
         end
 
         subgraph L3[🧩 切片测试]
-            WEB[🌐 Web层测试<br/>@WebMvcTest<br/>仅Controller上下文]
-            DATA[🗄️ 数据层测试<br/>@DataJpaTest<br/>仅JPA上下文]
+            WEB[🌐 Web层测试\n@WebMvcTest\n仅Controller上下文]
+            DATA[🗄️ 数据层测试\n@DataJpaTest\n仅JPA上下文]
         end
 
         subgraph L2[⚡ 单元测试]
-            UNIT[📐 纯单元测试<br/>无Spring容器<br/>Mock所有依赖<br/>数量：大量]
+            UNIT[📐 纯单元测试\n无Spring容器\nMock所有依赖\n数量：大量]
         end
 
     end
@@ -61,9 +61,9 @@ flowchart TD
     L4 --> L3
     L3 --> L2
 
-    classDef layer fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef layer fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class E2E,CONTRACT,INTEG,WEB,DATA,UNIT layer
     class L2 highlight
@@ -736,33 +736,33 @@ class UserControllerContractTest {
 
 ```mermaid
 flowchart TD
-    START[🎯 新写一个测试] --> Q1{被测对象<br/>是否有外部依赖?}
+    START[🎯 新写一个测试] --> Q1{被测对象\n是否有外部依赖?}
 
-    Q1 -->|否| U[⚡ 纯单元测试<br/>Mockito即可]
-    Q1 -->|是| Q2{依赖是<br/>数据库/Redis?}
+    Q1 -->|否| U[⚡ 纯单元测试\nMockito即可]
+    Q1 -->|是| Q2{依赖是\n数据库/Redis?}
 
-    Q2 -->|是| Q3{测试目标是<br/>验证SQL/查询逻辑?}
-    Q3 -->|是| S[DATA: @DataJpaTest<br/>内嵌H2]
-    Q3 -->|否| I[INTEG: @SpringBootTest<br/>Testcontainers真实DB]
+    Q2 -->|是| Q3{测试目标是\n验证SQL/查询逻辑?}
+    Q3 -->|是| S[DATA: @DataJpaTest\n内嵌H2]
+    Q3 -->|否| I[INTEG: @SpringBootTest\nTestcontainers真实DB]
 
-    Q2 -->|否| Q4{依赖是<br/>其他微服务?}
-    Q4 -->|是| Q5{测试目标是<br/>接口契约兼容性?}
-    Q5 -->|是| C[CONTRACT: WireMock<br/>验证序列化/反序列化]
-    Q5 -->|否| MOCK["MOCK: @MockBean<br/>Mock Feign接口"]
+    Q2 -->|否| Q4{依赖是\n其他微服务?}
+    Q4 -->|是| Q5{测试目标是\n接口契约兼容性?}
+    Q5 -->|是| C[CONTRACT: WireMock\n验证序列化/反序列化]
+    Q5 -->|否| MOCK["MOCK: @MockBean\nMock Feign接口"]
 
-    Q4 -->|否| Q6{依赖是<br/>消息队列?}
-    Q6 -->|是| Q7{测试目标是<br/>消息体序列化格式?}
-    Q7 -->|是| MQ_UNIT[⚡ 纯单元测试<br/>Mock KafkaTemplate]
-    Q7 -->|否| MQ_INTEG["INTEG: Testcontainers<br/>Kafka/RocketMQ容器"]
+    Q4 -->|否| Q6{依赖是\n消息队列?}
+    Q6 -->|是| Q7{测试目标是\n消息体序列化格式?}
+    Q7 -->|是| MQ_UNIT[⚡ 纯单元测试\nMock KafkaTemplate]
+    Q7 -->|否| MQ_INTEG["INTEG: Testcontainers\nKafka/RocketMQ容器"]
 
-    Q6 -->|否| Q8{依赖是<br/>文件系统/S3?}
-    Q8 -->|是| FS[⚡ 单元测试<br/>Mock FileService接口]
-    Q8 -->|否| API[⚡ Mock外部API<br/>WireMock/OkHttp MockWebServer]
+    Q6 -->|否| Q8{依赖是\n文件系统/S3?}
+    Q8 -->|是| FS[⚡ 单元测试\nMock FileService接口]
+    Q8 -->|否| API[⚡ Mock外部API\nWireMock/OkHttp MockWebServer]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef unit fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef integration fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef unit fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef integration fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class START,MOCK,API startEnd
     class Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8 condition
@@ -1027,19 +1027,19 @@ flowchart TD
     DEV[👨‍💻 开发者编写代码] --> AI1
 
     subgraph AI1[🤖 AI代码补全层]
-        COPILOT[GitHub Copilot<br/>根据方法名和上下文<br/>推测测试逻辑]
+        COPILOT[GitHub Copilot\n根据方法名和上下文\n推测测试逻辑]
     end
 
     DEV --> AI2
 
     subgraph AI2[💬 AI对话生成层]
-        CHATGPT[ChatGPT<br/>给定被测代码<br/>生成完整测试类]
+        CHATGPT[ChatGPT\n给定被测代码\n生成完整测试类]
     end
 
     DEV --> AI3
 
     subgraph AI3[🔍 AI测试分析层]
-        DIFFBLUE[Diffblue Cover<br/>分析字节码<br/>自动生成单元测试]
+        DIFFBLUE[Diffblue Cover\n分析字节码\n自动生成单元测试]
     end
 
     AI1 --> RESULT[✅ 测试代码产出]
@@ -1050,9 +1050,9 @@ flowchart TD
     REVIEW -->|✅ 通过| COMMIT[📥 提交]
     REVIEW -->|❌ 修正| DEV
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef ai fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef decision fill:#FFE082,stroke:#FFB300,stroke-width:1.5px,color:#5D4037,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef ai fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef decision fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
 
     class DEV,RESULT,COMMIT process
     class COPILOT,CHATGPT,DIFFBLUE ai

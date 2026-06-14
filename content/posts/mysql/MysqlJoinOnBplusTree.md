@@ -44,17 +44,17 @@ MySQL 实际的做法是：<strong>选一张表做驱动（外层循环），另
 
 ```mermaid
 flowchart TD
-    DRIVER["🔁 驱动表（外层）逐行读取"] --> CHECK{"被驱动表<br/>有可用索引?"}
-    CHECK -->|"有"| INLJ["Index Nested-Loop<br/>每行走 B+树查找"]
-    CHECK -->|"无"| BNLJ["Block Nested-Loop<br/>Join Buffer 批量匹配"]
-    BNLJ --> HASHCHECK{"MySQL 8.0+<br/>且等值连接?"}
-    HASHCHECK -->|"是"| HJ["Hash Join<br/>构建哈希表替代 B+树"]
+    DRIVER["🔁 驱动表（外层）逐行读取"] --> CHECK{"被驱动表\n有可用索引?"}
+    CHECK -->|"有"| INLJ["Index Nested-Loop\n每行走 B+树查找"]
+    CHECK -->|"无"| BNLJ["Block Nested-Loop\nJoin Buffer 批量匹配"]
+    BNLJ --> HASHCHECK{"MySQL 8.0+\n且等值连接?"}
+    HASHCHECK -->|"是"| HJ["Hash Join\n构建哈希表替代 B+树"]
     HASHCHECK -->|"否"| BNLJ2["仍用 BNLJ 或 SNLJ"]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class DRIVER startEnd
     class CHECK,HASHCHECK condition

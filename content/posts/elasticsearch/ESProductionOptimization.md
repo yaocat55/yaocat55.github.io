@@ -171,9 +171,9 @@ PUT /product
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef type fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef type fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     START([选择字段类型]) --> Q1{需要全文搜索？}
     Q1 -- 是 --> TEXT[text + ik_max_word]
@@ -191,7 +191,7 @@ flowchart TD
     Q7 -- 是 --> DATE[date]
     Q7 -- 否 --> Q8{字段值是 true/false？}
     Q8 -- 是 --> BOOL[boolean]
-    Q8 -- 否 --> KEYWORD2[keyword<br/>兜底]
+    Q8 -- 否 --> KEYWORD2[keyword\n兜底]
 
     class START startEnd;
     class Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8 condition;
@@ -287,15 +287,15 @@ public class ProductBulkIngester {
 
 ```mermaid
 flowchart LR
-    classDef source fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef channel fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef target fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef source fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef channel fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef target fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 
     MYSQL[(MySQL)]
 
-    MYSQL --> CANAL[Canal 监听 binlog<br/>实时增量同步]
-    MYSQL --> MQ[MQ 消息队列<br/>业务代码双写]
-    MYSQL --> TIMER[定时任务<br/>按 updateTime 批量拉]
+    MYSQL --> CANAL[Canal 监听 binlog\n实时增量同步]
+    MYSQL --> MQ[MQ 消息队列\n业务代码双写]
+    MYSQL --> TIMER[定时任务\n按 updateTime 批量拉]
 
     CANAL --> ES1([Elasticsearch])
     MQ --> ES1

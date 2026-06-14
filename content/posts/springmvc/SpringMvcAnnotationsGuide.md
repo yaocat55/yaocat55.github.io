@@ -76,10 +76,10 @@ Spring MVC 的注解按功能可以分为六大类：
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[Spring MVC 注解体系]
 
@@ -90,11 +90,11 @@ flowchart LR
     ROOT --> B5[校验与异常]
     ROOT --> B6[跨域配置]
 
-    B1 --> L1["@RequestMapping<br>@GetMapping<br>@PostMapping<br>@PutMapping<br>@DeleteMapping<br>@PatchMapping"]
-    B2 --> L2["@RequestParam<br>@PathVariable<br>@RequestBody<br>@RequestHeader<br>@CookieValue<br>@MatrixVariable"]
-    B3 --> L3["@ResponseBody<br>@ResponseStatus<br>@RestController"]
-    B4 --> L4["@ModelAttribute<br>@SessionAttributes<br>@InitBinder<br>@ControllerAdvice"]
-    B5 --> L5["@Valid / @Validated<br>@ExceptionHandler<br>@RestControllerAdvice"]
+    B1 --> L1["@RequestMapping\n@GetMapping\n@PostMapping\n@PutMapping\n@DeleteMapping\n@PatchMapping"]
+    B2 --> L2["@RequestParam\n@PathVariable\n@RequestBody\n@RequestHeader\n@CookieValue\n@MatrixVariable"]
+    B3 --> L3["@ResponseBody\n@ResponseStatus\n@RestController"]
+    B4 --> L4["@ModelAttribute\n@SessionAttributes\n@InitBinder\n@ControllerAdvice"]
+    B5 --> L5["@Valid / @Validated\n@ExceptionHandler\n@RestControllerAdvice"]
     B6 --> L6["@CrossOrigin"]
 
     class ROOT root;
@@ -106,29 +106,29 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef annotation fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef annotation fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     START([HTTP 请求到达])
 
     subgraph DS["DispatcherServlet 分发"]
-        A1[HandlerMapping<br>匹配 Handler]
-        A2[HandlerAdapter<br>适配调用]
+        A1[HandlerMapping\n匹配 Handler]
+        A2[HandlerAdapter\n适配调用]
     end
 
     subgraph PRE["预处理阶段"]
-        B1["@InitBinder<br>数据绑定器初始化"]
-        B2["@ModelAttribute<br>模型数据预填充"]
-        B3["@Valid / @Validated<br>参数校验"]
+        B1["@InitBinder\n数据绑定器初始化"]
+        B2["@ModelAttribute\n模型数据预填充"]
+        B3["@Valid / @Validated\n参数校验"]
     end
 
     subgraph BIND["参数绑定阶段"]
-        C1["@RequestParam<br>查询参数绑定"]
-        C2["@PathVariable<br>路径变量绑定"]
-        C3["@RequestBody<br>请求体JSON→对象"]
-        C4["@RequestHeader<br>请求头绑定"]
-        C5["@CookieValue<br>Cookie绑定"]
+        C1["@RequestParam\n查询参数绑定"]
+        C2["@PathVariable\n路径变量绑定"]
+        C3["@RequestBody\n请求体JSON→对象"]
+        C4["@RequestHeader\n请求头绑定"]
+        C5["@CookieValue\nCookie绑定"]
     end
 
     subgraph EXEC["方法执行"]
@@ -136,13 +136,13 @@ flowchart TD
     end
 
     subgraph RESP["响应处理"]
-        E1["@ResponseBody<br>返回值→JSON序列化"]
-        E2["@ResponseStatus<br>HTTP状态码设置"]
+        E1["@ResponseBody\n返回值→JSON序列化"]
+        E2["@ResponseStatus\nHTTP状态码设置"]
     end
 
     subgraph ERROR["异常处理"]
-        F1["@ExceptionHandler<br>局部异常处理"]
-        F2["@RestControllerAdvice<br>全局异常处理"]
+        F1["@ExceptionHandler\n局部异常处理"]
+        F2["@RestControllerAdvice\n全局异常处理"]
     end
 
     START --> DS

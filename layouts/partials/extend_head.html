@@ -7,13 +7,11 @@
 <!-- ==================== KaTeX 数学公式 ==================== -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-
 <script>
     // KaTeX 初始化（只执行一次）
     (function () {
         if (window._katexInitialized) return;
         window._katexInitialized = true;
-
         function initKaTeX() {
             var script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js';
@@ -29,163 +27,415 @@
             };
             document.head.appendChild(script);
         }
-
         document.addEventListener("DOMContentLoaded", initKaTeX);
     })();
 </script>
-
 <!-- ==================== Mermaid 图表 ==================== -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-
 <script>
     // Mermaid 初始化（只执行一次）
     (function () {
         if (window._mermaidInitialized) return;
         window._mermaidInitialized = true;
-
         function initMermaid() {
             if (document.getElementsByClassName("mermaid").length === 0) return;
+            var htmlEl = document.documentElement;
+            var isDark = htmlEl.getAttribute("data-theme") === "dark"
+                || localStorage.getItem("pref-theme") === "dark"
+                || window.matchMedia("(prefers-color-scheme: dark)").matches;
             mermaid.initialize({
                 startOnLoad: true,
-                theme: 'base',
                 securityLevel: 'loose',
-                themeVariables: {
-                    'background': 'transparent',
-                    'primaryColor': getComputedStyle(document.body).getPropertyValue('--theme').trim() || '#5c6bc0',
-                    'primaryBorderColor': getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#90a4ae',
-                    'primaryTextColor': getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#212529',
-                    'lineColor': getComputedStyle(document.body).getPropertyValue('--tertiary').trim() || '#b0bec5',
-                    'secondaryColor': getComputedStyle(document.body).getPropertyValue('--code-bg').trim() || '#f5f5f5',
+                theme: 'base',
+                themeVariables: isDark ? {
+                    // ======== 深色模式：高对比 slate 色系 ========
+                    background: '#111827',
+                    mainBkg: '#111827',
+                    textColor: '#f8fafc',
+                    primaryColor: '#1e293b',
+                    primaryTextColor: '#f8fafc',
+                    primaryBorderColor: '#475569',
+                    secondaryColor: '#0f172a',
+                    secondaryTextColor: '#e2e8f0',
+                    secondaryBorderColor: '#334155',
+                    tertiaryColor: '#334155',
+                    tertiaryTextColor: '#cbd5e1',
+                    tertiaryBorderColor: '#475569',
+                    lineColor: '#cbd5e1',
+                    edgeLabelBackground: '#0f172a',
+                    // 时序图
+                    noteBkgColor: '#1e293b',
+                    noteTextColor: '#f8fafc',
+                    noteBorderColor: '#475569',
+                    actorBkg: '#1e293b',
+                    actorBorder: '#475569',
+                    actorTextColor: '#f8fafc',
+                    actorLineColor: '#cbd5e1',
+                    signalColor: '#cbd5e1',
+                    signalTextColor: '#f8fafc',
+                    labelBoxBkgColor: '#1e293b',
+                    labelTextColor: '#f8fafc',
+                    loopTextColor: '#f8fafc',
+                    activationBkgColor: '#334155',
+                    activationBorderColor: '#475569',
+                    // 状态图
+                    labelColor: '#f8fafc',
+                    altBackground: '#1e293b',
+                    // 类图
+                    classText: '#f8fafc',
+                } : {
+                    // ======== 浅色模式 slate 色系 ========
+                    background: '#fafafa',
+                    mainBkg: '#fafafa',
+                    primaryColor: '#f1f5f9',
+                    primaryTextColor: '#1e293b',
+                    primaryBorderColor: '#cbd5e1',
+                    secondaryColor: '#e2e8f0',
+                    secondaryTextColor: '#334155',
+                    secondaryBorderColor: '#cbd5e1',
+                    tertiaryColor: '#f8fafc',
+                    tertiaryTextColor: '#475569',
+                    tertiaryBorderColor: '#e2e8f0',
+                    lineColor: '#64748b',
+                    // 时序图
+                    noteBkgColor: '#fef9c3',
+                    noteTextColor: '#1e293b',
+                    noteBorderColor: '#eab308',
+                    actorBkg: '#f1f5f9',
+                    actorBorder: '#cbd5e1',
+                    actorTextColor: '#1e293b',
+                    actorLineColor: '#64748b',
+                    signalColor: '#64748b',
+                    signalTextColor: '#1e293b',
+                    labelBoxBkgColor: '#f1f5f9',
+                    labelTextColor: '#1e293b',
+                    loopTextColor: '#1e293b',
+                    activationBkgColor: '#e2e8f0',
+                    activationBorderColor: '#cbd5e1',
+                    // 状态图
+                    labelColor: '#1e293b',
+                    altBackground: '#f1f5f9',
+                    // 类图
+                    classText: '#1e293b',
                 }
             });
         }
-
         document.addEventListener("DOMContentLoaded", initMermaid);
     })();
 </script>
-
 <!-- ==================== 缩放功能样式 ==================== -->
 <style>
+    /* 1. 强行矫正 PaperMod 内部 mermaid 的基础容器，允许点击和 hover 提示 */
     .mermaid,
     .zoomable-img-container {
-        background: transparent !important;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: zoom-in;
-        position: relative;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        margin: 1.5rem 0;
-        overflow: hidden;
-        width: 100%;
-        max-width: 100%;
-        transition: width 0.45s cubic-bezier(0.25, 1, 0.5, 1), margin 0.45s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+        cursor: zoom-in !important;
+        position: relative !important;
+        display: block !important;
+        margin: 1.5rem auto !important;
+        transition: box-shadow 0.3s ease;
     }
-
-    .zoomable-img-container img {
-        width: auto;
-        max-width: 100%;
-        height: auto;
-        display: block;
-        transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-
     .mermaid svg {
-        transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+        cursor: zoom-in !important;
+        pointer-events: auto !important;
     }
-
-    .mermaid.is-expanded,
-    .zoomable-img-container.is-expanded {
-        width: 92vw !important;
-        max-width: 92vw !important;
-        margin-left: calc(50% - 46vw) !important;
-        margin-right: calc(50% - 46vw) !important;
-        margin-top: 2.5rem !important;
-        margin-bottom: 2.5rem !important;
-        cursor: zoom-out;
-        border-color: var(--theme) !important;
-        z-index: 999;
+    .mermaid:hover,
+    .zoomable-img-container:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    /* 2. 核心绝杀：灯箱绝对属于 html 标签的直系子代，斩断 body 内部一切特效动画的逆向污染 */
+    html>.lightbox-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(10, 10, 12, 0.93) !important;
+        /* 暗黑磨砂质感 */
+        backdrop-filter: blur(8px) !important;
+        z-index: 2147483647 !important;
+        /* 顶死层级上限，强行压制 999999 的猫爪 */
         display: flex !important;
-        justify-content: flex-start !important;
+        justify-content: center !important;
         align-items: center !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        padding: 30px 40px !important;
-        box-sizing: border-box !important;
-        background: var(--code-bg, #1e1e1e) !important;
-        box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.65), 0 20px 50px rgba(0, 0, 0, 0.5) !important;
-    }
-
-    .mermaid.is-expanded::-webkit-scrollbar,
-    .zoomable-img-container.is-expanded::-webkit-scrollbar {
-        height: 8px !important;
-        display: block !important;
-    }
-
-    .mermaid.is-expanded::-webkit-scrollbar-thumb,
-    .zoomable-img-container.is-expanded::-webkit-scrollbar-thumb {
-        background: var(--theme, #5c6bc0) !important;
-        border-radius: 4px !important;
-    }
-
-    .mermaid.is-expanded::-webkit-scrollbar-track,
-    .zoomable-img-container.is-expanded::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-radius: 4px !important;
-    }
-
-    .zoomable-img-container.is-expanded img {
-        width: auto !important;
-        min-width: 100% !important;
-        max-width: none !important;
-        height: auto !important;
-        display: block;
-        margin: 0 !important;
-    }
-
-    .mermaid.is-expanded svg {
-        width: auto !important;
-        max-width: none !important;
-        height: auto !important;
-        display: block !important;
-        margin: 0 !important;
-    }
-
-    .mermaid:not(.is-expanded):hover,
-    .zoomable-img-container:not(.is-expanded):hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border-color: var(--theme) !important;
-    }
-
-    .mermaid:not(.is-expanded)::before,
-    .zoomable-img-container:not(.is-expanded)::before {
-        content: "点击展开 🔍";
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: var(--theme, #5c6bc0);
-        color: #fff;
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 4px;
         opacity: 0;
-        transition: opacity 0.2s ease;
-        z-index: 5;
         pointer-events: none;
+        transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: zoom-out;
+        transform: none !important;
+        /* 强制闭锁一切来自 body 的变形继承 */
     }
-
-    .mermaid:not(.is-expanded):hover::before,
-    .zoomable-img-container:not(.is-expanded):hover::before {
-        opacity: 0.9;
+    html>.lightbox-overlay.is-active {
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
-
-    .mermaid.is-expanded::before,
-    .zoomable-img-container.is-expanded::before {
-        display: none !important;
+    /* 滚轮缩放提示 */
+    .lightbox-zoom-hint {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--card-bg);
+        color: var(--content);
+        padding: 8px 18px;
+        border-radius: 24px;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        pointer-events: none;
+        z-index: 2147483647;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .lightbox-zoom-hint.visible {
+        opacity: 1;
+    }
+    /* 灯箱内部的内容包裹框：强制激活双向原生滚动条 */
+    .lightbox-content {
+        max-width: 92vw !important;
+        max-height: 86vh !important;
+        overflow: auto !important;
+        /* 彻底解放双向滚动条 */
+        box-sizing: border-box !important;
+        padding: 25px !important;
+        background: var(--card-bg) !important;
+        /* 固定的高级暗黑底色 */
+        border-radius: 12px !important;
+        box-shadow: 0 25px 65px rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid var(--border) !important;
+        display: block !important;
+        transform: none !important;
+    }
+    /* 终极沙箱：彻底斩断外围一切样式污染 */
+    .lightbox-isolated-wrapper {
+        display: inline-block !important;
+        margin: 0 auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+    .lightbox-isolated-wrapper img,
+    .lightbox-isolated-wrapper svg {
+        display: block !important;
+        margin: 0 auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        background: transparent !important;
+        transform: none !important;
+    }
+    .lightbox-isolated-wrapper svg text {
+        fill: var(--content) !important;
+        vector-effect: non-scaling-stroke !important;
+    }
+    /* 精美滚动条定制 */
+    .lightbox-content::-webkit-scrollbar {
+        width: 10px !important;
+        height: 10px !important;
+    }
+    .lightbox-content::-webkit-scrollbar-thumb {
+        background: var(--primary) !important;
+        /* 优雅的极客靛蓝 */
+        border-radius: 5px !important;
+    }
+    .lightbox-content::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2) !important;
     }
 </style>
+<script>
+    (function () {
+        if (window._finalUltimateLightboxInitialized) return;
+        window._finalUltimateLightboxInitialized = true;
+        // 核心修正：必须等 DOMContentLoaded（全页 HTML 解析完），才能安全地创建并挂载灯箱
+        document.addEventListener("DOMContentLoaded", function () {
+            var overlay = document.createElement('div');
+            overlay.className = 'lightbox-overlay';
+            var contentContainer = document.createElement('div');
+            contentContainer.className = 'lightbox-content';
+            overlay.appendChild(contentContainer);
+            // 【关键降维打击】挂在 html 节点下，彻底飞出 body 统治区，避开猫爪和播放器的动画污染
+            document.documentElement.appendChild(overlay);
+            // 缩放提示浮层（根据设备自动调整文案）
+            var zoomHint = document.createElement('div');
+            zoomHint.className = 'lightbox-zoom-hint';
+            var hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            zoomHint.textContent = hasTouch ? '双指捏合缩放  |  点击空白关闭' : '滚轮缩放  |  点击空白关闭';
+            document.documentElement.appendChild(zoomHint);
+            var zoomHintTimer = null;
+            function showZoomHint() {
+                zoomHint.classList.add('visible');
+                clearTimeout(zoomHintTimer);
+                zoomHintTimer = setTimeout(function() {
+                    zoomHint.classList.remove('visible');
+                }, 2500);
+            }
 
+            // 通用：应用缩放到克隆元素
+            function applyScale(newScale) {
+                if (!window._lboxNativeW || !window._lboxClone) return;
+                if (newScale < 0.3) newScale = 0.3;
+                if (newScale > 6.0) newScale = 6.0;
+                window._lboxCurrentScale = newScale;
+                var fw = window._lboxNativeW * newScale;
+                var fh = window._lboxNativeH * newScale;
+                window._lboxClone.setAttribute('width', fw);
+                window._lboxClone.setAttribute('height', fh);
+                window._lboxClone.style.setProperty('width', fw + 'px', 'important');
+                window._lboxClone.style.setProperty('height', fh + 'px', 'important');
+                showZoomHint();
+            }
+
+            function closeLightbox() {
+                contentContainer.removeEventListener('wheel', wheelZoomHandler);
+                contentContainer.removeEventListener('touchstart', touchStartHandler, { passive: false });
+                contentContainer.removeEventListener('touchmove', touchMoveHandler, { passive: false });
+                contentContainer.removeEventListener('touchend', touchEndHandler);
+                overlay.classList.remove('is-active');
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+                contentContainer.innerHTML = '';
+                // 重置捏合状态
+                window._lboxPinchDist = null;
+                window._lboxPinchScale = null;
+            }
+            // 滚轮缩放处理器
+            var wheelZoomHandler = function(e) {
+                if (!overlay.classList.contains('is-active')) return;
+                if (!window._lboxCurrentScale || !window._lboxClone) return;
+                e.preventDefault();
+                e.stopPropagation();
+                var delta = e.deltaY > 0 ? -0.2 : 0.2;
+                applyScale(window._lboxCurrentScale + delta);
+            };
+
+            // ======== 移动端双指捏合缩放 ========
+            var touchStartHandler = function(e) {
+                if (!overlay.classList.contains('is-active')) return;
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    var dx = e.touches[0].clientX - e.touches[1].clientX;
+                    var dy = e.touches[0].clientY - e.touches[1].clientY;
+                    window._lboxPinchDist = Math.hypot(dx, dy);
+                    window._lboxPinchScale = window._lboxCurrentScale;
+                }
+            };
+            var touchMoveHandler = function(e) {
+                if (!overlay.classList.contains('is-active')) return;
+                if (e.touches.length === 2 && window._lboxPinchDist && window._lboxPinchScale) {
+                    e.preventDefault();
+                    var dx = e.touches[0].clientX - e.touches[1].clientX;
+                    var dy = e.touches[0].clientY - e.touches[1].clientY;
+                    var newDist = Math.hypot(dx, dy);
+                    var newScale = window._lboxPinchScale * (newDist / window._lboxPinchDist);
+                    applyScale(newScale);
+                }
+            };
+            var touchEndHandler = function(e) {
+                window._lboxPinchDist = null;
+                window._lboxPinchScale = null;
+            };
+            // 扫描并包裹普通图片
+            function wrapPostImages() {
+                var selectors = '.post-content img, article img';
+                document.querySelectorAll(selectors).forEach(function (img) {
+                    if (img.closest('.toc') || img.closest('nav') || img.closest('header') || img.closest('.profile') || img.closest('#cat-radio')) return;
+                    if (img.complete && img.naturalWidth > 0 && img.naturalWidth < 80) return;
+                    if (img.parentElement && img.parentElement.classList.contains('zoomable-img-container')) return;
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'zoomable-img-container';
+                    img.parentNode.insertBefore(wrapper, img);
+                    wrapper.appendChild(img);
+                });
+            }
+            // 利用事件捕获拦截全局点击，确保在猫爪特效之前执行
+            document.addEventListener('click', function (e) {
+                if (overlay.classList.contains('is-active')) {
+                    if (e.target.closest('img, svg')) return;
+                    closeLightbox();
+                    return;
+                }
+                var targetContainer = e.target.closest('.zoomable-img-container, .mermaid');
+                if (targetContainer) {
+                    var targetElement = targetContainer.querySelector('img, svg');
+                    if (!targetElement) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    contentContainer.innerHTML = '';
+                    var clone = targetElement.cloneNode(true);
+                    // 彻底清除可能带入灯箱的旧样式污染
+                    clone.removeAttribute('style');
+                    clone.className = '';
+                    var sandbox = document.createElement('div');
+                    sandbox.className = 'lightbox-isolated-wrapper';
+                    if (targetElement.tagName.toLowerCase() === 'svg') {
+                        var viewBox = targetElement.getAttribute('viewBox');
+                        if (viewBox) {
+                            var parts = viewBox.split(' ');
+                            if (parts.length === 4) {
+                                var nativeWidth = parseFloat(parts[2]);
+                                var nativeHeight = parseFloat(parts[3]);
+                                // 目标宽度：占视口 90%，上限 1500px，不设死板下线
+                                var targetWidth = Math.min(window.innerWidth * 0.92, 1500);
+                                var scale = targetWidth / nativeWidth;
+                                // 防止过度放大导致像素感太强，也防止缩得过小看不清
+                                if (scale > 3.5) scale = 3.5;
+                                if (scale < 0.5) scale = 0.5;
+                                // 存入全局，供滚轮缩放使用
+                                window._lboxNativeW = nativeWidth;
+                                window._lboxNativeH = nativeHeight;
+                                window._lboxCurrentScale = scale;
+                                window._lboxClone = clone;
+                                var finalW = nativeWidth * scale;
+                                var finalH = nativeHeight * scale;
+                                clone.setAttribute('width', finalW);
+                                clone.setAttribute('height', finalH);
+                                clone.style.setProperty('width', finalW + 'px', 'important');
+                                clone.style.setProperty('height', finalH + 'px', 'important');
+                            }
+                        } else {
+                            clone.setAttribute('width', '1000');
+                            clone.style.setProperty('width', '1000px', 'important');
+                        }
+                    } else if (clone.tagName.toLowerCase() === 'img') {
+                        // 普通图片限制在视口内自适应，绝不撑爆
+                        clone.style.setProperty('max-width', '100%', 'important');
+                        clone.style.setProperty('max-height', '75vh', 'important');
+                        clone.style.setProperty('height', 'auto', 'important');
+                    }
+                    sandbox.appendChild(clone);
+                    contentContainer.appendChild(sandbox);
+                    overlay.classList.add('is-active');
+                    // 绑定滚轮缩放 + 移动端双指捏合
+                    contentContainer.addEventListener('wheel', wheelZoomHandler, { passive: false });
+                    contentContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
+                    contentContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
+                    contentContainer.addEventListener('touchend', touchEndHandler);
+                    // 显示缩放提示
+                    showZoomHint();
+                    // 双层锁定外围滚动
+                    document.documentElement.style.overflow = 'hidden';
+                    document.body.style.overflow = 'hidden';
+                    setTimeout(function () {
+                        contentContainer.scrollLeft = 0;
+                        contentContainer.scrollTop = 0;
+                    }, 20);
+                }
+            }, true); // true 激活捕获阶段
+            // ESC 键响应
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('is-active')) {
+                    closeLightbox();
+                }
+            });
+            // 周期性轮询应对 PaperMod / Mermaid 异步渲染
+            wrapPostImages();
+            var timerCount = 0;
+            var paperModChecker = setInterval(function () {
+                wrapPostImages();
+                timerCount++;
+                if (timerCount > 12) clearInterval(paperModChecker);
+            }, 500);
+        });
+    })();
+</script>
 <!-- ==================== 目录 (TOC) 样式 ==================== -->
 <style>
     @media screen and (min-width: 1280px) {
@@ -202,12 +452,10 @@
             padding: 15px;
             font-size: 14px;
         }
-
         .toc .inner {
             margin: 0;
             padding: 0;
         }
-
         .toc summary {
             list-style: none;
             cursor: default;
@@ -216,147 +464,13 @@
             border-bottom: 1px solid var(--border);
             padding-bottom: 5px;
         }
-
         .toc summary::-webkit-details-marker {
             display: none;
         }
     }
-
     @media screen and (max-width: 1279px) {
         .toc {
             margin-bottom: 20px;
         }
     }
 </style>
-
-<!-- ==================== 图片缩放核心 JS ==================== -->
-<script>
-    // 图片缩放初始化函数（只执行一次）
-    (function () {
-        if (window._imageZoomInitialized) return;
-        window._imageZoomInitialized = true;
-
-        function isAvatarElement(img) {
-            var parent = img.parentElement;
-            while (parent && parent !== document.body) {
-                if (parent.classList && (parent.classList.contains('profile') || parent.classList.contains('profile-img'))) {
-                    return true;
-                }
-                if (parent.classList && parent.classList.contains('avatar')) {
-                    return true;
-                }
-                parent = parent.parentElement;
-            }
-            if (img.classList && (img.classList.contains('avatar') || img.classList.contains('profile-img'))) {
-                return true;
-            }
-            if (img.closest('.profile')) {
-                return true;
-            }
-            return false;
-        }
-
-        function initImageZoom() {
-            var contentSelectors = 'article img, .post-content img, .content img, main img';
-
-            document.querySelectorAll(contentSelectors).forEach(function (img) {
-                if (isAvatarElement(img)) return;
-                if (img.closest('.toc') || img.closest('nav') || img.closest('header') || img.closest('footer')) return;
-                if (img.complete && img.naturalWidth > 0 && img.naturalWidth < 80) return;
-                if (img.parentElement && img.parentElement.classList && img.parentElement.classList.contains('zoomable-img-container')) return;
-
-                var wrapper = document.createElement('div');
-                wrapper.className = 'zoomable-img-container';
-                img.parentNode.insertBefore(wrapper, img);
-                wrapper.appendChild(img);
-            });
-        }
-
-        // 缩放事件绑定（全局只绑定一次）
-        function bindZoomEvents() {
-            if (window._zoomEventsBound) return;
-            window._zoomEventsBound = true;
-
-            document.body.addEventListener('click', function (e) {
-                var activeExpanded = document.querySelector('.is-expanded');
-
-                if (activeExpanded) {
-                    if (activeExpanded.classList.contains('mermaid')) {
-                        var svg = activeExpanded.querySelector('svg');
-                        if (svg) {
-                            if (svg.dataset.origWidth) svg.setAttribute('width', svg.dataset.origWidth);
-                            else svg.removeAttribute('width');
-                            if (svg.dataset.origStyle) svg.setAttribute('style', svg.dataset.origStyle);
-                            else svg.removeAttribute('style');
-                        }
-                    }
-                    activeExpanded.classList.remove('is-expanded');
-                    return;
-                }
-
-                var zoomableDiv = e.target.closest('.zoomable-img-container, .mermaid');
-                if (zoomableDiv) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    if (zoomableDiv.classList.contains('mermaid')) {
-                        var svg = zoomableDiv.querySelector('svg');
-                        if (svg) {
-                            if (!svg.dataset.origWidth) svg.dataset.origWidth = svg.getAttribute('width') || '';
-                            if (!svg.dataset.origStyle) svg.dataset.origStyle = svg.getAttribute('style') || '';
-
-                            var viewBox = svg.getAttribute('viewBox');
-                            if (viewBox) {
-                                var parts = viewBox.split(' ');
-                                if (parts.length === 4) {
-                                    var nativeWidth = parseFloat(parts[2]);
-                                    if (nativeWidth > 800) {
-                                        var targetWidth = nativeWidth * 1.15;
-                                        svg.style.setProperty('width', targetWidth + 'px', 'important');
-                                        svg.style.setProperty('min-width', targetWidth + 'px', 'important');
-                                    } else {
-                                        svg.style.setProperty('width', '100%', 'important');
-                                    }
-                                }
-                            } else {
-                                svg.style.setProperty('width', '1500px', 'important');
-                            }
-                        }
-                    }
-
-                    zoomableDiv.classList.add('is-expanded');
-
-                    if (zoomableDiv.scrollWidth <= zoomableDiv.clientWidth) {
-                        zoomableDiv.style.setProperty('justify-content', 'center', 'important');
-                    } else {
-                        zoomableDiv.style.setProperty('justify-content', 'flex-start', 'important');
-                        zoomableDiv.scrollLeft = 0;
-                    }
-                }
-            });
-
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    var activeExpanded = document.querySelector('.is-expanded');
-                    if (activeExpanded) {
-                        if (activeExpanded.classList.contains('mermaid')) {
-                            var svg = activeExpanded.querySelector('svg');
-                            if (svg) {
-                                if (svg.dataset.origWidth) svg.setAttribute('width', svg.dataset.origWidth);
-                                else svg.removeAttribute('width');
-                                if (svg.dataset.origStyle) svg.setAttribute('style', svg.dataset.origStyle);
-                                else svg.removeAttribute('style');
-                            }
-                        }
-                        activeExpanded.classList.remove('is-expanded');
-                    }
-                }
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            initImageZoom();
-            bindZoomEvents();
-        });
-    })();
-</script>

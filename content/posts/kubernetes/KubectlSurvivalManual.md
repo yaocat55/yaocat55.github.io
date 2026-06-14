@@ -79,7 +79,7 @@ kubectl apply -f ~/k8s-first-app/
 ### 4.1 第一步：资源查看四件套 —— 90% 的日常就是这个循环
 
 ```mermaid
-flowchart TD
+flowchart LR
   GET["kubectl get&#a看概览: 列出资源, 看状态"]
   DESC["kubectl describe&#a看详情: Events 区域看发生了什么"]
   LOGS["kubectl logs&#a看日志: 容器自己说了什么"]
@@ -90,7 +90,7 @@ flowchart TD
   LOGS -->|"日志不够, 需要验证内部?"| EXEC
   GET -->|"一切正常?"| GET
 
-  classDef cmd fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef cmd fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class GET,DESC,LOGS,EXEC cmd
 ```
 
@@ -421,13 +421,13 @@ flowchart TD
   NR1 --> NR2["2. readinessProbe 是否在检查未就绪的依赖?"]
   NR2 --> NR3["3. 应用是否真的在监听 targetPort?"]
 
-  classDef start fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef start fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class START start
 
-  classDef problem fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold
+classDef problem fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class IMAGE,CRASH,PENDING,OOM,CONFIG,MOUNT,EVICTED,PROBE,NOTREADY problem
 
-  classDef step fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef step fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class IMG1,IMG2,IMG3,CR1,CR2,CR3,CR4,PD1,PD2,PD3,PD4 step
   class OOM1,OOM2,OOM3,OOM4,CFG1,CFG2,CFG3,M1,M2,M3 step
   class EV1,EV2,EV3,PR1,PR2,PR3,NR1,NR2,NR3 step

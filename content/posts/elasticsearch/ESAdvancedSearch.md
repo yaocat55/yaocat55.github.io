@@ -54,19 +54,19 @@ cover:
 
 ```mermaid
 flowchart LR
-    classDef mode fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef field fill:#BBDEFB,stroke:#1976D2,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+classDef mode fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef field fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
 
-    MM[multi_match<br/>搜索苹果手机]
-    MM --> BF[best_fields<br/>取最优字段的分数]
-    MM --> MF[most_fields<br/>各字段分数累加]
-    MM --> CF[cross_fields<br/>跨字段组合匹配]
+    MM[multi_match\n搜索苹果手机]
+    MM --> BF[best_fields\n取最优字段的分数]
+    MM --> MF[most_fields\n各字段分数累加]
+    MM --> CF[cross_fields\n跨字段组合匹配]
 
-    BF --> BF_EX["name=苹果手机 → 10分<br/>description=苹果... → 2分<br/>最终得分：10分"]
+    BF --> BF_EX["name=苹果手机 → 10分\ndescription=苹果... → 2分\n最终得分：10分"]
 
-    MF --> MF_EX["name=苹果... → 5分<br/>description=手机... → 3分<br/>最终得分：8分"]
+    MF --> MF_EX["name=苹果... → 5分\ndescription=手机... → 3分\n最终得分：8分"]
 
-    CF --> CF_EX["name=苹果 + detail=手机<br/>作为一个整体匹配<br/>最终得分：匹配两个字段"]
+    CF --> CF_EX["name=苹果 + detail=手机\n作为一个整体匹配\n最终得分：匹配两个字段"]
 
     class BF,MF,CF mode;
     class BF_EX,MF_EX,CF_EX field;
@@ -411,14 +411,14 @@ GET /product/_search
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[ES 聚合分类]
-    ROOT --> BUCKET[Bucket 桶聚合<br/>分组]
-    ROOT --> METRIC[Metric 指标聚合<br/>统计计算]
-    ROOT --> PIPELINE[Pipeline 管道聚合<br/>对聚合结果再聚合]
+    ROOT --> BUCKET[Bucket 桶聚合\n分组]
+    ROOT --> METRIC[Metric 指标聚合\n统计计算]
+    ROOT --> PIPELINE[Pipeline 管道聚合\n对聚合结果再聚合]
 
     BUCKET --> B1[terms: 按字段值分组]
     BUCKET --> B2[range: 按数值区间分组]

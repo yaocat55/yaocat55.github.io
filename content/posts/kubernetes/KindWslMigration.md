@@ -68,9 +68,9 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[本地 K8s 学习工具选型]
 
@@ -198,12 +198,12 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef verify fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef verify fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     START([开始]) --> CHECK_WSL{确认 WSL 2 就绪？}
-    CHECK_WSL -->|否| UPGRADE_WSL[升级到 WSL 2<br/>wsl --update]
+    CHECK_WSL -->|否| UPGRADE_WSL[升级到 WSL 2\nwsl --update]
     UPGRADE_WSL --> CHECK_WSL
     CHECK_WSL -->|是| INSTALL_DOCKER[安装 Docker Engine]
     INSTALL_DOCKER --> VERIFY_DOCKER["验证：docker run hello-world"]
@@ -294,10 +294,10 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef host fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef docker fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
-    classDef containers fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef apps fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef host fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef docker fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
+classDef containers fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef apps fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     subgraph HOST ["🖥️ WSL 2 / Linux 宿主机"]
         DOCKER[🐳 Docker Daemon]
@@ -346,30 +346,30 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
-    ROOT[K8s 核心概念分层<br/>掌握这8个概念即掌握80%]
+    ROOT[K8s 核心概念分层\n掌握这8个概念即掌握80%]
 
     ROOT --> L1(工作负载层)
-    L1 --> L1A["Pod<br/>最小调度单元"]
-    L1 --> L1B["Deployment<br/>副本管理、滚动更新、回滚"]
+    L1 --> L1A["Pod\n最小调度单元"]
+    L1 --> L1B["Deployment\n副本管理、滚动更新、回滚"]
 
     ROOT --> L2(网络层)
-    L2 --> L2A["Service<br/>固定虚拟IP + DNS + 负载均衡"]
-    L2 --> L2B["Ingress<br/>HTTP路由、域名、TLS终止"]
+    L2 --> L2A["Service\n固定虚拟IP + DNS + 负载均衡"]
+    L2 --> L2B["Ingress\nHTTP路由、域名、TLS终止"]
 
     ROOT --> L3(配置层)
-    L3 --> L3A["ConfigMap<br/>非敏感配置"]
-    L3 --> L3B["Secret<br/>密码、密钥等敏感信息"]
+    L3 --> L3A["ConfigMap\n非敏感配置"]
+    L3 --> L3B["Secret\n密码、密钥等敏感信息"]
 
     ROOT --> L4(存储层)
-    L4 --> L4A["PV/PVC<br/>持久化存储、解耦申请与供给"]
+    L4 --> L4A["PV/PVC\n持久化存储、解耦申请与供给"]
 
     ROOT --> L5(运维层)
-    L5 --> L5A["健康检查<br/>livenessProbe + readinessProbe"]
-    L5 --> L5B["滚动更新/回滚<br/>零停机部署"]
+    L5 --> L5A["健康检查\nlivenessProbe + readinessProbe"]
+    L5 --> L5B["滚动更新/回滚\n零停机部署"]
 
     class ROOT root;
     class L1,L2,L3,L4,L5 branch;
@@ -635,15 +635,15 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef producer fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
-    classDef consumer fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold;
-    classDef bridge fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef producer fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
+classDef consumer fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
+classDef bridge fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
-    ADMIN["管理员创建 PV<br/>定义：存储类型、容量、路径"] --> POOL[(存储池)]
-    POOL --> MATCH["K8s 根据容量和访问模式<br/>自动匹配 PV 与 PVC"]
-    USER["开发者创建 PVC<br/>声明：需要 10Gi RWO 存储"] --> MATCH
-    MATCH --> POD["Pod 引用 PVC<br/>挂载到容器路径"]
-    POD --> DATA[("数据持久化<br/>Pod 被删数据仍在")]
+    ADMIN["管理员创建 PV\n定义：存储类型、容量、路径"] --> POOL[(存储池)]
+    POOL --> MATCH["K8s 根据容量和访问模式\n自动匹配 PV 与 PVC"]
+    USER["开发者创建 PVC\n声明：需要 10Gi RWO 存储"] --> MATCH
+    MATCH --> POD["Pod 引用 PVC\n挂载到容器路径"]
+    POD --> DATA[("数据持久化\nPod 被删数据仍在")]
 
     class ADMIN producer;
     class USER consumer;
@@ -803,7 +803,7 @@ sequenceDiagram
     Note over N: 等待 readinessProbe 通过
     N-->>S: 新 Pod 就绪，注册到 Service
     D->>O: 缩容旧 ReplicaSet −1 个 Pod
-    Note over O: 旧 Pod 收到 SIGTERM<br/>优雅退出
+    Note over O: 旧 Pod 收到 SIGTERM\n优雅退出
     O-->>S: 旧 Pod 从 Service 摘除
 
     N->>N: 继续启动第 2 个新 Pod
@@ -865,10 +865,10 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef ok fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef fail fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef ok fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef fail fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     START([触发滚动更新]) --> NEW_POD["创建新版本 Pod"]
     NEW_POD --> PROBE{"readinessProbe\n连续通过？"}
@@ -909,23 +909,23 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef compose fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold;
-    classDef k8s fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef compose fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
+classDef k8s fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     subgraph COMPOSE ["Docker Compose 原项目"]
-        C1["nginx<br/>ports: 80:80<br/>volumes: ./nginx.conf"]
-        C2["app<br/>build: ./app<br/>ports: 5000:5000<br/>env: REDIS_HOST"]
-        C3["redis<br/>image: redis:7-alpine"]
-        C4["mysql<br/>image: mysql:8<br/>env: MYSQL_ROOT_PASSWORD"]
+        C1["nginx\nports: 80:80\nvolumes: ./nginx.conf"]
+        C2["app\nbuild: ./app\nports: 5000:5000\nenv: REDIS_HOST"]
+        C3["redis\nimage: redis:7-alpine"]
+        C4["mysql\nimage: mysql:8\nenv: MYSQL_ROOT_PASSWORD"]
     end
 
     subgraph K8S ["Kubernetes 迁移后"]
-        K1["nginx Deployment<br/>+ nginx Service (NodePort: 30080)<br/>+ nginx ConfigMap"]
-        K2["app Deployment (replicas: 3)<br/>+ app Service (ClusterIP)"]
-        K3["redis Deployment<br/>+ redis Service (ClusterIP)"]
-        K4["mysql StatefulSet<br/>+ mysql Service (ClusterIP)<br/>+ mysql Secret"]
+        K1["nginx Deployment\n+ nginx Service (NodePort: 30080)\n+ nginx ConfigMap"]
+        K2["app Deployment (replicas: 3)\n+ app Service (ClusterIP)"]
+        K3["redis Deployment\n+ redis Service (ClusterIP)"]
+        K4["mysql StatefulSet\n+ mysql Service (ClusterIP)\n+ mysql Secret"]
     end
 
     C1 -->|映射为| K1
@@ -1234,7 +1234,7 @@ sequenceDiagram
     participant AP as app Pod
 
     B->>H: GET http://localhost/
-    H->>K: extraPortMappings<br/>hostPort:80 → containerPort:30080
+    H->>K: extraPortMappings\nhostPort:80 → containerPort:30080
     K->>NS: NodePort 30080 转发
     NS->>NP: 负载均衡到 nginx Pod
     NP->>AS: proxy_pass http://app-svc:5000
@@ -1274,24 +1274,24 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef phase1 fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef phase2 fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef phase3 fill:#FFE082,stroke:#F9A825,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef detail fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px,color:#212121;
+classDef phase1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef phase2 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef phase3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef detail fill:#1e1e24,stroke:#6b7280,stroke-width:1px,color:#e5e7eb;
 
     subgraph P1 ["🔵 第一阶段：Kind 学 K8s 核心（本地、免费、零成本）"]
-        P1A["8 大核心概念<br/>Pod/Deployment/Service/Ingress<br/>ConfigMap/Secret/PV·PVC<br/>健康检查/滚动更新·回滚"] --> P1B["Docker Compose 迁移实战"]
-        P1B --> P1C["产出：能独立将 Compose 项目<br/>迁移到 K8s 并运行在生产级配置上"]
+        P1A["8 大核心概念\nPod/Deployment/Service/Ingress\nConfigMap/Secret/PV·PVC\n健康检查/滚动更新·回滚"] --> P1B["Docker Compose 迁移实战"]
+        P1B --> P1C["产出：能独立将 Compose 项目\n迁移到 K8s 并运行在生产级配置上"]
     end
 
     subgraph P2 ["🟢 第二阶段：云试用（阿里云 ACK 免费 1 个月）"]
-        P2A["体验云特性<br/>托管日志/云监控/负载均衡<br/>自动伸缩/云盘持久化"] --> P2B["对比 Kind 的差异<br/>哪些是 K8s 原生<br/>哪些是云厂商封装"]
-        P2B --> P2C["产出：理解云 K8s 只是<br/>K8s 核心 + 云基础设施的一层封装"]
+        P2A["体验云特性\n托管日志/云监控/负载均衡\n自动伸缩/云盘持久化"] --> P2B["对比 Kind 的差异\n哪些是 K8s 原生\n哪些是云厂商封装"]
+        P2B --> P2C["产出：理解云 K8s 只是\nK8s 核心 + 云基础设施的一层封装"]
     end
 
     subgraph P3 ["🟡 第三阶段：公司生产环境"]
-        P3A["已有理论基础 + 云体验"] --> P3B["直接上手干活<br/>CI·CD 流水线/Helm Chart<br/>监控告警/安全策略"]
-        P3C["到这时候，你已经不需要<br/>从零学 K8s 了——只需要<br/>学公司特定的工具链"]
+        P3A["已有理论基础 + 云体验"] --> P3B["直接上手干活\nCI·CD 流水线/Helm Chart\n监控告警/安全策略"]
+        P3C["到这时候，你已经不需要\n从零学 K8s 了——只需要\n学公司特定的工具链"]
     end
 
     P1 -.->|掌握 80%| P2
@@ -1344,16 +1344,16 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef core fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef cloud fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+classDef core fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef cloud fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
 
-    K8S[K8s 核心概念<br/>Pod/Deployment/Service<br/>Ingress/PV·PVC/探针<br/>你在 Kind 上已掌握] --> C1[阿里云 ACK]
+    K8S[K8s 核心概念\nPod/Deployment/Service\nIngress/PV·PVC/探针\n你在 Kind 上已掌握] --> C1[阿里云 ACK]
     K8S --> C2[腾讯云 TKE]
     K8S --> C3[Google GKE]
     K8S --> C4[AWS EKS]
 
-    C1 -.->|云厂商封装层| CA["• 托管控制面<br/>• SLB 负载均衡<br/>• 云盘/对象存储<br/>• 日志/监控服务"]
-    C2 -.->|云厂商封装层| CB["同上<br/>名称不同，本质一样"]
+    C1 -.->|云厂商封装层| CA["• 托管控制面\n• SLB 负载均衡\n• 云盘/对象存储\n• 日志/监控服务"]
+    C2 -.->|云厂商封装层| CB["同上\n名称不同，本质一样"]
     C3 -.->|云厂商封装层| CC["同上"]
     C4 -.->|云厂商封装层| CD["同上"]
 
@@ -1380,10 +1380,10 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[Kind 学习 K8s 总结]
 

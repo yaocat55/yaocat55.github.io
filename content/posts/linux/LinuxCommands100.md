@@ -39,10 +39,10 @@ cover:
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     PROBLEM([🚨 服务器异常]) --> CHECK_LOAD{"负载过高\n响应变慢？"}
     CHECK_LOAD -->|是| PATH_LOAD[📊 系统信息诊断]
@@ -618,12 +618,12 @@ mysql     1234  0.8 12.1 2097152 464896 ?     Ssl  Nov14   5:00 /usr/sbin/mysqld
 
 ```mermaid
 stateDiagram-v2
-    classDef start fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef running fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef sleeping fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121;
-    classDef stopped fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315;
-    classDef dead fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C;
-    classDef queue fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef start fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef running fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef sleeping fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe;
+classDef stopped fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
+classDef dead fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
+classDef queue fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     [*] --> Created
     Created --> Ready : fork()完成
@@ -1760,11 +1760,11 @@ alias ll='ls -alFh'
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT([🔍 常见服务器故障诊断入口])
 
@@ -1804,10 +1804,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     subgraph USERSPACE ["用户空间：诊断命令"]
         CMD_CPU["top / htop / mpstat"]

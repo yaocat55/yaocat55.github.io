@@ -63,15 +63,23 @@ lock.lockInterruptibly();  // 被 interrupt 时抛 InterruptedException
 
 ```mermaid
 flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
     root((ReentrantLock))
     root --> LOCK[实现 Lock 接口]
     root --> SYNC[持有内部类 Sync]
-    SYNC --> NS[NonfairSync<br/>非公平同步器]
-    SYNC --> FS[FairSync<br/>公平同步器]
-    SYNC --> AQS[extends<br/>AbstractQueuedSynchronizer]
-    AQS --> STATE[state 字段<br/>锁状态/重入计数]
-    AQS --> QUEUE[CLH 队列<br/>双向链表]
-    AQS --> OWNER[exclusiveOwnerThread<br/>独占线程引用]
+    SYNC --> NS[NonfairSync\n非公平同步器]
+    SYNC --> FS[FairSync\n公平同步器]
+    SYNC --> AQS[extends\nAbstractQueuedSynchronizer]
+    AQS --> STATE[state 字段\n锁状态/重入计数]
+    AQS --> QUEUE[CLH 队列\n双向链表]
+    AQS --> OWNER[exclusiveOwnerThread\n独占线程引用]
+
+class QUEUE data;
+class FS,LOCK,NS,OWNER,STATE,SYNC process;
+class AQS,root startEnd;
 ```
 
 核心设计：**ReentrantLock 不直接继承 AQS，而是通过内部类 `Sync` 间接继承**。`Sync` 是一个抽象类，提供公共的锁释放逻辑 `tryRelease()` 和非公平获取逻辑 `nonfairTryAcquire()`。`NonfairSync` 和 `FairSync` 是 `Sync` 的两个子类，各自实现不同的获取策略。
@@ -117,16 +125,22 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 当线程尝试获取锁失败时，它不会自旋空耗 CPU，而是会被包装成一个 `Node` 节点，插入 AQS 内部维护的 **CLH 队列**（Craig, Landin, and Hagersten 锁队列的变体——一个 FIFO 双向链表）的尾部，然后挂起（park）。
 
 ```mermaid
-flowchart TD
-    HEAD[head<br/>哑结点<br/>thread=null<br/>waitStatus=SIGNAL]
-    N1[Node-T1<br/>thread=T1<br/>waitStatus=SIGNAL<br/>nextWaiter=null]
-    N2[Node-T2<br/>thread=T2<br/>waitStatus=0<br/>nextWaiter=null]
+flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+    HEAD[head\n哑结点\nthread=null\nwaitStatus=SIGNAL]
+    N1[Node-T1\nthread=T1\nwaitStatus=SIGNAL\nnextWaiter=null]
+    N2[Node-T2\nthread=T2\nwaitStatus=0\nnextWaiter=null]
     TAIL[tail]
     HEAD -->|next| N1
     N1 -->|prev| HEAD
     N1 -->|next| N2
     N2 -->|prev| N1
     TAIL -.-> N2
+
+class N1,N2 branch;
+class HEAD,TAIL process;
 ```
 
 每个 `Node` 节点的关键字段：
@@ -321,13 +335,13 @@ sequenceDiagram
 
     T1->>FS: lock() → acquire(1)
     FS->>FS: tryAcquire(1)
-    Note over FS: state=0, 队列空<br/>hasQueuedPredecessors()=false
+    Note over FS: state=0, 队列空\nhasQueuedPredecessors()=false
     FS->>FS: CAS(0,1) 成功
     FS-->>T1: T1 获取锁
 
     T2->>FS: lock() → acquire(1)
     FS->>FS: tryAcquire(1)
-    Note over FS: state=1, owner=T1<br/>获取失败
+    Note over FS: state=1, owner=T1\n获取失败
     FS->>Q: addWaiter → 入队
     Q-->>FS: Node(T2)
     FS->>Q: park(T2)
@@ -337,7 +351,7 @@ sequenceDiagram
     FS->>Q: unparkSuccessor → unpark(T2)
     Q-->>T2: T2 被唤醒
     T2->>FS: tryAcquire(1)
-    Note over FS: state=0<br/>hasQueuedPredecessors()=false<br/>（T2是head.next）
+    Note over FS: state=0\nhasQueuedPredecessors()=false\n（T2是head.next）
     FS->>FS: CAS(0,1) 成功
     FS-->>T2: T2 获取锁
 ```
@@ -420,19 +434,31 @@ public final boolean release(int arg) {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
     A[Thread.unlock] --> B[AQS.release1]
     B --> C[Sync.tryRelease1]
     C --> D{state - 1 == 0?}
-    D -->|否| E[setState 新值<br/>返回 false]
-    D -->|是| F[setExclusiveOwnerThread null<br/>setState 0<br/>返回 true]
+    D -->|否| E[setState 新值\n返回 false]
+    D -->|是| F[setExclusiveOwnerThread null\nsetState 0\n返回 true]
     F --> G[unparkSuccessor head]
     G --> H[将 head.waitStatus 清零]
     H --> I[取 head.next]
     I --> J{next 存在且未取消?}
     J -->|是| K[LockSupport.unpark next.thread]
-    J -->|否| L[从 tail 向前找有效节点<br/>unpark 该节点线程]
-    K --> M[被唤醒线程在<br/>acquireQueued 中继续循环]
+    J -->|否| L[从 tail 向前找有效节点\nunpark 该节点线程]
+    K --> M[被唤醒线程在\nacquireQueued 中继续循环]
     L --> M
+
+class L branch;
+class D,J condition;
+class G,M data;
+class A,B,C,H,I,K process;
+class E,F startEnd;
 ```
 
 ## ⚙️ 可重入性：state 字段的累加与递减
@@ -469,16 +495,16 @@ setState(c);
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    Idle: state=0<br/>owner=null
-    Idle --> Held1: 线程T首次 lock()<br/>CAS(0→1) 成功
-    Held1: state=1<br/>owner=T
-    Held1 --> Held2: T 再次 lock()<br/>state++ (1→2)
-    Held2: state=2<br/>owner=T
-    Held2 --> Held3: T 再次 lock()<br/>state++ (2→3...)
-    Held3: state=N (N≥3)<br/>owner=T
-    Held3 --> Held2: T unlock()<br/>state-- (N→N-1)
-    Held2 --> Held1: T unlock()<br/>state-- (2→1)
-    Held1 --> Idle: T unlock()<br/>state-- (1→0)
+    Idle: state=0\nowner=null
+    Idle --> Held1: 线程T首次 lock()\nCAS(0→1) 成功
+    Held1: state=1\nowner=T
+    Held1 --> Held2: T 再次 lock()\nstate++ (1→2)
+    Held2: state=2\nowner=T
+    Held2 --> Held3: T 再次 lock()\nstate++ (2→3...)
+    Held3: state=N (N≥3)\nowner=T
+    Held3 --> Held2: T unlock()\nstate-- (N→N-1)
+    Held2 --> Held1: T unlock()\nstate-- (2→1)
+    Held1 --> Idle: T unlock()\nstate-- (1→0)
 ```
 
 注意：**每一次 `lock()` 必须对应一次 `unlock()`**。如果 lock 了 3 次但只 unlock 了 2 次，state 永远是 1，锁永远不会释放，其他线程将永远阻塞——这是常见的线上死锁原因之一。
@@ -564,13 +590,21 @@ class BoundedBuffer {
 
 ```mermaid
 flowchart TD
-    CLH[CLH 同步队列<br/>双向链表<br/>prev/next]
-    CQ[Condition 等待队列<br/>单向链表<br/>nextWaiter]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    CLH[CLH 同步队列\n双向链表\nprev/next]
+    CQ[Condition 等待队列\n单向链表\nnextWaiter]
     CLH -->|head| H[head 哑结点]
     CLH -->|tail| TAIL[tail]
-    CQ -->|firstWaiter| FW[Node-T2<br/>waitStatus=CONDITION<br/>nextWaiter→T3]
-    FW -->|nextWaiter| TW[Node-T3<br/>waitStatus=CONDITION]
+    CQ -->|firstWaiter| FW[Node-T2\nwaitStatus=CONDITION\nnextWaiter→T3]
+    FW -->|nextWaiter| TW[Node-T3\nwaitStatus=CONDITION]
     CQ -->|lastWaiter| LW[lastWaiter]
+
+class CQ,FW,TW condition;
+class CLH data;
+class H,LW,TAIL process;
 ```
 
 关键区别：CLH 同步队列使用 `prev/next` 双向指针，Condition 等待队列使用 `nextWaiter` 单向指针。同一个 `Node` 对象不会同时出现在两个队列中——`await()` 将节点从同步队列转移到 Condition 队列，`signal()` 将节点从 Condition 队列转移回同步队列。
@@ -589,14 +623,14 @@ sequenceDiagram
 
     Note over T: T 持有锁
     T->>CO: await()
-    CO->>CQ: addConditionWaiter<br/>创建新节点加入 Condition 队列
-    CO->>AQS: fullyRelease(state)<br/>释放锁（state→0）
-    CO->>Q: unparkSuccessor<br/>唤醒 CLH 队列后继
+    CO->>CQ: addConditionWaiter\n创建新节点加入 Condition 队列
+    CO->>AQS: fullyRelease(state)\n释放锁（state→0）
+    CO->>Q: unparkSuccessor\n唤醒 CLH 队列后继
     CO->>CO: isOnSyncQueue(node)?
-    Note over CO: 节点在 Condition 队列<br/>不在 CLH 队列
-    CO->>T: LockSupport.park(T)<br/>T 挂起等待 signal
+    Note over CO: 节点在 Condition 队列\n不在 CLH 队列
+    CO->>T: LockSupport.park(T)\nT 挂起等待 signal
     Note over T: T 被 signal 唤醒后
-    T->>AQS: acquireQueued(node)<br/>重新竞争锁
+    T->>AQS: acquireQueued(node)\n重新竞争锁
     AQS-->>T: 获取锁成功
     CO-->>T: await() 返回
     Note over T: T 重新持有锁
@@ -820,21 +854,30 @@ try {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     RL[ReentrantLock] --> SYNC[Sync extends AQS]
-    SYNC --> STATE["volatile int state<br/>0=空闲, >0=重入次数"]
+    SYNC --> STATE["volatile int state\n0=空闲, >0=重入次数"]
     SYNC --> OWNER[exclusiveOwnerThread]
 
     %% 修复行：添加了双引号包裹，防止内部的 [thread, ...] 与外层 CLH[...] 的方括号冲突
-    SYNC --> CLH["CLH 双向链表队列<br/>Node[thread, waitStatus, prev, next]"]
+    SYNC --> CLH["CLH 双向链表队列\nNode[thread, waitStatus, prev, next]"]
 
     CLH --> ACQUIRE[acquire 模板方法]
     CLH --> RELEASE[release 模板方法]
-    ACQUIRE --> TRY_ACQ["tryAcquire<br/>由子类 FairSync/NonfairSync 实现"]
-    RELEASE --> TRY_REL["tryRelease<br/>由 Sync 统一实现"]
-    SYNC --> COND["ConditionObject<br/>Condition 单向队列<br/>nextWaiter 连接"]
+    ACQUIRE --> TRY_ACQ["tryAcquire\n由子类 FairSync/NonfairSync 实现"]
+    RELEASE --> TRY_REL["tryRelease\n由 Sync 统一实现"]
+    SYNC --> COND["ConditionObject\nCondition 单向队列\nnextWaiter 连接"]
     COND --> AWAIT["await: 释放锁→入Condition队列→park"]
     COND --> SIGNAL["signal: 转移回CLH队列→重新竞争锁"]
 
+class AWAIT,COND condition;
+class SIGNAL data;
+class ACQUIRE,CLH,OWNER,RELEASE,RL,STATE,TRY_ACQ,TRY_REL,nNode process;
+class SYNC startEnd;
 ```
 
 ### 📋 核心概念速查

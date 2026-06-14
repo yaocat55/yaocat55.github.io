@@ -54,22 +54,22 @@ A 认为 x=1——B 认为 x=2——到底 x 是多少？
 
 ```mermaid
 flowchart TD
-    start["两个客户端——两个写请求——<br/>到达两个不同节点"]:::startEnd
+    start["两个客户端——两个写请求——\n到达两个不同节点"]:::startEnd
 
-    start --> c1["客户端 1 → 节点 A<br/>SET x=1"]:::data
-    start --> c2["客户端 2 → 节点 B<br/>SET x=2"]:::data
+    start --> c1["客户端 1 → 节点 A\nSET x=1"]:::data
+    start --> c2["客户端 2 → 节点 B\nSET x=2"]:::data
 
-    c1 --> conflict["节点 A：x=1<br/>节点 B：x=2<br/>⚡ 冲突——x 到底等于几？"]:::highlight
+    c1 --> conflict["节点 A：x=1\n节点 B：x=2\n⚡ 冲突——x 到底等于几？"]:::highlight
     c2 --> conflict
 
-    conflict --> naive["最简单的方案：<br/>规定只有一台机器能接受写——<br/>这台机器叫 Leader"]:::data
+    conflict --> naive["最简单的方案：\n规定只有一台机器能接受写——\n这台机器叫 Leader"]:::data
 
-    naive --> next_q["新问题：Leader 宕机了呢？<br/>谁当新 Leader？<br/>怎么告诉大家？"]:::condition
+    naive --> next_q["新问题：Leader 宕机了呢？\n谁当新 Leader？\n怎么告诉大家？"]:::condition
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
 ```
 
 Raft 要解决的就是这两个问题合在一起：<strong>(1) 选出一个大家都认可的 Leader——(2) Leader 挂了以后——自动选出新 Leader。</strong>
@@ -122,13 +122,13 @@ Raft 里每个节点在任意时刻只属于三种角色之一：
 stateDiagram-v2
     [*] --> Follower: 节点启动
 
-    Follower --> Candidate: 选举超时——<br/>没收到 Leader 心跳
+    Follower --> Candidate: 选举超时——\n没收到 Leader 心跳
     Candidate --> Leader: 收到 majority 投票
 
-    Candidate --> Follower: 发现更高任期<br/>或选举超时——分裂投票
+    Candidate --> Follower: 发现更高任期\n或选举超时——分裂投票
     Leader --> Follower: 发现更高任期
 
-    note right of Leader: Leader 负责处理所有写请求<br/>Follower 只读——不直接接受写
+    note right of Leader: Leader 负责处理所有写请求\nFollower 只读——不直接接受写
 ```
 
 | 角色 | 职责 | 关键行为 |
@@ -145,7 +145,7 @@ sequenceDiagram
     participant N2 as Nacos-2 (Follower)
     participant N3 as Nacos-3 (Follower)
 
-    Note over N1,N3: 初始状态——三节点都是 Follower<br/>Nacos-1 是当前 Leader——刚挂了
+    Note over N1,N3: 初始状态——三节点都是 Follower\nNacos-1 是当前 Leader——刚挂了
 
     rect rgb(255, 243, 224)
         Note over N2: Nacos-2 选举超时（150ms ~ 300ms 随机）
@@ -193,17 +193,17 @@ Leader 选出来之后——写操作怎么处理？步骤很简单——<strong
 ```mermaid
 flowchart TD
     write["客户端写入 x=3"]:::startEnd
-    write --> l1["① Leader 追加到本地日志<br/>状态：uncommitted"]:::process
-    l1 --> l2["② 并发发送 AppendEntries<br/>给所有 Followers"]:::process
-    l2 --> q{"③ 多少 Followers<br/>确认收到？"}:::condition
-    q -->|"≥ majority（含 Leader）"| commit["④ 标记 committed——应用到状态机<br/>✅ 写入成功"]:::data
-    q -->|"＜ majority"| retry["不断重试——直到超时后<br/>重新选举——<br/>当前 Leader 可能不是真正的 Leader"]:::reject
+    write --> l1["① Leader 追加到本地日志\n状态：uncommitted"]:::process
+    l1 --> l2["② 并发发送 AppendEntries\n给所有 Followers"]:::process
+    l2 --> q{"③ 多少 Followers\n确认收到？"}:::condition
+    q -->|"≥ majority（含 Leader）"| commit["④ 标记 committed——应用到状态机\n✅ 写入成功"]:::data
+    q -->|"＜ majority"| retry["不断重试——直到超时后\n重新选举——\n当前 Leader 可能不是真正的 Leader"]:::reject
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 ```
 
 这就是 Raft 如何实现 CP——<strong>写操作必须 majority 确认——网络分区发生时——少数派分区不可能提交任何新数据——保证了一致性。</strong>
@@ -241,14 +241,14 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant PS as product-service<br/>(临时实例)
+    participant PS as product-service\n(临时实例)
     participant NS as Nacos Server
-    participant CS as coupon-service<br/>(消费者)
+    participant CS as coupon-service\n(消费者)
 
     Note over PS,CS: 正常运行——心跳保持
 
     loop 每 5 秒
-        PS->>NS: 心跳——/nacos/v1/ns/instance/beat<br/>serviceName=product-service&ip=192.168.1.10&port=8080
+        PS->>NS: 心跳——/nacos/v1/ns/instance/beat\nserviceName=product-service&ip=192.168.1.10&port=8080
         NS-->>PS: OK——服务健康
     end
 
@@ -262,7 +262,7 @@ sequenceDiagram
     rect rgb(255, 243, 224)
         Note over CS: 消费者拉取最新实例列表
         CS->>NS: GET /nacos/v1/ns/instance/list
-        NS-->>CS: product-service 实例列表<br/>(已剔除挂掉的实例)
+        NS-->>CS: product-service 实例列表\n(已剔除挂掉的实例)
     end
 ```
 
@@ -299,18 +299,18 @@ Dubbo 服务感知的完整链路：
 
 ```mermaid
 flowchart TD
-    p1["Provider-1<br/>192.168.1.10:8080"]:::data --> nacos["Nacos 注册中心"]:::startEnd
-    p2["Provider-2<br/>192.168.1.11:8080"]:::data --> nacos
-    p3["Provider-3<br/>192.168.1.12:8080"]:::data --> nacos
+    p1["Provider-1\n192.168.1.10:8080"]:::data --> nacos["Nacos 注册中心"]:::startEnd
+    p2["Provider-2\n192.168.1.11:8080"]:::data --> nacos
+    p3["Provider-3\n192.168.1.12:8080"]:::data --> nacos
 
-    nacos -->|"推送实例变更<br/>TCP 长连接"| consumer["Consumer<br/>本地缓存 Provider 列表"]:::process
+    nacos -->|"推送实例变更\nTCP 长连接"| consumer["Consumer\n本地缓存 Provider 列表"]:::process
 
-    consumer --> rpc1["RPC 调用<br/>Provider-1"]:::data
-    consumer --> rpc2["RPC 调用<br/>Provider-2"]:::data
+    consumer --> rpc1["RPC 调用\nProvider-1"]:::data
+    consumer --> rpc2["RPC 调用\nProvider-2"]:::data
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 ```
 
 > ⚠️ <strong>新手提示</strong>：Dubbo Consumer 本地的 Provider 缓存是 <strong>最终一致性</strong>的——从 Provider 宕机到 Consumer 收到推送、更新缓存——这中间有一小段时间差——Consumer 可能还在往已宕机的 Provider 发请求。所以 Dubbo 通常要配合<strong>重试机制</strong>（Failover）来兜这个时间窗口——这又是 AP 模式在可用性和一致性之间的权衡——缓存机制加快了 Consumer 调用速度（不用每次都查注册中心）——代价是短暂的地址不一致。

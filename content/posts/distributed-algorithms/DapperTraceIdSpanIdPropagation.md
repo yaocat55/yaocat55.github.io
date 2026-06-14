@@ -102,18 +102,18 @@ Span D (SpanId=D, ParentSpanId=B)
 四个 Span 共享同一个 TraceId（abc123），通过 ParentSpanId 串联成调用树。在 SkyWalking 的 UI 上——这张图会被渲染成一棵可视化调用树——每个 Span 的耗时用颜色标记（绿色快、黄色一般、红色慢），研发一眼就能看到<strong>"AccountService 的扣余额花了 200ms——比扣库存的 120ms 多了近一倍"</strong>——排查范围瞬间缩小。
 
 ```mermaid
-flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+flowchart LR
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
-    TRACE["🔗 TraceId: abc123<br/>用户下单请求——全程"]:::startEnd
+    TRACE["🔗 TraceId: abc123\n用户下单请求——全程"]:::startEnd
 
-    TRACE --> SA["Span A: API Gateway<br/>SpanId=A——ParentSpanId=null<br/>⏱ 500ms"]:::process
-    SA --> SB["Span B: OrderService<br/>SpanId=B——ParentSpanId=A<br/>⏱ 400ms"]:::process
-    SB --> SC["Span C: InventoryService<br/>SpanId=C——ParentSpanId=B<br/>⏱ 120ms ✅"]:::data
-    SB --> SD["Span D: AccountService<br/>SpanId=D——ParentSpanId=B<br/>⏱ 200ms ⚠ 偏慢！"]:::highlight
+    TRACE --> SA["Span A: API Gateway\nSpanId=A——ParentSpanId=null\n⏱ 500ms"]:::process
+    SA --> SB["Span B: OrderService\nSpanId=B——ParentSpanId=A\n⏱ 400ms"]:::process
+    SB --> SC["Span C: InventoryService\nSpanId=C——ParentSpanId=B\n⏱ 120ms ✅"]:::data
+    SB --> SD["Span D: AccountService\nSpanId=D——ParentSpanId=B\n⏱ 200ms ⚠ 偏慢！"]:::highlight
 ```
 
 ---
@@ -140,23 +140,23 @@ sequenceDiagram
     participant OS as OrderService
     participant IS as InventoryService
 
-    Note over GW: 请求到达——生成 TraceId=abc123<br/>生成 SpanId=A——ParentSpanId=null<br/>记录 Span A——开始计时
+    Note over GW: 请求到达——生成 TraceId=abc123\n生成 SpanId=A——ParentSpanId=null\n记录 Span A——开始计时
 
-    GW->>OS: HTTP POST /order/create<br/>Header: TraceId=abc123<br/>SpanId=B——ParentSpanId=A
+    GW->>OS: HTTP POST /order/create\nHeader: TraceId=abc123\nSpanId=B——ParentSpanId=A
 
-    Note over OS: 收到请求——提取 Header<br/>TraceId=abc123——ParentSpanId=A<br/>自己生成 SpanId=B<br/>记录 Span B——开始计时
+    Note over OS: 收到请求——提取 Header\nTraceId=abc123——ParentSpanId=A\n自己生成 SpanId=B\n记录 Span B——开始计时
 
-    OS->>IS: RPC: deductStock()<br/>Header: TraceId=abc123<br/>SpanId=C——ParentSpanId=B
+    OS->>IS: RPC: deductStock()\nHeader: TraceId=abc123\nSpanId=C——ParentSpanId=B
 
-    Note over IS: 收到请求——提取 Header<br/>TraceId=abc123——ParentSpanId=B<br/>自己生成 SpanId=C<br/>记录 Span C——开始计时
+    Note over IS: 收到请求——提取 Header\nTraceId=abc123——ParentSpanId=B\n自己生成 SpanId=C\n记录 Span C——开始计时
 
     IS-->>OS: 返回——库存扣减成功
-    Note over IS: Span C 结束——记录耗时 120ms<br/>上报到追踪收集器
+    Note over IS: Span C 结束——记录耗时 120ms\n上报到追踪收集器
 
     OS-->>GW: 返回——订单创建成功
-    Note over OS: Span B 结束——记录耗时 400ms<br/>上报到追踪收集器
+    Note over OS: Span B 结束——记录耗时 400ms\n上报到追踪收集器
 
-    Note over GW: Span A 结束——记录耗时 500ms<br/>上报到追踪收集器
+    Note over GW: Span A 结束——记录耗时 500ms\n上报到追踪收集器
 ```
 
 ### 4.2 自动埋点——对业务代码零侵入
@@ -202,27 +202,27 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     USER["👤 用户发起请求"]:::highlight
 
-    USER --> P1["① Distro 协议<br/>服务发现——找到目标<br/>——AP——最终一致"]:::data
-    USER --> P2["② Raft 协议<br/>配置中心——读到的<br/>必须正确——CP——强一致"]:::data
+    USER --> P1["① Distro 协议\n服务发现——找到目标\n——AP——最终一致"]:::data
+    USER --> P2["② Raft 协议\n配置中心——读到的\n必须正确——CP——强一致"]:::data
 
-    P1 --> P3["③ 流控算法<br/>滑动窗口——漏桶——令牌桶<br/>——保护系统不被冲垮"]:::data
+    P1 --> P3["③ 流控算法\n滑动窗口——漏桶——令牌桶\n——保护系统不被冲垮"]:::data
     P2 --> P3
 
-    P3 --> P4["④ 2PC / TCC<br/>跨服务同步调用<br/>——数据要么全成功<br/>——要么全回滚"]:::data
+    P3 --> P4["④ 2PC / TCC\n跨服务同步调用\n——数据要么全成功\n——要么全回滚"]:::data
 
-    P4 --> P5["⑤ 事务消息<br/>半消息 + 回查<br/>——异步场景下<br/>——保证最终一致"]:::data
+    P4 --> P5["⑤ 事务消息\n半消息 + 回查\n——异步场景下\n——保证最终一致"]:::data
 
-    P5 --> P6["⑥ 负载均衡<br/>加权随机——最少活跃<br/>——一致性哈希<br/>——请求打到哪个实例"]:::data
+    P5 --> P6["⑥ 负载均衡\n加权随机——最少活跃\n——一致性哈希\n——请求打到哪个实例"]:::data
 
-    P6 --> P7["⑦ Dapper 模型<br/>TraceId + SpanId<br/>——跨服务追踪<br/>——定位瓶颈"]:::data
+    P6 --> P7["⑦ Dapper 模型\nTraceId + SpanId\n——跨服务追踪\n——定位瓶颈"]:::data
 
-    P7 --> DONE["✅ 一个请求的完整旅程:<br/>发现→配置→限流→事务<br/>→消息→路由→追踪"]:::highlight
+    P7 --> DONE["✅ 一个请求的完整旅程:\n发现→配置→限流→事务\n→消息→路由→追踪"]:::highlight
 ```
 
 | # | 文章 | 核心算法/协议 | 一句话 |

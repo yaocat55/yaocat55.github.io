@@ -70,19 +70,19 @@ cover:
 
 ```mermaid
 flowchart TD
-    SPRING(("⚙️ Spring Framework<br/>IoC + AOP"))
+    SPRING(("⚙️ Spring Framework\nIoC + AOP"))
 
-    SPRING --> MVC["🔄 Spring MVC<br/>Web请求处理 / 路由 / 视图"]
-    SPRING --> BOOT["🚀 Spring Boot<br/>整合简化层"]
+    SPRING --> MVC["🔄 Spring MVC\nWeb请求处理 / 路由 / 视图"]
+    SPRING --> BOOT["🚀 Spring Boot\n整合简化层"]
 
     BOOT --> AC[自动配置]
     BOOT --> EM[嵌入式容器]
     BOOT --> ST[Starter依赖]
     BOOT --> AC1[Actuator监控]
 
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     class SPRING root
     class MVC,BOOT branch
@@ -142,19 +142,19 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    SBA["🔷 @SpringBootApplication<br/>组合注解"]
+    SBA["🔷 @SpringBootApplication\n组合注解"]
 
     SBA --> SBC["⚙️ @SpringBootConfiguration"]
     SBA --> EAC["⚡ @EnableAutoConfiguration"]
     SBA --> CS["🔍 @ComponentScan"]
 
-    SBC --> CFG["本质是 @Configuration<br/>标识该类为配置类"]
-    EAC --> IMP["通过 @Import 引入<br/>AutoConfigurationImportSelector"]
-    CS --> SCAN["默认扫描启动类<br/>所在包及子包"]
+    SBC --> CFG["本质是 @Configuration\n标识该类为配置类"]
+    EAC --> IMP["通过 @Import 引入\nAutoConfigurationImportSelector"]
+    CS --> SCAN["默认扫描启动类\n所在包及子包"]
 
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     class SBA root
     class SBC,EAC,CS branch
@@ -313,11 +313,11 @@ DataAccessException
 flowchart TD
     START(["🔷 @EnableAutoConfiguration"])
 
-    START --> IMPORT["@Import 导入<br/>AutoConfigurationImportSelector"]
+    START --> IMPORT["@Import 导入\nAutoConfigurationImportSelector"]
 
-    IMPORT --> METADATA["读取 spring.factories 或<br/>AutoConfiguration.imports"]
+    IMPORT --> METADATA["读取 spring.factories 或\nAutoConfiguration.imports"]
 
-    METADATA --> FILTER{"🔍 @Conditional<br/>条件判断"}
+    METADATA --> FILTER{"🔍 @Conditional\n条件判断"}
 
     FILTER -->|满足| REGISTER["✅ 注册 Bean 到容器"]
     FILTER -->|不满足| SKIP["⏭️ 跳过此配置"]
@@ -326,10 +326,10 @@ flowchart TD
     PRIORITY -->|用户未定义| DEFAULT["使用默认 Bean"]
     PRIORITY -->|用户已定义| USER["使用用户自定义 Bean"]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class START startEnd
     class FILTER,PRIORITY condition
@@ -665,7 +665,7 @@ flowchart TD
 
     CALL --> PROXY{AOP 代理拦截}
 
-    PROXY --> TM[⚙️ PlatformTransactionManager<br/>开启事务]
+    PROXY --> TM[⚙️ PlatformTransactionManager\n开启事务]
 
     TM --> EXEC[执行目标方法]
 
@@ -673,7 +673,7 @@ flowchart TD
 
     CHECK -->|正常返回| COMMIT[✅ 提交事务]
     CHECK -->|RuntimeException/Error| ROLLBACK[❌ 回滚事务]
-    CHECK -->|受检异常| DEPENDS{rollbackFor<br/>是否配置?}
+    CHECK -->|受检异常| DEPENDS{rollbackFor\n是否配置?}
 
     DEPENDS -->|已配置| ROLLBACK
     DEPENDS -->|未配置| COMMIT
@@ -681,10 +681,10 @@ flowchart TD
     COMMIT --> END([事务结束])
     ROLLBACK --> END
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class CALL,END startEnd
     class PROXY,CHECK,DEPENDS condition
@@ -810,16 +810,16 @@ Spring AOP 基于 <strong>动态代理</strong>实现，在运行时期将切面
 flowchart TD
     TARGET[🎯 目标对象]
 
-    TARGET --> CHECK{目标是否<br/>实现接口?}
+    TARGET --> CHECK{目标是否\n实现接口?}
 
-    CHECK -->|是| JDK[🔷 JDK 动态代理<br/>基于接口生成代理]
-    CHECK -->|否| CGLIB[🔶 CGLIB 代理<br/>继承目标类生成子类]
+    CHECK -->|是| JDK[🔷 JDK 动态代理\n基于接口生成代理]
+    CHECK -->|否| CGLIB[🔶 CGLIB 代理\n继承目标类生成子类]
 
-    JDK --> JDK_METHOD[基于反射调用<br/>java.lang.reflect.Proxy]
-    CGLIB --> CGLIB_METHOD[基于字节码生成子类<br/>org.springframework.cglib]
+    JDK --> JDK_METHOD[基于反射调用\njava.lang.reflect.Proxy]
+    CGLIB --> CGLIB_METHOD[基于字节码生成子类\norg.springframework.cglib]
 
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     class CHECK condition
     class TARGET,JDK,CGLIB,JDK_METHOD,CGLIB_METHOD process
@@ -947,20 +947,20 @@ management:
 flowchart TD
     RUN([🚀 SpringApplication.run])
 
-    RUN --> ENV[⚙️ 准备 Environment<br/>加载配置文件]
+    RUN --> ENV[⚙️ 准备 Environment\n加载配置文件]
 
-    ENV --> CTX[🏗️ 创建 ApplicationContext<br/>推断应用类型]
+    ENV --> CTX[🏗️ 创建 ApplicationContext\n推断应用类型]
 
-    CTX --> REFRESH[🔄 刷新容器 refresh<br/>实例化所有单例 Bean]
+    CTX --> REFRESH[🔄 刷新容器 refresh\n实例化所有单例 Bean]
 
-    REFRESH --> RUNNER[▶️ 执行 ApplicationRunner<br/>和 CommandLineRunner]
+    REFRESH --> RUNNER[▶️ 执行 ApplicationRunner\n和 CommandLineRunner]
 
-    RUNNER --> WEB[🌐 启动嵌入式 Web 服务器<br/>Tomcat/Jetty/Undertow]
+    RUNNER --> WEB[🌐 启动嵌入式 Web 服务器\nTomcat/Jetty/Undertow]
 
     WEB --> DONE([✅ 启动完成])
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     class RUN,DONE startEnd
     class ENV,CTX,REFRESH,RUNNER,WEB process

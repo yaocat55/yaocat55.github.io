@@ -147,7 +147,7 @@ sequenceDiagram
     participant SERVLET as Servlet
 
     CLIENT->>CONNECTOR: HTTP GET /app/api/users
-    CONNECTOR->>CONNECTOR: 解析HTTP协议<br>封装Request/Response
+    CONNECTOR->>CONNECTOR: 解析HTTP协议\n封装Request/Response
     CONNECTOR->>ENGINE: 传入解析后的请求
     ENGINE->>HOST: 根据Host头分发(默认localhost)
     HOST->>CONTEXT: 根据URL路径匹配Context(/app)
@@ -478,19 +478,19 @@ public interface Filter {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef filter fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef servlet fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef filter fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef servlet fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     REQ([HTTP请求]) --> F1
     subgraph FILTER_CHAIN["FilterChain 执行顺序"]
         direction LR
-        F1[Filter 1<br>前置逻辑] --> F2[Filter 2<br>前置逻辑]
-        F2 --> F3[Filter 3<br>前置逻辑]
+        F1[Filter 1\n前置逻辑] --> F2[Filter 2\n前置逻辑]
+        F2 --> F3[Filter 3\n前置逻辑]
         F3 --> SERVLET_END[Servlet]
-        SERVLET_END --> F3_R[Filter 3<br>后置逻辑]
-        F3_R --> F2_R[Filter 2<br>后置逻辑]
-        F2_R --> F1_R[Filter 1<br>后置逻辑]
+        SERVLET_END --> F3_R[Filter 3\n后置逻辑]
+        F3_R --> F2_R[Filter 2\n后置逻辑]
+        F2_R --> F1_R[Filter 1\n后置逻辑]
     end
     F1_R --> RESP([HTTP响应])
 
@@ -896,8 +896,8 @@ DataSource ds = (DataSource) initCtx.lookup("java:comp/env/jdbc/MyDB");
 
 ```mermaid
 flowchart TD
-    classDef servlet fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef spring fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef servlet fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef spring fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     subgraph SERVLET["Servlet 规范"]
         S1["HttpServlet: doGet/doPost"]

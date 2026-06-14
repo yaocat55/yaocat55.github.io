@@ -91,17 +91,17 @@ Caffeine 是 Java 生态中<strong>性能最高的本地缓存库</strong>，它
 
 ```mermaid
 flowchart LR
-    classDef api fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef internal fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef result fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef api fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef internal fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
+classDef result fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
 
-    API[Cache 接口<br/>get / put / invalidate]
+    API[Cache 接口\nget / put / invalidate]
     API --> POLICY[策略层]
-    POLICY --> EVICT[淘汰策略<br/>W-TinyLFU]
-    POLICY --> EXPIRE[过期策略<br/>Write / Access]
-    POLICY --> REFRESH[刷新策略<br/>异步 reload]
-    API --> STORE[存储层<br/>ConcurrentHashMap]
-    STORE --> STATS[统计层<br/>命中率 / 加载耗时]
+    POLICY --> EVICT[淘汰策略\nW-TinyLFU]
+    POLICY --> EXPIRE[过期策略\nWrite / Access]
+    POLICY --> REFRESH[刷新策略\n异步 reload]
+    API --> STORE[存储层\nConcurrentHashMap]
+    STORE --> STATS[统计层\n命中率 / 加载耗时]
 
     class API result;
     class POLICY,STORE internal;

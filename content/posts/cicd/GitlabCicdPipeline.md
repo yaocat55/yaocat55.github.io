@@ -50,18 +50,20 @@ cover:
 ## 二、🏗️ 完整的 Pipeline 架构
 
 ```mermaid
-graph LR
-    Push["git push"] --> Compile["① 编译<br/>mvn compile"]
-    Compile --> Test["② 单元测试<br/>mvn test<br/>+ 覆盖率报告"]
-    Test --> SonarQube["③ 代码扫描<br/>SonarQube<br/>+ Quality Gate"]
-    SonarQube --> Package["④ 打包<br/>mvn package"]
-    Package --> DockerBuild["⑤ 构建镜像<br/>docker build"]
-    DockerBuild --> HarborPush["⑥ 推送仓库<br/>docker push<br/>→ Harbor"]
-    HarborPush --> Notify["⑦ 通知<br/>企业微信/钉钉"]
+flowchart LR
+    Push["git push"] --> Compile["① 编译\nmvn compile"]
+    Compile --> Test["② 单元测试\nmvn test\n+ 覆盖率报告"]
+    Test --> SonarQube["③ 代码扫描\nSonarQube\n+ Quality Gate"]
+    SonarQube --> Package["④ 打包\nmvn package"]
+    Package --> DockerBuild["⑤ 构建镜像\ndocker build"]
+    DockerBuild --> HarborPush["⑥ 推送仓库\ndocker push\n→ Harbor"]
+    HarborPush --> Notify["⑦ 通知\n企业微信/钉钉"]
 
-    style SonarQube fill:#FF9800,color:#fff
-    style HarborPush fill:#2196F3,color:#fff
-```
+
+classDef style_SonarQube fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+classDef style_HarborPush fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe;
+class SonarQube style_SonarQube;
+class HarborPush style_HarborPush;```
 
 ## 三、🔧 基础设施——SonarQube + Harbor 搭建
 

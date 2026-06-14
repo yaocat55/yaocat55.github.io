@@ -705,6 +705,12 @@ MySQL 逻辑删除后，MongoDB 里的对应文档成了<strong>孤儿数据</st
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[管理后台录入商品详情] --> B{填写了富文本详情?}
     B -->|是| C[TransactionTemplate 开启事务]
     B -->|否| D[只写 MySQL 基本字段]
@@ -718,6 +724,12 @@ flowchart TD
     K --> L[ProductSearchService.fillDetail]
     L --> M[MongoDB: mongoTemplate.find by productId]
     M --> N[填充 detail 字段返回前端]
+
+class L branch;
+class B,G condition;
+class D,E,F,H,I,K,M data;
+class A,C,J process;
+class N startEnd;
 ```
 
 <strong>一句话总结</strong>：MongoDB 的角色是<strong>MySQL 的"大字段卸载器"</strong>——把富文本这种又大又不参与 JOIN 的数据挪走，MySQL 专心干事务和关联的活。MongoDB 文档丢了？重新编辑一次商品就写回来了。MySQL 的 `mall_product_detail` 表才是"真相来源"。

@@ -86,20 +86,20 @@ offset 4:  2024-01-16 订单C 创建
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph KAFKA_MODEL ["Kafka 日志模型"]
         direction TB
-        PROD([Producer]) -->|"append 追加写入"| PART[Partition-0<br/>Leader 副本]
-        PART --> SEG0["Segment 文件<br/>00000000000000000000.log<br/>offset: 0 ~ 999"]
-        PART --> SEG1["Segment 文件<br/>00000000000000001000.log<br/>offset: 1000 ~ 1999"]
-        PART --> SEG2["Segment 文件<br/>00000000000000002000.log<br/>offset: 2000 ~ 2999"]
+        PROD([Producer]) -->|"append 追加写入"| PART[Partition-0\nLeader 副本]
+        PART --> SEG0["Segment 文件\n00000000000000000000.log\noffset: 0 ~ 999"]
+        PART --> SEG1["Segment 文件\n00000000000000001000.log\noffset: 1000 ~ 1999"]
+        PART --> SEG2["Segment 文件\n00000000000000002000.log\noffset: 2000 ~ 2999"]
 
-        C1([Consumer-A<br/>消费到 offset=1500]) -.->|"自己记录 offset"| SEG1
-        C2([Consumer-B<br/>从 offset=0 开始重放]) -.->|"自己记录 offset<br/>随时回到任意位置"| SEG0
+        C1([Consumer-A\n消费到 offset=1500]) -.->|"自己记录 offset"| SEG1
+        C2([Consumer-B\n从 offset=0 开始重放]) -.->|"自己记录 offset\n随时回到任意位置"| SEG0
     end
 
     class PROD startEnd;
@@ -193,18 +193,18 @@ Consumer 从 offset=1500 开始继续消费
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph DISK ["Kafka 数据目录 /var/lib/kafka/data/order-events-0/"]
         direction TB
-        SEG1_FILE["00000000000000000000.log<br/>消息数据文件（顺序写）<br/>offset 0 ~ 999"]
-        SEG1_IDX["00000000000000000000.index<br/>稀疏索引（offset → 文件位置）"]
-        SEG1_TIME["00000000000000000000.timeindex<br/>时间戳索引（timestamp → offset）"]
+        SEG1_FILE["00000000000000000000.log\n消息数据文件（顺序写）\noffset 0 ~ 999"]
+        SEG1_IDX["00000000000000000000.index\n稀疏索引（offset → 文件位置）"]
+        SEG1_TIME["00000000000000000000.timeindex\n时间戳索引（timestamp → offset）"]
 
-        SEG2_FILE["00000000000000001000.log<br/>offset 1000 ~ 1999"]
+        SEG2_FILE["00000000000000001000.log\noffset 1000 ~ 1999"]
         SEG2_IDX["00000000000000001000.index"]
         SEG2_TIME["00000000000000001000.timeindex"]
     end

@@ -229,19 +229,19 @@ public class OrderTimeoutListener
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    P([Producer]) -->|"syncSendDelay(msg, level=16)<br/>level=16 → 30分钟"| B[Broker]
-    B -->|"1. 先存到内部延迟Topic<br/>SCHEDULE_TOPIC_XXXX<br/>时间轮第16个槽位"| DELAY[(延迟Topic<br/>30分钟槽位)]
-    B -->|"2. 30分钟后<br/>时间轮到期"| DELIVER[投递到原始Topic<br/>order-topic]
+    P([Producer]) -->|"syncSendDelay(msg, level=16)\nlevel=16 → 30分钟"| B[Broker]
+    B -->|"1. 先存到内部延迟Topic\nSCHEDULE_TOPIC_XXXX\n时间轮第16个槽位"| DELAY[(延迟Topic\n30分钟槽位)]
+    B -->|"2. 30分钟后\n时间轮到期"| DELIVER[投递到原始Topic\norder-topic]
 
-    DELIVER --> Q0[Queue-0<br/>原始消息队列]
+    DELIVER --> Q0[Queue-0\n原始消息队列]
     DELIVER --> Q1[Queue-1]
 
-    Q0 --> C([Consumer<br/>订单取消服务<br/>和普通消息一样消费])
+    Q0 --> C([Consumer\n订单取消服务\n和普通消息一样消费])
 
     class P startEnd;
     class B highlight;
@@ -298,29 +298,29 @@ RocketMQ 的事务消息基于<strong>两阶段提交 + 回查</strong>：
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    P([Producer]) -->|"1. 发送半消息<br/>（Half Message）"| B[Broker]
-    B -->|"2. 半消息存在<br/>RMQ_SYS_TRANS_HALF_TOPIC<br/>对消费者不可见"| HALF[(半消息Topic)]
+    P([Producer]) -->|"1. 发送半消息\n（Half Message）"| B[Broker]
+    B -->|"2. 半消息存在\nRMQ_SYS_TRANS_HALF_TOPIC\n对消费者不可见"| HALF[(半消息Topic)]
 
     B -->|"3. 返回半消息发送成功"| P
 
-    P -->|"4. 执行本地事务<br/>（下单 + 扣库存）"| LOCAL{本地事务结果?}
+    P -->|"4. 执行本地事务\n（下单 + 扣库存）"| LOCAL{本地事务结果?}
 
     LOCAL -- 成功 --> COMMIT[5. commit → 半消息变为可见]
     LOCAL -- 失败 --> ROLLBACK[5. rollback → 半消息删除]
 
-    COMMIT --> REAL[(原始Topic<br/>对消费者可见)]
+    COMMIT --> REAL[(原始Topic\n对消费者可见)]
 
-    LOCAL -- "Producer 挂了<br/>没 commit 也没 rollback" --> CHECK{6. Broker 回查<br/>回查间隔递增：<br/>10s → 30s → 1m → 2m...}
+    LOCAL -- "Producer 挂了\n没 commit 也没 rollback" --> CHECK{6. Broker 回查\n回查间隔递增：\n10s → 30s → 1m → 2m...}
 
-    CHECK -->|"7. 调用 Producer 的<br/>checkLocalTransaction<br/>检查本地事务状态"| P
-    P -->|"8. 根据本地事务结果<br/>返回 commit 或 rollback"| B
+    CHECK -->|"7. 调用 Producer 的\ncheckLocalTransaction\n检查本地事务状态"| P
+    P -->|"8. 根据本地事务结果\n返回 commit 或 rollback"| B
 
     class P startEnd;
     class B highlight;

@@ -71,15 +71,26 @@ mvn --version
 
 ```mermaid
 flowchart LR
-    ROOT((my-logging-starter-parent<br/>父工程))
-    ROOT --> AC[autoconfigure模块<br/>自动配置实现]
-    ROOT --> ST[starter模块<br/>依赖入口]
-    AC --> A1[LoggingProperties<br/>配置属性]
-    AC --> A2[LoggingService<br/>服务接口与实现]
-    AC --> A3[LoggingAspect<br/>AOP切面]
-    AC --> A4[LoggingAutoConfiguration<br/>自动配置类]
-    AC --> A5[AutoConfiguration.imports<br/>注册文件]
-    ST --> S1[依赖autoconfigure<br/>提供单一入口]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+    ROOT((my-logging-starter-parent\n父工程))
+    ROOT --> AC[autoconfigure模块\n自动配置实现]
+    ROOT --> ST[starter模块\n依赖入口]
+    AC --> A1[LoggingProperties\n配置属性]
+    AC --> A2[LoggingService\n服务接口与实现]
+    AC --> A3[LoggingAspect\nAOP切面]
+    AC --> A4[LoggingAutoConfiguration\n自动配置类]
+    AC --> A5[AutoConfiguration.imports\n注册文件]
+    ST --> S1[依赖autoconfigure\n提供单一入口]
+
+
+class A2,AC branch;
+class A1 data;
+class A3,A4,A5 process;
+class ROOT,S1,ST startEnd;
 ```
 
 ### 📦 3.1 创建父工程
@@ -267,12 +278,17 @@ my-logging-starter-parent/
 
 ```mermaid
 flowchart LR
-    SP["spring-boot-starter-parent<br/>（顶级父 POM）<br/>统一版本管理 + 插件配置"]
-    SP --> SS["spring-boot-starters<br/>（中间层）<br/>所有官方 Starter 的公共父 POM"]
-    SS --> SW["spring-boot-starter-web<br/>（叶子层）<br/>只声明依赖，无 src 目录"]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+    SP["spring-boot-starter-parent\n（顶级父 POM）\n统一版本管理 + 插件配置"]
+    SP --> SS["spring-boot-starters\n（中间层）\n所有官方 Starter 的公共父 POM"]
+    SS --> SW["spring-boot-starter-web\n（叶子层）\n只声明依赖，无 src 目录"]
     SS --> SA["spring-boot-starter-actuator"]
     SS --> SD["spring-boot-starter-data-jpa"]
     SS --> SO["... 其余 40+ 官方 Starter"]
+
+
+class SA,SD,SO,SP,SS,SW startEnd;
 ```
 
 <strong>对比我们自定义的 Starter 结构：</strong>
@@ -531,14 +547,14 @@ public class LoggingAspect {
 ```mermaid
 flowchart LR
     CLIENT[📥调用方] --> PROXY[🔄代理对象]
-    PROXY --> ASPECT[⚙️AOP切面<br/>记录开始时间]
-    ASPECT --> REAL[🎯原始方法<br/>执行业务逻辑]
-    REAL --> ASPECT2[⚙️AOP切面<br/>记录结束时间 计算耗时]
+    PROXY --> ASPECT[⚙️AOP切面\n记录开始时间]
+    ASPECT --> REAL[🎯原始方法\n执行业务逻辑]
+    REAL --> ASPECT2[⚙️AOP切面\n记录结束时间 计算耗时]
     ASPECT2 --> CLIENT2[📤返回结果]
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
 
     class CLIENT,CLIENT2 startEnd
     class PROXY,REAL process
@@ -553,16 +569,16 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    IOC["📦 IoC容器<br/>管理所有 Bean"] --> CONFIG
-    CONFIG["⚙️ @Configuration + @Bean<br/>手动往容器注册 Bean"] --> IMPORT
-    IMPORT["🔗 @Import<br/>引入其他配置类 合并 Bean 定义"] --> SELECTOR
-    SELECTOR["🔁 ImportSelector<br/>动态扫描并返回配置类列表"] --> CONDITIONAL
-    CONDITIONAL["🔍 @Conditional<br/>按条件决定是否创建 Bean"] --> AUTOCONFIG
-    AUTOCONFIG["✅ Spring Boot 自动装配<br/>= ImportSelector + @Conditional + 配置文件"]
+    IOC["📦 IoC容器\n管理所有 Bean"] --> CONFIG
+    CONFIG["⚙️ @Configuration + @Bean\n手动往容器注册 Bean"] --> IMPORT
+    IMPORT["🔗 @Import\n引入其他配置类 合并 Bean 定义"] --> SELECTOR
+    SELECTOR["🔁 ImportSelector\n动态扫描并返回配置类列表"] --> CONDITIONAL
+    CONDITIONAL["🔍 @Conditional\n按条件决定是否创建 Bean"] --> AUTOCONFIG
+    AUTOCONFIG["✅ Spring Boot 自动装配\n= ImportSelector + @Conditional + 配置文件"]
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class IOC startEnd
     class AUTOCONFIG highlight
@@ -582,16 +598,16 @@ Spring Boot 的自动装配起点是 `@SpringBootApplication` 注解，它的源
 ```mermaid
 flowchart TD
     A[📦 @SpringBootApplication] --> B[⚙️ @EnableAutoConfiguration]
-    B --> C[🔁 @Import<br/>AutoConfigurationImportSelector]
-    C --> D[📂 读取 META-INF/spring/<br/>...AutoConfiguration.imports]
+    B --> C[🔁 @Import\nAutoConfigurationImportSelector]
+    C --> D[📂 读取 META-INF/spring/\n...AutoConfiguration.imports]
     D --> E[📋 获得候选自动配置类全限定名列表]
     E --> F[🔍 逐类执行 @Conditional 条件判断]
     F -->|条件满足| G[✅ 创建 Bean 并注入 IoC 容器]
     F -->|条件不满足| H[⛔ 跳过该配置类]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
     class A,B startEnd
     class C,D,E,F process
     class G startEnd
@@ -634,9 +650,9 @@ flowchart TD
     C4 -->|否| SKIP
     C4 -->|是| CREATE([✅ 创建 Bean 注入容器])
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class START,CREATE startEnd
     class C1,C2,C3,C4 condition
@@ -1171,10 +1187,10 @@ flowchart TD
     J --> K[⏱️ 切面拦截并记录耗时]
     K --> L[📝 控制台输出耗时日志]
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class A,L startEnd
     class E,G condition

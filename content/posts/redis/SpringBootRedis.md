@@ -1297,11 +1297,11 @@ redis-cli --scan --pattern "captcha:*"
 ```mermaid
 flowchart LR
     ROOT["🗄 Redis DB"]
-    AUTH["🔐 认证域<br/>token:<br/>user:<br/>captcha:<br/>smsRegisterCode:<br/>smsLoginCode:<br/>loginErrorUser:<br/>lockedUser:"]
-    BIZ["🛒 业务域<br/>reduceStockLock:<br/>seckillProductDetail:<br/>seckillProductStock:<br/>{userId}(订单确认)"]
-    CACHE["📦 缓存域<br/>indexProduct:<br/>indexNotice<br/>indexCarouselImage<br/>dictData"]
-    RATE["🛡 防护域<br/>limitRate:ip:<br/>limitRate:userId:<br/>repeatSubmit:"]
-    INFRA["⚙️ 基础设施<br/>snowFlakeWorkerId:<br/>userRecommendProduct:"]
+    AUTH["🔐 认证域\ntoken:\nuser:\ncaptcha:\nsmsRegisterCode:\nsmsLoginCode:\nloginErrorUser:\nlockedUser:"]
+    BIZ["🛒 业务域\nreduceStockLock:\nseckillProductDetail:\nseckillProductStock:\n{userId}(订单确认)"]
+    CACHE["📦 缓存域\nindexProduct:\nindexNotice\nindexCarouselImage\ndictData"]
+    RATE["🛡 防护域\nlimitRate:ip:\nlimitRate:userId:\nrepeatSubmit:"]
+    INFRA["⚙️ 基础设施\nsnowFlakeWorkerId:\nuserRecommendProduct:"]
 
     ROOT --> AUTH
     ROOT --> BIZ
@@ -1311,6 +1311,9 @@ flowchart LR
 
     class ROOT root
     class AUTH,BIZ,CACHE,RATE,INFRA branch
+
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
 ```
 
 > ⚠️ **新手提示**：上面图中的 `{userId}`（订单确认缓存）是真实项目中的一个反面案例——它直接用用户 ID 数字作为 key，没有前缀。运维排查时看到 `KEYS *` 结果里一个裸数字 `1001`，完全不知道它是什么。后来重构时改成了 `orderConfirm:{userId}`。
@@ -1355,8 +1358,8 @@ SpringBoot 的 `RedisAutoConfiguration` 会探测 classpath 上有 Lettuce 或 J
 
 ```mermaid
 flowchart TD
-    Start([SpringBoot 启动]) --> AutoConf[RedisAutoConfiguration<br/>自动配置类]
-    AutoConf --> CheckClient{检测客户端<br/>Lettuce / Jedis?}
+    Start([SpringBoot 启动]) --> AutoConf[RedisAutoConfiguration\n自动配置类]
+    AutoConf --> CheckClient{检测客户端\nLettuce / Jedis?}
     CheckClient -->|classpath 有 Lettuce| LettuceFactory[创建 LettuceConnectionFactory]
     CheckClient -->|classpath 有 Jedis| JedisFactory[创建 JedisConnectionFactory]
     LettuceFactory --> CreateTemplate[创建 RedisTemplate]
@@ -1364,9 +1367,9 @@ flowchart TD
     CreateTemplate --> CreateStringTemplate[创建 StringRedisTemplate]
     CreateStringTemplate --> Ready([Bean 就绪，可注入使用])
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
 
     class Start,Ready startEnd
     class AutoConf,LettuceFactory,JedisFactory,CreateTemplate,CreateStringTemplate process

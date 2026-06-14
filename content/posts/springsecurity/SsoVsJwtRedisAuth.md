@@ -84,7 +84,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant U as 用户
-    participant SSO as SSO认证中心<br/>(sso.company.com)
+    participant SSO as SSO认证中心\n(sso.company.com)
     participant OA as OA系统
     participant CRM as CRM系统
 
@@ -117,25 +117,25 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[鉴权体系三层抽象]
 
     ROOT --> L1[第一层: Token数据格式]
-    L1 --> L1A["JWT<br/>Header.Payload.Signature<br/>Base64编码, 签名防篡改"]
-    L1 --> L1B["其他格式<br/>UUID Token<br/>Opaque Token<br/>SAML Assertion"]
+    L1 --> L1A["JWT\nHeader.Payload.Signature\nBase64编码, 签名防篡改"]
+    L1 --> L1B["其他格式\nUUID Token\nOpaque Token\nSAML Assertion"]
 
-    ROOT --> L2[第二层: Token管理策略<br/>单服务内部]
-    L2 --> L2A["纯JWT<br/>签发后无状态<br/>无法主动撤销"]
-    L2 --> L2B["JWT + Redis<br/>Redis存jti<br/>可主动撤销"]
-    L2 --> L2C["纯Redis+Token<br/>UUID作为Token<br/>每次查Redis"]
+    ROOT --> L2[第二层: Token管理策略\n单服务内部]
+    L2 --> L2A["纯JWT\n签发后无状态\n无法主动撤销"]
+    L2 --> L2B["JWT + Redis\nRedis存jti\n可主动撤销"]
+    L2 --> L2C["纯Redis+Token\nUUID作为Token\n每次查Redis"]
 
-    ROOT --> L3[第三层: 认证架构模式<br/>跨服务]
-    L3 --> L3A["SSO单点登录<br/>独立认证中心<br/>一处登录, 处处可用"]
-    L3 --> L3B["非SSO<br/>各服务独立鉴权<br/>每个服务有自己<br/>的用户表和登录接口"]
+    ROOT --> L3[第三层: 认证架构模式\n跨服务]
+    L3 --> L3A["SSO单点登录\n独立认证中心\n一处登录, 处处可用"]
+    L3 --> L3B["非SSO\n各服务独立鉴权\n每个服务有自己\n的用户表和登录接口"]
 
     class ROOT startEnd;
     class L1,L2,L3 branch;
@@ -190,27 +190,27 @@ SSO 引入了一个**独立的认证中心**，它的职责是：
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[JWT+Redis vs SSO]
 
     ROOT --> SCOPE[作用范围不同]
-    SCOPE --> S1["JWT+Redis: 单服务内部<br/>OA系统自己的Token管理"]
-    SCOPE --> S2["SSO: 跨服务全局<br/>多个系统共享登录状态"]
+    SCOPE --> S1["JWT+Redis: 单服务内部\nOA系统自己的Token管理"]
+    SCOPE --> S2["SSO: 跨服务全局\n多个系统共享登录状态"]
 
     ROOT --> PROBLEM[解决的问题不同]
-    PROBLEM --> P1["JWT+Redis: Token生命周期控制<br/>签发 / 验证 / 刷新 / 撤销"]
-    PROBLEM --> P2["SSO: 跨系统登录共享<br/>一次登录, 多系统通行"]
+    PROBLEM --> P1["JWT+Redis: Token生命周期控制\n签发 / 验证 / 刷新 / 撤销"]
+    PROBLEM --> P2["SSO: 跨系统登录共享\n一次登录, 多系统通行"]
 
     ROOT --> CENTER[是否有中心]
-    CENTER --> C1["JWT+Redis: 无中心<br/>每个服务自己管自己的Token"]
-    CENTER --> C2["SSO: 有认证中心<br/>独立的SSO服务做统一认证"]
+    CENTER --> C1["JWT+Redis: 无中心\n每个服务自己管自己的Token"]
+    CENTER --> C2["SSO: 有认证中心\n独立的SSO服务做统一认证"]
 
     ROOT --> DEPEND[依赖关系]
-    DEPEND --> D1["JWT+Redis: 独立方案<br/>不依赖其他鉴权组件"]
-    DEPEND --> D2["SSO: 可用JWT+Redis<br/>作为其内部Token<br/>管理策略"]
+    DEPEND --> D1["JWT+Redis: 独立方案\n不依赖其他鉴权组件"]
+    DEPEND --> D2["SSO: 可用JWT+Redis\n作为其内部Token\n管理策略"]
 
     class ROOT root;
     class SCOPE,PROBLEM,CENTER,DEPEND branch;
@@ -299,9 +299,18 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
     C[客户端] -->|JWT| API[单体API服务]
     API -->|GET/SET/DEL| R[Redis]
     API --> DB[MySQL]
+
+
+class API branch;
+class DB,R data;
+class C process;
 ```
 
 ### 🔗 6.2 同产品微服务：JWT + API 网关 + 共享认证
@@ -310,12 +319,23 @@ flowchart LR
 
 ```mermaid
 flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
     C[客户端] -->|JWT| GW[API网关]
     GW -->|验证JWT签名| AUTH[认证服务]
     GW -->|转发+用户信息| MS1[订单服务]
     GW -->|转发+用户信息| MS2[商品服务]
     AUTH --> R[Redis]
     AUTH --> DB[用户DB]
+
+
+class AUTH,MS1,MS2 branch;
+class DB,R data;
+class C process;
+class GW root;
 ```
 
 特点：只有一套用户体系，一个登录入口。网关负责验证，微服务自己不关心"这是谁"。**这不是 SSO，而是集中式网关认证。**
@@ -326,17 +346,26 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    C[用户] --> SSO[SSO认证中心<br/>sso.company.com]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+    C[用户] --> SSO[SSO认证中心\nsso.company.com]
     SSO --> R_SSO[SSO的Redis]
     SSO --> DB_USER[统一用户DB]
 
-    C --> OA[OA系统<br/>oa.company.com]
-    C --> CRM[CRM系统<br/>crm.company.com]
-    C --> BI[BI系统<br/>bi.company.com]
+    C --> OA[OA系统\noa.company.com]
+    C --> CRM[CRM系统\ncrm.company.com]
+    C --> BI[BI系统\nbi.company.com]
 
     OA -.->|验证Token| SSO
     CRM -.->|验证Token| SSO
     BI -.->|验证Token| SSO
+
+
+class DB_USER,R_SSO data;
+class BI,C,CRM,OA process;
+class SSO root;
 ```
 
 特点：多个独立系统，各有各的域名，各有各的业务数据库。SSO 认证中心独立部署，有统一的登录页面。用户登录一次后，访问任何系统都不需要再输入密码。**这才是 SSO。**
@@ -365,24 +394,24 @@ CAS 是最早的 SSO 协议之一，由耶鲁大学发起，目前由 Apereo 基
 ```mermaid
 sequenceDiagram
     participant U as 用户浏览器
-    participant APP as 业务系统<br/>(crm.company.com)
-    participant CAS as CAS认证中心<br/>(sso.company.com)
+    participant APP as 业务系统\n(crm.company.com)
+    participant CAS as CAS认证中心\n(sso.company.com)
     participant DB as 用户数据库
 
     Note over U,DB: ====== 首次访问：无TGT，无ST ======
 
     U->>APP: 1. 访问CRM首页（未登录）
-    APP-->>U: 2. 302重定向到CAS登录页<br/>带上service参数（回调地址）
+    APP-->>U: 2. 302重定向到CAS登录页\n带上service参数（回调地址）
     U->>CAS: 3. 浏览器跳转到CAS登录页
     CAS->>U: 4. 返回登录表单
 
     U->>CAS: 5. 提交用户名+密码
     CAS->>DB: 6. 验证用户凭据
     DB-->>CAS: 7. 验证通过
-    CAS-->>U: 8. Set-Cookie: CASTGC=TGT-xxx<br/>（TGT写入浏览器Cookie）<br/>302重定向回CRM，URL上带ST
+    CAS-->>U: 8. Set-Cookie: CASTGC=TGT-xxx\n（TGT写入浏览器Cookie）\n302重定向回CRM，URL上带ST
 
-    U->>APP: 9. 自动重定向到CRM<br/>URL: /callback?ticket=ST-xxx
-    APP->>CAS: 10. 拿着ST去CAS Server验证<br/>POST /serviceValidate
+    U->>APP: 9. 自动重定向到CRM\nURL: /callback?ticket=ST-xxx
+    APP->>CAS: 10. 拿着ST去CAS Server验证\nPOST /serviceValidate
     CAS-->>APP: 11. ST有效，返回用户信息XML
     APP->>APP: 12. 创建本地Session
     APP-->>U: 13. CRM首页（已登录状态）
@@ -393,7 +422,7 @@ sequenceDiagram
     U->>U: 15. BI重定向到CAS登录页
     U->>CAS: 16. 浏览器自动带上CASTGC Cookie
     CAS->>CAS: 17. 校验TGT有效
-    CAS-->>U: 18. 直接签发新ST<br/>302重定向回BI，URL上带ST
+    CAS-->>U: 18. 直接签发新ST\n302重定向回BI，URL上带ST
     U->>U: 19. BI验证ST，创建本地Session
     U->>U: 20. BI首页（无需输入密码）
 ```
@@ -427,27 +456,27 @@ OAuth 2.0 本身是**授权协议**（Authorization），不是认证协议（Au
 ```mermaid
 sequenceDiagram
     participant U as 用户浏览器
-    participant APP as 业务系统后端<br/>(crm.company.com)
-    participant AUTH as 授权服务器<br/>(sso.company.com)
-    participant RES as 资源服务器<br/>(API网关)
+    participant APP as 业务系统后端\n(crm.company.com)
+    participant AUTH as 授权服务器\n(sso.company.com)
+    participant RES as 资源服务器\n(API网关)
 
     Note over U,RES: ====== 首次登录：获取授权码 + 换Token ======
 
     U->>APP: 1. 访问CRM（未登录）
-    APP-->>U: 2. 302重定向到授权服务器<br/>GET /authorize?<br/>response_type=code&<br/>client_id=crm&<br/>redirect_uri=/callback&<br/>scope=openid profile&<br/>code_challenge=xxx
+    APP-->>U: 2. 302重定向到授权服务器\nGET /authorize?\nresponse_type=code&\nclient_id=crm&\nredirect_uri=/callback&\nscope=openid profile&\ncode_challenge=xxx
 
     U->>AUTH: 3. 跳转到授权服务器登录页
     AUTH->>U: 4. 返回登录表单
     U->>AUTH: 5. 提交用户名+密码
     AUTH->>AUTH: 6. 验证凭据 + 生成授权码(code)
-    AUTH-->>U: 7. 302重定向回CRM<br/>URL: /callback?code=abc123
+    AUTH-->>U: 7. 302重定向回CRM\nURL: /callback?code=abc123
 
-    U->>APP: 8. 浏览器自动回调<br/>/callback?code=abc123
-    APP->>AUTH: 9. POST /token<br/>grant_type=authorization_code&<br/>code=abc123&<br/>code_verifier=xxx
-    AUTH->>AUTH: 10. 校验code+code_verifier<br/>签发ID Token + Access Token + Refresh Token
-    AUTH-->>APP: 11. 返回Token三元组<br/>{id_token, access_token, refresh_token}
+    U->>APP: 8. 浏览器自动回调\n/callback?code=abc123
+    APP->>AUTH: 9. POST /token\ngrant_type=authorization_code&\ncode=abc123&\ncode_verifier=xxx
+    AUTH->>AUTH: 10. 校验code+code_verifier\n签发ID Token + Access Token + Refresh Token
+    AUTH-->>APP: 11. 返回Token三元组\n{id_token, access_token, refresh_token}
 
-    APP->>APP: 12. 解析ID Token获取用户信息<br/>创建本地会话
+    APP->>APP: 12. 解析ID Token获取用户信息\n创建本地会话
 
     Note over U,RES: ====== 后续请求：使用Access Token ======
 
@@ -457,7 +486,7 @@ sequenceDiagram
 
     Note over U,RES: ====== Access Token过期 ======
 
-    APP->>AUTH: 16. POST /token<br/>grant_type=refresh_token&<br/>refresh_token=xxx
+    APP->>AUTH: 16. POST /token\ngrant_type=refresh_token&\nrefresh_token=xxx
     AUTH->>AUTH: 17. 校验Refresh Token
     AUTH-->>APP: 18. 签发新的Access Token + Refresh Token
 ```
@@ -478,9 +507,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant U as 用户浏览器
-    participant OA as OA系统<br/>(oa.company.com)
-    participant SSO as SSO认证中心<br/>(sso.company.com)
-    participant CRM as CRM系统<br/>(crm.company.com)
+    participant OA as OA系统\n(oa.company.com)
+    participant SSO as SSO认证中心\n(sso.company.com)
+    participant CRM as CRM系统\n(crm.company.com)
 
     Note over U,CRM: ====== 首次登录 ======
 
@@ -489,15 +518,15 @@ sequenceDiagram
 
     U->>SSO: 3. 输入用户名+密码
     SSO->>SSO: 4. 验证凭据，用共享密钥签发JWT
-    SSO-->>U: 5. 302重定向回OA<br/>URL带上JWT参数<br/>同时Set-Cookie存JWT
+    SSO-->>U: 5. 302重定向回OA\nURL带上JWT参数\n同时Set-Cookie存JWT
     U->>OA: 6. 访问OA，携带JWT
-    OA->>OA: 7. 用共享密钥验证JWT签名<br/>（本地验证，不需要回调SSO）
+    OA->>OA: 7. 用共享密钥验证JWT签名\n（本地验证，不需要回调SSO）
     OA-->>U: 8. OA首页（已登录）
 
     Note over U,CRM: ====== 切换到CRM：同一个JWT ======
 
     U->>CRM: 9. 访问CRM（携带同一个JWT）
-    CRM->>CRM: 10. 用共享密钥验证JWT签名<br/>（同样是本地验证）
+    CRM->>CRM: 10. 用共享密钥验证JWT签名\n（同样是本地验证）
     CRM-->>U: 11. CRM首页（无需输入密码）
 
     Note over U,CRM: ====== JWT过期后 ======
@@ -564,9 +593,9 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     FINAL[(核心结论)]
 
@@ -583,7 +612,7 @@ flowchart TD
     C4 --> C4A["不是互斥关系, 而是层层叠加"]
 
     FINAL --> C5[真实项目中的使用]
-    C5 --> C5A["SSO认证中心签发JWT<br/>SSO内部用Redis管理Token<br/>业务系统验证JWT签名"]
+    C5 --> C5A["SSO认证中心签发JWT\nSSO内部用Redis管理Token\n业务系统验证JWT签名"]
 
     class FINAL startEnd;
     class C1,C2,C3,C4,C5 process;

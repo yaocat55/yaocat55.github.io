@@ -144,22 +144,22 @@ mall:
 
 ```mermaid
 flowchart TD
-    YML["application.yml<br>aliyun.sms.provider + mockSms"] --> Mock{mockSms = true?}
+    YML["application.yml\naliyun.sms.provider + mockSms"] --> Mock{mockSms = true?}
 
-    Mock -->|"是（开发环境）"| MockCode["返回固定验证码<br>mall.api.mockCode"]
+    Mock -->|"是（开发环境）"| MockCode["返回固定验证码\nmall.api.mockCode"]
     Mock -->|"否（生产/测试）"| Provider{provider = ?}
 
-    Provider -->|"dysmsapi"| Dysmsapi["AliyunSmsService<br>@ConditionalOnProperty<br>havingValue=dysmsapi<br>matchIfMissing=true"]
-    Provider -->|"dypnsapi"| Dypnsapi["DypnsSmsService<br>@ConditionalOnProperty<br>havingValue=dypnsapi"]
+    Provider -->|"dysmsapi"| Dysmsapi["AliyunSmsService\n@ConditionalOnProperty\nhavingValue=dysmsapi\nmatchIfMissing=true"]
+    Provider -->|"dypnsapi"| Dypnsapi["DypnsSmsService\n@ConditionalOnProperty\nhavingValue=dypnsapi"]
 
     Dysmsapi --> Send[调用阿里云短信API]
     Dypnsapi --> Send
-    MockCode --> Redis["Redis存储验证码<br>60s过期 + 防重复发送"]
+    MockCode --> Redis["Redis存储验证码\n60s过期 + 防重复发送"]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class YML,Dysmsapi,Dypnsapi,Send process
     class Mock,Provider condition

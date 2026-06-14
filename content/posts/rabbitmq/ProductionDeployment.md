@@ -64,22 +64,22 @@ RabbitMQ 集群是多个 Erlang 节点组成的对等网络——每个节点运
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph CLUSTER ["RabbitMQ 三节点集群"]
-        N1[节点 rabbit@node1<br/>Queue: order.create 的<strong>主副本</strong><br/>Queue: order.email 的<strong>从副本</strong>]
-        N2[节点 rabbit@node2<br/>Queue: order.email 的<strong>主副本</strong><br/>Queue: order.sms 的<strong>从副本</strong>]
-        N3[节点 rabbit@node3<br/>Queue: order.sms 的<strong>主副本</strong><br/>Queue: order.create 的<strong>从副本</strong>]
+        N1[节点 rabbit@node1\nQueue: order.create 的<strong>主副本</strong>\nQueue: order.email 的<strong>从副本</strong>]
+        N2[节点 rabbit@node2\nQueue: order.email 的<strong>主副本</strong>\nQueue: order.sms 的<strong>从副本</strong>]
+        N3[节点 rabbit@node3\nQueue: order.sms 的<strong>主副本</strong>\nQueue: order.create 的<strong>从副本</strong>]
 
-        N1 <-->|Erlang Cookie<br/>元数据同步| N2
-        N2 <-->|Erlang Cookie<br/>元数据同步| N3
+        N1 <-->|Erlang Cookie\n元数据同步| N2
+        N2 <-->|Erlang Cookie\n元数据同步| N3
         N1 <-->|Erlang Cookie| N3
     end
 
-    P([Producer]) -->|"连接任一节点<br/>都能发到正确的队列"| LB[负载均衡<br/>HAProxy / Nginx]
+    P([Producer]) -->|"连接任一节点\n都能发到正确的队列"| LB[负载均衡\nHAProxy / Nginx]
     LB --> N1
     LB --> N2
     LB --> N3

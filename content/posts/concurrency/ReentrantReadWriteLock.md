@@ -107,11 +107,15 @@ ReentrantLock 只需一个 `state` 就能表达锁状态：`0` = 空闲，`1` = 
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     subgraph STATE["AQS state（32位 int）"]
-        HIGH["高 16 位<br/>读锁持有计数<br/>（所有线程读锁重入次数的总和）"]
-        LOW["低 16 位<br/>写锁重入计数<br/>（持有写锁的线程的重入次数）"]
+        HIGH["高 16 位\n读锁持有计数\n（所有线程读锁重入次数的总和）"]
+        LOW["低 16 位\n写锁重入计数\n（持有写锁的线程的重入次数）"]
     end
     HIGH --- LOW
+
+class HIGH,LOW,STATE process;
 ```
 
 源码中的常量定义和拆分操作：
@@ -231,17 +235,27 @@ protected final int tryAcquireShared(int unused) {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[tryAcquireShared] --> B{写锁被持有?}
     B -->|否| C{readerShouldBlock?}
     B -->|是| B2{持有者是当前线程?}
     B2 -->|是| C
-    B2 -->|否| FAIL[返回 -1<br/>入队等待]
+    B2 -->|否| FAIL[返回 -1\n入队等待]
     C -->|否| D[CAS state + SHARED_UNIT]
     C -->|是| E[fullTryAcquireShared]
-    D -->|成功| F[更新 HoldCounter<br/>返回 1]
+    D -->|成功| F[更新 HoldCounter\n返回 1]
     D -->|失败| E
     E -->|成功| F
     E -->|失败| FAIL
+
+class B,B2,C condition;
+class A,E data;
+class D process;
+class F,FAIL startEnd;
 ```
 
 ### 📝 HoldCounter：记录每个线程的读锁重入次数
@@ -286,14 +300,22 @@ if (r == 0) {                    // 第一个读线程
 
 ```mermaid
 flowchart TD
-    A[线程获取读锁<br/>需记录重入次数] --> B{是第一个读线程?}
-    B -->|是| L1["🏆 第一层: firstReader + firstReaderHoldCount<br/>（Sync 对象上的两个普通字段）"]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    A[线程获取读锁\n需记录重入次数] --> B{是第一个读线程?}
+    B -->|是| L1["🏆 第一层: firstReader + firstReaderHoldCount\n（Sync 对象上的两个普通字段）"]
     B -->|否| C{与上一读线程相同?}
-    C -->|是| L2["🥈 第二层: cachedHoldCounter<br/>（单条目缓存，指针引用）"]
-    C -->|否| L3["🥉 第三层: readHolds ThreadLocal<br/>（完整的 ThreadLocal.get 查找）"]
+    C -->|是| L2["🥈 第二层: cachedHoldCounter\n（单条目缓存，指针引用）"]
+    C -->|否| L3["🥉 第三层: readHolds ThreadLocal\n（完整的 ThreadLocal.get 查找）"]
     L1 --> RESULT[count++]
     L2 --> RESULT
     L3 --> RESULT
+
+class B,C condition;
+class L2 data;
+class A,L1,L3,RESULT process;
 ```
 
 | 层级 | 缓存结构 | 存储位置 | 命中条件 | 开销 |
@@ -351,17 +373,25 @@ private transient ThreadLocalHoldCounter readHolds;
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
     subgraph CASE1[场景1：单线程读]
-        S1[Thread-1 反复 readLock] --> S1L1[每次都命中第一层<br/>firstReader=Thread-1]
+        S1[Thread-1 反复 readLock] --> S1L1[每次都命中第一层\nfirstReader=Thread-1]
     end
     subgraph CASE2[场景2：交替读]
         S2T1[Thread-1 readLock] --> S2L1[第一层命中]
-        S2T2[Thread-2 readLock] --> S2L3[前两层未命中<br/>降级第三层]
-        S2T2_2[Thread-2 再次 readLock] --> S2L2[第二层命中<br/>cachedHoldCounter=Thread-2]
+        S2T2[Thread-2 readLock] --> S2L3[前两层未命中\n降级第三层]
+        S2T2_2[Thread-2 再次 readLock] --> S2L2[第二层命中\ncachedHoldCounter=Thread-2]
     end
     subgraph CASE3[场景3：高并发读]
         S3[多线程各自一次 readLock] --> S3L3[全部降级第三层]
     end
+
+class S2L2 data;
+class CASE1,CASE2,CASE3,S1,S1L1,S2L1,S2T1,S2T2,S2T2_2,S3 process;
+class S2L3,S3L3 reject;
 ```
 
 在实际业务中，场景1和场景2占绝大多数，前两层缓存命中率极高。道格·李通过这三个字段，将读锁重入计数的平均开销从一次完整的 `ThreadLocal.get()`（含线性探测）降到了 2 次普通字段访问。
@@ -461,7 +491,7 @@ sequenceDiagram
     Note over T1: 阻塞！等待所有读锁释放
 
     T2->>RL: readLock.unlock()
-    Note over T1: T2释放了读锁，但T1自己也持有读锁<br/>T1如果不释放读锁，写锁永远等不到
+    Note over T1: T2释放了读锁，但T1自己也持有读锁\nT1如果不释放读锁，写锁永远等不到
     Note over T1: T1在等写锁获取→写锁在等T1释放读锁→死锁
 ```
 
@@ -577,24 +607,32 @@ public Map<String, Object> snapshot() {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef highlight fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;
     subgraph WHY[为什么需要]
-        W1[ReentrantLock 读操作也互斥<br/>读多写少场景性能差]
-        W2[需要读-读不互斥<br/>读-写互斥的锁]
+        W1[ReentrantLock 读操作也互斥\n读多写少场景性能差]
+        W2[需要读-读不互斥\n读-写互斥的锁]
     end
     subgraph HOW[如何实现]
-        H1[state 高16位=读锁计数<br/>低16位=写锁重入]
-        H2[读锁=共享模式 AQS<br/>写锁=独占模式 AQS]
-        H3[HoldCounter ThreadLocal<br/>记录每线程读锁重入]
+        H1[state 高16位=读锁计数\n低16位=写锁重入]
+        H2[读锁=共享模式 AQS\n写锁=独占模式 AQS]
+        H3[HoldCounter ThreadLocal\n记录每线程读锁重入]
     end
     subgraph RULE[核心规则]
         R1[读-读: 不互斥]
         R2[读-写: 互斥]
         R3[写-写: 互斥]
-        R4[锁降级: 支持<br/>写→读的原子过渡]
-        R5[锁升级: 不支持<br/>会导致死锁]
+        R4[锁降级: 支持\n写→读的原子过渡]
+        R5[锁升级: 不支持\n会导致死锁]
     end
     WHY --> HOW
     HOW --> RULE
+
+class RULE highlight;
+class H1,H2,H3,HOW,R1,R2,R3,R5,W1,W2,WHY process;
+class R4 reject;
 ```
 
 | 核心问题 | 答案 |

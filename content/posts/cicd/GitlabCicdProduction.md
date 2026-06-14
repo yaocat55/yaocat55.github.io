@@ -53,16 +53,18 @@ cover:
 ### 2.1 三个环境的流转
 
 ```mermaid
-graph LR
-    MR["Merge Request<br/>→ feature → main"] --> Dev["① dev 环境<br/>自动部署<br/>每次 push 到 main"]
-    Dev --> Staging["② staging 环境<br/>自动部署<br/>跑自动化回归测试"]
-    Staging --> Manual["③ 人工审批<br/>点按钮确认"]
-    Manual --> Prod["④ prod 环境<br/>部署<br/>滚动更新"]
-    Prod --> Health["⑤ 健康检查<br/>自动 curl 验证<br/>失败自动回滚"]
+flowchart LR
+    MR["Merge Request\n→ feature → main"] --> Dev["① dev 环境\n自动部署\n每次 push 到 main"]
+    Dev --> Staging["② staging 环境\n自动部署\n跑自动化回归测试"]
+    Staging --> Manual["③ 人工审批\n点按钮确认"]
+    Manual --> Prod["④ prod 环境\n部署\n滚动更新"]
+    Prod --> Health["⑤ 健康检查\n自动 curl 验证\n失败自动回滚"]
     
-    style Manual fill:#F44336,color:#fff
-    style Prod fill:#D32F2F,color:#fff
-```
+
+classDef style_Manual fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+classDef style_Prod fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+class Manual style_Manual;
+class Prod style_Prod;```
 
 | 环境 | 触发方式 | 部署策略 | 谁在验证 | 数据库 |
 |------|------|------|------|------|

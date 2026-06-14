@@ -608,17 +608,17 @@ public class OrderServiceImpl extends OrderServiceGrpc.OrderServiceImplBase {
 
 ```mermaid
 flowchart TD
-    classDef caller fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef server fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef db fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef caller fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef server fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef db fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     CLIENT[客户端] --> OS
 
-    OS[OrderService<br/>port: 9092] --> US
+    OS[OrderService\nport: 9092] --> US
     OS --> PS
 
-    US[UserService<br/>port: 9090] --> UDB[(User DB)]
-    PS[ProductService<br/>port: 9091] --> PDB[(Product DB)]
+    US[UserService\nport: 9090] --> UDB[(User DB)]
+    PS[ProductService\nport: 9091] --> PDB[(Product DB)]
     OS --> ODB[(Order DB)]
 
     class CLIENT,OS caller;
@@ -875,21 +875,21 @@ service UserService {
 
 ```mermaid
 flowchart TD
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef result fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef warn fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef result fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef warn fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    START([一个功能该不该拆成独立服务？]) --> Q1{这个功能的数据<br/>需要独立扩展吗？}
-    Q1 -- "是——有自己的数据库" --> Q2{这个功能被多个<br/>业务场景调用吗？}
-    Q1 -- "否——数据和其他功能<br/>强关联、必须事务一致" --> NO["不拆<br/>保持在一个服务内"]
+    START([一个功能该不该拆成独立服务？]) --> Q1{这个功能的数据\n需要独立扩展吗？}
+    Q1 -- "是——有自己的数据库" --> Q2{这个功能被多个\n业务场景调用吗？}
+    Q1 -- "否——数据和其他功能\n强关联、必须事务一致" --> NO["不拆\n保持在一个服务内"]
 
-    Q2 -- "是——至少三个<br/>调用方" --> Q3{这个功能的团队<br/>独立于其他服务？}
-    Q2 -- "否——只有一个<br/>调用方" --> NO
+    Q2 -- "是——至少三个\n调用方" --> Q3{这个功能的团队\n独立于其他服务？}
+    Q2 -- "否——只有一个\n调用方" --> NO
 
     Q3 -- "是——不同团队维护" --> YES["拆成独立服务"]
-    Q3 -- "否——同一个<br/>团队维护" --> Q4{拆了之后<br/>能减少非功能风险吗？}
-    Q4 -- "能——独立部署、<br/>独立扩容" --> YES
-    Q4 -- "不能——只是<br/>为了拆而拆" --> NO
+    Q3 -- "否——同一个\n团队维护" --> Q4{拆了之后\n能减少非功能风险吗？}
+    Q4 -- "能——独立部署、\n独立扩容" --> YES
+    Q4 -- "不能——只是\n为了拆而拆" --> NO
 
     class START,YES,NO result;
     class Q1,Q2,Q3,Q4 condition;

@@ -96,7 +96,7 @@ sequenceDiagram
 
     Note over C,S: 登出
     C->>C: 删除本地Token
-    Note over S: ⚠️ 服务端无感知<br/>Token仍然有效直到过期
+    Note over S: ⚠️ 服务端无感知\nToken仍然有效直到过期
 ```
 
 | 维度 | 评价 | 说明 |
@@ -121,7 +121,7 @@ sequenceDiagram
     Note over C,R: 登录
     C->>S: 用户名+密码
     S->>S: 生成UUID作为Token
-    S->>R: SET token:{uuid} → {userId, username, role}<br/>EXPIRE 1800 (30分钟)
+    S->>R: SET token:{uuid} → {userId, username, role}\nEXPIRE 1800 (30分钟)
     S-->>C: Token (UUID)
 
     Note over C,R: 后续请求
@@ -164,7 +164,7 @@ sequenceDiagram
     C->>S: 用户名+密码
     S->>S: 验证用户名密码
     S->>J: 生成JWT (jti=唯一ID, 过期30分钟)
-    S->>R: SET auth:token:{jti} → {userId, username}<br/>EXPIRE 1800 (与JWT一致)
+    S->>R: SET auth:token:{jti} → {userId, username}\nEXPIRE 1800 (与JWT一致)
     S-->>C: {accessToken: JWT, refreshToken}
 
     Note over C,R: ====== 正常请求（JWT有效+Redis命中）======
@@ -183,7 +183,7 @@ sequenceDiagram
 
     Note over C,R: ====== 强制下线 ======
     S->>R: DEL auth:token:{jti}
-    Note over R: 该JWT即使未过期<br/>下次请求时Redis查不到<br/>→ 返回401
+    Note over R: 该JWT即使未过期\n下次请求时Redis查不到\n→ 返回401
 ```
 
 这是目前企业生产环境中最主流的方案，它在两种极端之间找到了最佳平衡点。
@@ -198,16 +198,16 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    ROOT[JWT + Redis<br/>混合鉴权体系]
+    ROOT[JWT + Redis\n混合鉴权体系]
 
     ROOT --> JWT_PART[JWT Token]
     JWT_PART --> J1["Header\n• alg: HS256"]
-    JWT_PART --> J2["Payload\n• sub: 用户ID\n• username: 用户名\n• role: 角色\n• jti: Token唯一ID<br/>  (UUID, 每次签发不同)\n• iat: 签发时间\n• exp: 过期时间"]
+    JWT_PART --> J2["Payload\n• sub: 用户ID\n• username: 用户名\n• role: 角色\n• jti: Token唯一ID\n  (UUID, 每次签发不同)\n• iat: 签发时间\n• exp: 过期时间"]
     JWT_PART --> J3["Signature\n• HMAC-SHA256签名"]
 
     ROOT --> REDIS_PART[Redis 存储]
@@ -473,23 +473,23 @@ DEL auth:user:1001
 
 ```mermaid
 stateDiagram-v2
-    classDef valid fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
-    classDef invalid fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold
-    classDef middle fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px,color:#212121,font-weight:bold
+classDef valid fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef invalid fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef middle fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
 
-    [*] --> Active : 登录成功<br/>签发JWT+写入Redis
+    [*] --> Active : 登录成功\n签发JWT+写入Redis
 
     state Active {
         [*] --> Normal : JWT有效期内
     }
 
-    Active --> Expired : JWT的exp时间到达<br/>Redis Key自动过期
-    Active --> Revoked : 管理员/DEL Redis Key<br/>用户主动登出
-    Active --> Refreshed : 用RefreshToken<br/>换取新的AccessToken
+    Active --> Expired : JWT的exp时间到达\nRedis Key自动过期
+    Active --> Revoked : 管理员/DEL Redis Key\n用户主动登出
+    Active --> Refreshed : 用RefreshToken\n换取新的AccessToken
 
     Expired --> [*]
     Revoked --> [*]
-    Refreshed --> Active : 签发新JWT<br/>写入新Redis Key
+    Refreshed --> Active : 签发新JWT\n写入新Redis Key
 
     class Active,Refreshed valid
     class Expired,Revoked invalid
@@ -1404,10 +1404,10 @@ public class RefreshRequest {
 
 ```mermaid
 flowchart TD
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[三种鉴权方案对比]
 
@@ -1474,10 +1474,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     REQ([请求到达]) --> JWT_CHECK[JWT签名验证]
     JWT_CHECK --> JWT_OK{"JWT有效 ?"}
@@ -1491,8 +1491,8 @@ flowchart TD
     EXISTS -- 否 --> REVOKED([401 Token已撤销])
 
     REDIS_OK -- 否(超时/连接失败) --> STRATEGY{"降级策略 ?"}
-    STRATEGY -- 严格模式<br/>(银行/金融) --> DENY2([拒绝<br/>安全优先])
-    STRATEGY -- 宽松模式<br/>(内容/资讯) --> ALLOW2([放行<br/>可用优先])
+    STRATEGY -- 严格模式\n(银行/金融) --> DENY2([拒绝\n安全优先])
+    STRATEGY -- 宽松模式\n(内容/资讯) --> ALLOW2([放行\n可用优先])
 
     class REQ,ALLOW,ALLOW2 startEnd;
     class JWT_OK,REDIS_OK,EXISTS,STRATEGY condition;
@@ -1638,27 +1638,27 @@ public class TokenCleanupTask {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
 
-    SUMMARY[(JWT+Redis<br/>混合鉴权)]
+    SUMMARY[(JWT+Redis\n混合鉴权)]
     SUMMARY --> WHY[为什么需要混合方案]
-    WHY --> W1["纯JWT: Token签发后<br/>无法撤销"]
-    WHY --> W2["纯Redis: 每次请求<br/>都查Redis,性能差"]
+    WHY --> W1["纯JWT: Token签发后\n无法撤销"]
+    WHY --> W2["纯Redis: 每次请求\n都查Redis,性能差"]
 
     SUMMARY --> HOW[混合方案如何实现]
-    HOW --> H1["JWT加入jti<br/>作为Token唯一标识"]
-    HOW --> H2["Redis存储<br/>auth:token:{jti} → TokenInfo<br/>TTL = JWT过期时间"]
-    HOW --> H3["认证流程:<br/>①验证JWT签名<br/>②Redis GET jti<br/>③均通过→放行"]
+    HOW --> H1["JWT加入jti\n作为Token唯一标识"]
+    HOW --> H2["Redis存储\nauth:token:{jti} → TokenInfo\nTTL = JWT过期时间"]
+    HOW --> H3["认证流程:\n①验证JWT签名\n②Redis GET jti\n③均通过→放行"]
 
     SUMMARY --> WHAT[获得了什么能力]
-    WHAT --> WH1["✅ 主动撤销Token<br/>(登出/改密码/踢人)"]
-    WHAT --> WH2["✅ 在线状态查询<br/>(用户几台设备在线)"]
-    WHAT --> WH3["✅ JWT自解释性<br/>(Payload含用户信息)"]
-    WHAT --> WH4["✅ 性能可控<br/>(一次Redis GET的开销)"]
-    WHAT --> WH5["✅ Redis故障可降级<br/>(降级为纯JWT)"]
+    WHAT --> WH1["✅ 主动撤销Token\n(登出/改密码/踢人)"]
+    WHAT --> WH2["✅ 在线状态查询\n(用户几台设备在线)"]
+    WHAT --> WH3["✅ JWT自解释性\n(Payload含用户信息)"]
+    WHAT --> WH4["✅ 性能可控\n(一次Redis GET的开销)"]
+    WHAT --> WH5["✅ Redis故障可降级\n(降级为纯JWT)"]
 
     class SUMMARY startEnd;
     class WHY,HOW,WHAT branch;

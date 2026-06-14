@@ -265,34 +265,34 @@ JAVA_OPT="${JAVA_OPT} -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"
 
 ```mermaid
 flowchart TB
-    classDef gateway fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef nacos fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef service fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef middleware fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef config fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#F57F17;
+classDef gateway fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef nacos fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef service fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef middleware fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef config fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a;
 
     BROWSER[浏览器/移动端] --> GW
 
-    GW[Spring Cloud Gateway<br/>:8080] -->|"路由规则<br/>存 Nacos 配置中心"| NACOS
+    GW[Spring Cloud Gateway\n:8080] -->|"路由规则\n存 Nacos 配置中心"| NACOS
     GW -->|lb://user-service| US
     GW -->|lb://order-service| OS
 
-    NACOS[★ Nacos ★<br/>服务发现 + 配置中心]
+    NACOS[★ Nacos ★\n服务发现 + 配置中心]
 
-    US[UserService<br/>:8081] -->|注册| NACOS
-    OS[OrderService<br/>:8082] -->|注册| NACOS
-    PS[ProductService<br/>:8083] -->|注册| NACOS
+    US[UserService\n:8081] -->|注册| NACOS
+    OS[OrderService\n:8082] -->|注册| NACOS
+    PS[ProductService\n:8083] -->|注册| NACOS
 
-    SENTINEL[Sentinel Dashboard<br/>:8080] -->|"流控/熔断规则<br/>持久化到 Nacos"| NACOS
+    SENTINEL[Sentinel Dashboard\n:8080] -->|"流控/熔断规则\n持久化到 Nacos"| NACOS
 
-    OS -->|"@FeignClient<br/>服务发现"| NACOS
-    OS -->|"OpenFeign HTTP<br/>调 REST 接口"| US
-    OS -->|"@DubboReference<br/>服务发现"| NACOS
-    OS -->|"Dubbo RPC<br/>调 Dubbo 接口"| PS
+    OS -->|"@FeignClient\n服务发现"| NACOS
+    OS -->|"OpenFeign HTTP\n调 REST 接口"| US
+    OS -->|"@DubboReference\n服务发现"| NACOS
+    OS -->|"Dubbo RPC\n调 Dubbo 接口"| PS
 
-    US -->|"@RefreshScope<br/>动态刷新配置"| NACOS
+    US -->|"@RefreshScope\n动态刷新配置"| NACOS
 
-    NACOS -->|"健康检查<br/>实例上下线通知"| GW
+    NACOS -->|"健康检查\n实例上下线通知"| GW
 
     class GW gateway;
     class NACOS nacos;

@@ -70,9 +70,9 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef problem fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold;
-    classDef solution fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef desc fill:#FFF9C4,stroke:#F9A825,stroke-width:1px,color:#5D4037;
+classDef problem fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef solution fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef desc fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#fde68a;
 
     %% ==========================================
     %% 原生 NIO 四大痛点 → Netty 解决方案
@@ -108,10 +108,10 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef boss fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef worker fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef pipeline fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef handler fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef boss fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef worker fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef pipeline fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef handler fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     %% ==========================================
     %% Netty Reactor 主从模型
@@ -258,10 +258,10 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef inbound fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef outbound fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold;
-    classDef both fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef label fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px,color:#212121;
+classDef inbound fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef outbound fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef both fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef label fill:#1e1e24,stroke:#6b7280,stroke-width:1px,color:#e5e7eb;
 
     %% ==========================================
     %% Pipeline 责任链处理顺序
@@ -342,9 +342,9 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef bytebuf fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef nio fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold;
-    classDef region fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1px,color:#212121;
+classDef bytebuf fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef nio fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef region fill:#2a1147,stroke:#a855f7,stroke-width:1px,color:#ede9fe;
 
     %% ==========================================
     %% ByteBuf 读写索引模型
@@ -941,10 +941,10 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     %% ==========================================
     %% Netty 知识体系总览

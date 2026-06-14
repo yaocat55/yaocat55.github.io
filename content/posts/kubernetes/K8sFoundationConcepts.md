@@ -99,19 +99,19 @@ Docker 解决的就是这个 **"在我机器上能跑，到你机器上跑不了
 Image 内部是**分层文件系统**（UnionFS）：
 
 ```mermaid
-flowchart TD
+flowchart LR
   L4["Layer 4: 你的业务代码 app.jar (可替换)"]
   L3["Layer 3: JDK 17 运行环境"]
   L2["Layer 2: apt-get install 的依赖库"]
   L1["Layer 1: ubuntu:22.04 Base Image"]
 
-  classDef base fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef base fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
   class L1 base
 
-  classDef mid fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef mid fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class L2,L3 mid
 
-  classDef top fill:#FFE082,stroke:#FFB300,stroke-width:1.5px,color:#5D4037,font-weight:bold
+classDef top fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
   class L4 top
 ```
 
@@ -189,16 +189,16 @@ flowchart LR
   K8S -->|"CRI 接口调用"| CR
   CR -->|"创建/启停"| C
 
-  classDef dev fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#212121,font-weight:bold
+classDef dev fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class D,KC dev
 
-  classDef k8s fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef k8s fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class K8S k8s
 
-  classDef runtime fill:#FFCCBC,stroke:#E64A19,stroke-width:2px,color:#212121,font-weight:bold
+classDef runtime fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class CR runtime
 
-  classDef ct fill:#FFF9C4,stroke:#F9A825,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef ct fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class C ct
 ```
 
@@ -262,10 +262,10 @@ flowchart TD
   C1["策略: 资源最空闲? 跟已有 Pod 分散(打散)? 亲和性?"]
   C --- C1
 
-  classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class A,B,C,D process
 
-  classDef note fill:#FFF8E1,stroke:#FF8F00,stroke-width:1px,color:#5D4037,font-size:10px
+classDef note fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#fde68a;
   class B1,C1 note
 ```
 
@@ -298,7 +298,7 @@ kubelet 是每个 Node 上**唯一的守护进程**。它做三件事：
 关系图很简单：
 
 ```mermaid
-flowchart TD
+flowchart LR
   AS["API Server"]
   KL["kubelet"]
   CR["Container Runtime"]
@@ -310,16 +310,16 @@ flowchart TD
   CR --> CT
   CR --> CT2
 
-  classDef api fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#212121,font-weight:bold
+classDef api fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class AS api
 
-  classDef kl fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef kl fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class KL kl
 
-  classDef rt fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#212121
+classDef rt fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
   class CR rt
 
-  classDef ct fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037
+classDef ct fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a;
   class CT,CT2 ct
 ```
 
@@ -446,13 +446,13 @@ flowchart TD
   S1 -.-> S2
   S2 -.-> S3
 
-  classDef deploy fill:#FCE4EC,stroke:#C62828,stroke-width:2px,color:#212121,font-weight:bold
+classDef deploy fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
   class D deploy
 
-  classDef rs fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#212121,font-weight:bold
+classDef rs fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
   class RS_OLD,RS_NEW rs
 
-  classDef step fill:#FFF8E1,stroke:#FF8F00,stroke-width:1px,color:#5D4037,font-size:11px
+classDef step fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#fde68a;
   class S1,S2,S3 step
 ```
 
@@ -628,13 +628,13 @@ flowchart LR
   G3 --> G3B["Pod 为啥 CrashLoop?"]
   G3 --> G3C["Service 为啥不通?"]
 
-  classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class R root
 
-  classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class G1,G2,G3 branch
 
-  classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class G1A,G1B,G1C,G1D,G2A,G2B,G2C,G2D,G3A,G3B,G3C leaf
 ```
 

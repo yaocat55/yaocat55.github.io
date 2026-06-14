@@ -68,7 +68,7 @@ order-service 调用 product-service 扣库存：
 <strong>异步分布式事务的本质：把非关键路径的操作——从同步链路中剥离出来——通过消息异步执行——用最终一致性保证数据正确。</strong>
 
 ```mermaid
-graph LR
+flowchart LR
     subgraph "同步方案"
         A1["创建订单"] --> B1["扣库存"]
         B1 --> C1["发优惠券"]
@@ -77,14 +77,16 @@ graph LR
     end
 
     subgraph "异步方案"
-        A2["创建订单<br/>+ 扣库存<br/>(核心链路)"] --> B2["返回用户<br/>⚡快"]
-        A2 -.->|"消息"| C2["发优惠券<br/>(异步)"]
-        A2 -.->|"消息"| D2["发短信<br/>(异步)"]
+        A2["创建订单\n+ 扣库存\n(核心链路)"] --> B2["返回用户\n⚡快"]
+        A2 -.->|"消息"| C2["发优惠券\n(异步)"]
+        A2 -.->|"消息"| D2["发短信\n(异步)"]
     end
 
-    style E1 fill:#F44336,color:#fff
-    style B2 fill:#4CAF50,color:#fff
-```
+
+classDef style_E1 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+classDef style_B2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
+class E1 style_E1;
+class B2 style_B2;```
 
 但异步引入了一个新问题：<strong>怎么保证"消息一定发出去"？怎么保证"消息发出去了——消费一定成功"？</strong>
 
@@ -160,10 +162,10 @@ sequenceDiagram
 
     Note over OS,CS: ① 发送半消息
     OS->>MQ: sendMessageInTransaction(halfMsg)
-    MQ-->>OS: OK——半消息已存储——消费者不可见<br/>返回 transactionId
+    MQ-->>OS: OK——半消息已存储——消费者不可见\n返回 transactionId
 
     Note over OS,CS: ② 执行本地事务
-    OS->>OS: @Transactional<br/>orderMapper.insert(order)<br/>productMapper.updateStock()
+    OS->>OS: @Transactional\norderMapper.insert(order)\nproductMapper.updateStock()
 
     Note over OS,CS: ③ 提交/回滚
     alt 本地事务成功
@@ -178,7 +180,7 @@ sequenceDiagram
     Note over OS,CS: ④ 回查——OS 挂了的情况
     MQ->>OS: checkLocalTransaction(transactionId)
     OS->>OS: 查订单表——SELECT status FROM order WHERE id = ?
-    OS-->>MQ: 订单存在 → COMMIT<br/>订单不存在 → ROLLBACK
+    OS-->>MQ: 订单存在 → COMMIT\n订单不存在 → ROLLBACK
 ```
 
 > ⚠️ <strong>新手提示</strong>：半消息不是"发到消费者队列但标记为不可见"——它存在一个独立的半消息主题（RMQ_SYS_TRANS_HALF_TOPIC）中——消费者根本订阅不到。只有 Commit 后——消息才从半消息主题移到真正的业务主题。
@@ -491,23 +493,23 @@ public class CouponMessageConsumer implements RocketMQListener<OrderMessageBody>
 ```mermaid
 sequenceDiagram
     participant OS as order-service
-    participant DB as order-service<br/>数据库
+    participant DB as order-service\n数据库
     participant Job as 定时任务
     participant MQ as Kafka/RabbitMQ
     participant CS as coupon-service
 
     Note over OS,CS: ① 本地事务——业务数据 + 消息记录一起写
-    OS->>DB: @Transactional<br/>INSERT INTO order (...)<br/>INSERT INTO event_log (status='PENDING')
+    OS->>DB: @Transactional\nINSERT INTO order (...)\nINSERT INTO event_log (status='PENDING')
 
     Note over OS,CS: ② 定时任务——扫描未发送的消息
     loop 每 5 秒
-        Job->>DB: SELECT * FROM event_log<br/>WHERE status = 'PENDING'<br/>AND next_retry_time <= NOW()
+        Job->>DB: SELECT * FROM event_log\nWHERE status = 'PENDING'\nAND next_retry_time <= NOW()
         DB-->>Job: [未发送的消息列表]
         Job->>MQ: 逐条发送到 MQ
         alt 发送成功
             Job->>DB: UPDATE event_log SET status='SENT'
         else 发送失败
-            Job->>DB: UPDATE event_log<br/>SET retry_count = retry_count + 1,<br/>next_retry_time = NOW() + 指数退避
+            Job->>DB: UPDATE event_log\nSET retry_count = retry_count + 1,\nnext_retry_time = NOW() + 指数退避
         end
     end
 

@@ -96,15 +96,15 @@ flowchart TD
     IOApp --> NIO["🔄 非阻塞 IO（NIO）"]
     IOApp --> Multiplexing["📡 IO 多路复用"]
     
-    BIO --> BIODesc["线程调用 read（）→ 阻塞等待<br/>数据就绪 → 内核拷贝到用户空间 → 返回<br/><br/>代表：Java BIO / ServerSocket<br/>特点：一个连接一个线程<br/>缺点：线程数 = 连接数<br/>C10K 问题直接爆炸"]
+    BIO --> BIODesc["线程调用 read（）→ 阻塞等待\n数据就绪 → 内核拷贝到用户空间 → 返回\n\n代表：Java BIO / ServerSocket\n特点：一个连接一个线程\n缺点：线程数 = 连接数\nC10K 问题直接爆炸"]
     
-    NIO --> NIODesc["线程调用 read（）→ 立即返回<br/>（有数据或 EAGAIN）<br/>应用轮询判断是否就绪<br/><br/>代表：Java NIO（非阻塞模式）<br/>特点：一个线程管多个连接<br/>缺点：轮询浪费 CPU"]
+    NIO --> NIODesc["线程调用 read（）→ 立即返回\n（有数据或 EAGAIN）\n应用轮询判断是否就绪\n\n代表：Java NIO（非阻塞模式）\n特点：一个线程管多个连接\n缺点：轮询浪费 CPU"]
     
-    Multiplexing --> MDesc["线程调用 select/poll/epoll → 阻塞<br/>内核通知哪个 fd 就绪 → 再 read（）<br/><br/>代表：Netty / Redis / Nginx / Go netpoller<br/>特点：一个线程管成千上万连接<br/>缺点：编程模型复杂（回调/Pipeline）"]
+    Multiplexing --> MDesc["线程调用 select/poll/epoll → 阻塞\n内核通知哪个 fd 就绪 → 再 read（）\n\n代表：Netty / Redis / Nginx / Go netpoller\n特点：一个线程管成千上万连接\n缺点：编程模型复杂（回调/Pipeline）"]
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
     
     class IOApp root
     class BIO,NIO,Multiplexing root
@@ -128,18 +128,18 @@ Go 没有像 Netty 那样让开发者显式使用 epoll/kqueue。Go 在运行时
 
 ```mermaid
 flowchart TD
-    G["goroutine<br/>执行 conn.Read()"] --> NetPoller["🔧 Go netpoller<br/>（epoll/kqueue/IOCP）"]
-    G2["goroutine 被挂起到<br/>netpoller 等待队列<br/>OS 线程不阻塞，去干别的"]
+    G["goroutine\n执行 conn.Read()"] --> NetPoller["🔧 Go netpoller\n（epoll/kqueue/IOCP）"]
+    G2["goroutine 被挂起到\nnetpoller 等待队列\nOS 线程不阻塞，去干别的"]
     
     NetPoller --> Block["fd 未就绪"]
     NetPoller --> Ready["fd 就绪"]
     
     Block --> G2
-    Ready --> Wakeup["唤醒 goroutine<br/>放回可运行队列<br/>继续执行"]
+    Ready --> Wakeup["唤醒 goroutine\n放回可运行队列\n继续执行"]
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
     
     class G root
     class NetPoller highlight
@@ -162,23 +162,23 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph NettyModel["☕ Netty Reactor 模型"]
-        BossGroup["Boss EventLoopGroup<br/>（1 个线程）"] --> Accept["处理 Accept 事件"]
-        Accept --> WorkerGroup["Worker EventLoopGroup<br/>（N 个线程）"]
-        WorkerGroup --> Pipeline1["Channel 1 Pipeline<br/>Handler1→Handler2→Handler3"]
-        WorkerGroup --> Pipeline2["Channel 2 Pipeline<br/>Handler1→Handler2→Handler3"]
+        BossGroup["Boss EventLoopGroup\n（1 个线程）"] --> Accept["处理 Accept 事件"]
+        Accept --> WorkerGroup["Worker EventLoopGroup\n（N 个线程）"]
+        WorkerGroup --> Pipeline1["Channel 1 Pipeline\nHandler1→Handler2→Handler3"]
+        WorkerGroup --> Pipeline2["Channel 2 Pipeline\nHandler1→Handler2→Handler3"]
     end
     
     subgraph GoModel["🐹 Go netpoller 模型"]
-        ListenerG["goroutine<br/>Accept 循环"] --> ConnG1["goroutine<br/>处理连接 1<br/>同步代码"]
-        ListenerG --> ConnG2["goroutine<br/>处理连接 2<br/>同步代码"]
-        NetPoller2["netpoller<br/>管理所有 fd"]
+        ListenerG["goroutine\nAccept 循环"] --> ConnG1["goroutine\n处理连接 1\n同步代码"]
+        ListenerG --> ConnG2["goroutine\n处理连接 2\n同步代码"]
+        NetPoller2["netpoller\n管理所有 fd"]
     end
     
-    Note["核心差异"] --> DiffText["Netty：显式 EventLoop + Pipeline<br/>Go：goroutine 替代 EventLoop<br/>同步代码替代 Pipeline"]
+    Note["核心差异"] --> DiffText["Netty：显式 EventLoop + Pipeline\nGo：goroutine 替代 EventLoop\n同步代码替代 Pipeline"]
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
     
     class BossGroup,WorkerGroup,ListenerG,NetPoller2 root
     class Accept,Pipeline1,Pipeline2,ConnG1,ConnG2 process

@@ -186,19 +186,19 @@ Spring Boot 启动
 ```mermaid
 flowchart TD
     subgraph L1["📋 Logger 层（门面）"]
-        ROOT["Root Logger<br/>兜底，所有 Logger 的祖先"]
-        PKG["Package Logger<br/>com.mall.* 开 DEBUG<br/>org.springframework 开 WARN"]
+        ROOT["Root Logger\n兜底，所有 Logger 的祖先"]
+        PKG["Package Logger\ncom.mall.* 开 DEBUG\norg.springframework 开 WARN"]
     end
     subgraph L2["⚙️ Appender 层（输出目标）"]
-        CONSOLE["ConsoleAppender<br/>写入 System.out"]
-        FILE["RollingFileAppender<br/>写入磁盘文件"]
+        CONSOLE["ConsoleAppender\n写入 System.out"]
+        FILE["RollingFileAppender\n写入磁盘文件"]
     end
     subgraph L3["📝 Encoder / Layout 层（格式化）"]
-        PATTERN["PatternLayout<br/>%d 时间 | %level 级别 | %logger 类名 | %msg 消息 | %n 换行"]
-        CHARSET["Charset: UTF-8<br/>避免中文乱码"]
+        PATTERN["PatternLayout\n%d 时间 | %level 级别 | %logger 类名 | %msg 消息 | %n 换行"]
+        CHARSET["Charset: UTF-8\n避免中文乱码"]
     end
     subgraph L4["🗂 轮转策略"]
-        ROLL["SizeAndTimeBasedRollingPolicy<br/>每天 + 100MB 上限 = 触发切分"]
+        ROLL["SizeAndTimeBasedRollingPolicy\n每天 + 100MB 上限 = 触发切分"]
     end
 
     L1 --> L2
@@ -210,6 +210,10 @@ flowchart TD
     class ROOT,PKG process
     class CONSOLE,FILE data
     class PATTERN,CHARSET,ROLL highlight
+
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
 ```
 
 **Logger**：负责**收**。每个 `log.info()` 调用背后都有一个 Logger 实例（通过 `@Slf4j` 注入）。Logger 之间有父子继承关系——`com.mall.service.pay.PayService` 的 Logger 如果自己没有配 level，就向上找 `com.mall.service.pay` → `com.mall.service` → `com.mall` → Root。最后一级 Root Logger **必须配**，否则 Logback 自己会补一个默认的。
@@ -504,6 +508,12 @@ flowchart TD
     class C reject
     class D,E,F process
     class G data
+
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
 ```
 
 **关键结论**：
@@ -539,6 +549,12 @@ flowchart TD
     class E,G process
     class H,I data
     class J,K,N data
+
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
 ```
 
 `LoggingEvent` 是整个 logback 的核心数据结构——每次 `log.info()` 调用都会创建一个 `LoggingEvent` 对象，包含：时间戳、日志级别、logger 名称、格式化后的消息、异常对象（如果有）、MDC（Mapped Diagnostic Context）上下文。
@@ -556,18 +572,23 @@ flowchart TD
 SLF4J 定义了五个级别，从低到高：
 
 ```mermaid
-flowchart TD
-    A["🔍 TRACE<br/>最细粒度<br/>变量值、循环内的状态"] --> B
-    B["🛠 DEBUG<br/>调试信息<br/>方法入参出参、分支走向"] --> C
-    C["📋 INFO<br/>关键业务流程节点<br/>订单创建、支付成功、用户登录"] --> D
-    D["⚠️ WARN<br/>潜在问题、可恢复异常<br/>业务校验失败、降级触发、重试"] --> E
-    E["🔥 ERROR<br/>需要人工介入的故障<br/>数据库连接失败、MQ投递失败、第三方API超时"]
+flowchart LR
+    A["🔍 TRACE\n最细粒度\n变量值、循环内的状态"] --> B
+    B["🛠 DEBUG\n调试信息\n方法入参出参、分支走向"] --> C
+    C["📋 INFO\n关键业务流程节点\n订单创建、支付成功、用户登录"] --> D
+    D["⚠️ WARN\n潜在问题、可恢复异常\n业务校验失败、降级触发、重试"] --> E
+    E["🔥 ERROR\n需要人工介入的故障\n数据库连接失败、MQ投递失败、第三方API超时"]
 
     class A process
     class B process
     class C data
     class D highlight
     class E reject
+
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
 ```
 
 > 📌 **前置知识**：级别是**包含关系**。如果 root level 设为 INFO，则 INFO / WARN / ERROR 都会输出，TRACE 和 DEBUG 被丢弃。
@@ -686,19 +707,25 @@ Caused by: java.net.SocketTimeoutException: connect timed out
 ```mermaid
 flowchart TD
     A["🖥 生产环境日志屏"] --> B{"看到什么级别？"}
-    B -->|"INFO（常态）"| C["📊 业务曲线正常<br/>注册量/下单量/支付率平稳"]
-    B -->|"WARN（警惕）"| D["🔍 检索 WARN 密集时段<br/>判读是偶发还是趋势"]
-    B -->|"ERROR（告警）"| E["🚨 立即拉异常栈<br/>定位 external dependency<br/>或代码 bug"]
+    B -->|"INFO（常态）"| C["📊 业务曲线正常\n注册量/下单量/支付率平稳"]
+    B -->|"WARN（警惕）"| D["🔍 检索 WARN 密集时段\n判读是偶发还是趋势"]
+    B -->|"ERROR（告警）"| E["🚨 立即拉异常栈\n定位 external dependency\n或代码 bug"]
     D -->|"偶发（<5条/分钟）"| F["📝 记录、次优先级处理"]
     D -->|"趋势（持续增长）"| E
-    C --> G["✅ 日常只看大盘<br/>不逐行翻日志"]
-    E --> H["🔧 MTTR<br/>目标: 5 ~ 15min 内定位"]
+    C --> G["✅ 日常只看大盘\n不逐行翻日志"]
+    E --> H["🔧 MTTR\n目标: 5 ~ 15min 内定位"]
 
     class A startEnd
     class B condition
     class C,G data
     class D,F process
     class E,H reject
+
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
 ```
 
 上图总结了生产环境排障的标准路径：**常态看 INFO 大盘，毛刺查 WARN 趋势，故障追 ERROR 栈**。三个级别三个画面，互不干扰。
@@ -733,6 +760,9 @@ flowchart TD
 
     class D1,D2,D3,T1,T2,T3,P1,P2,P3,P5 process
     class D4,T4,P4 data
+
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
 ```
 
 #### 开发环境（dev）

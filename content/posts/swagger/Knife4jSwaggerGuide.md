@@ -159,21 +159,21 @@ public ApiInfo apiInfo() {
 
 ```mermaid
 flowchart TD
-    Config["SwaggerConfig<br/>@EnableSwagger2"] --> D1["Docket<br/>adminApi"]
-    Config --> D2["Docket<br/>mobileApi"]
+    Config["SwaggerConfig\n@EnableSwagger2"] --> D1["Docket\nadminApi"]
+    Config --> D2["Docket\nmobileApi"]
 
     D1 --> A1["扫描 com.mall.api.admin"]
     D2 --> A2["扫描 com.mall.api.mobile"]
 
-    A1 --> G1["分组：01-管理后台<br/>商品管理/用户管理/订单管理<br/>优惠券/秒杀/系统设置"]
-    A2 --> G2["分组：02-移动端<br/>商品浏览/用户登录/订单提交<br/>地址管理/优惠券领取"]
+    A1 --> G1["分组：01-管理后台\n商品管理/用户管理/订单管理\n优惠券/秒杀/系统设置"]
+    A2 --> G2["分组：02-移动端\n商品浏览/用户登录/订单提交\n地址管理/优惠券领取"]
 
-    G1 --> Doc["Knife4j 文档页面<br/>右上角下拉切换分组"]
+    G1 --> Doc["Knife4j 文档页面\n右上角下拉切换分组"]
     G2 --> Doc
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class Config process
     class D1,D2 process
@@ -368,7 +368,7 @@ sequenceDiagram
     F->>K: 5. 在"全局参数设置"填入 token
     Note over F,K: 后续所有接口自动带 Authorization 请求头
     F->>K: 6. 调 /v1/web/user/getUserDetail
-    K->>S: GET /v1/web/user/getUserDetail<br/>Authorization: eyJhbG...
+    K->>S: GET /v1/web/user/getUserDetail\nAuthorization: eyJhbG...
     S-->>K: {"id":1, "userName":"admin", ...}
 ```
 
@@ -422,15 +422,15 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
 ```mermaid
 flowchart TD
-    Start([项目启动]) --> Scan[Springfox 扫描<br/>@Api @ApiOperation<br/>@ApiModel @ApiModelProperty]
-    Scan --> Build[组装 OpenAPI 3.0<br/>JSON 文档]
-    Build --> Endpoint["暴露 /v3/api-docs<br/>端点"]
-    Endpoint --> Knife4j[Knife4j 读取 JSON<br/>渲染 /doc.html 页面]
-    Knife4j --> UI[用户看到可交互的<br/>API 文档页面]
+    Start([项目启动]) --> Scan[Springfox 扫描\n@Api @ApiOperation\n@ApiModel @ApiModelProperty]
+    Scan --> Build[组装 OpenAPI 3.0\nJSON 文档]
+    Build --> Endpoint["暴露 /v3/api-docs\n端点"]
+    Endpoint --> Knife4j[Knife4j 读取 JSON\n渲染 /doc.html 页面]
+    Knife4j --> UI[用户看到可交互的\nAPI 文档页面]
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
 
     class Start,UI startEnd
     class Scan,Build process

@@ -46,14 +46,14 @@ Map<String, List<Long>> windowCache = new HashMap<>();
 
 ```mermaid
 flowchart LR
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    INPUT[("input-topic<br/>原始数据")] -->|"consume"| KS[Kafka Streams<br/>计算引擎<br/>+ RocksDB 本地状态]
-    KS -->|"produce"| OUTPUT[("output-topic<br/>处理结果")]
-    KS -->|"备份"| CHANGELOG[("changelog-topic<br/>状态变更日志")]
+    INPUT[("input-topic\n原始数据")] -->|"consume"| KS[Kafka Streams\n计算引擎\n+ RocksDB 本地状态]
+    KS -->|"produce"| OUTPUT[("output-topic\n处理结果")]
+    KS -->|"备份"| CHANGELOG[("changelog-topic\n状态变更日志")]
 
     class INPUT,OUTPUT data;
     class CHANGELOG process;

@@ -37,8 +37,8 @@ cover:
 ```mermaid
 sequenceDiagram
     participant Browser as 浏览器
-    participant Biz as 业务系统<br/>merchant.shop.com
-    participant SSO as 认证中心<br/>sso.company.com
+    participant Biz as 业务系统\nmerchant.shop.com
+    participant SSO as 认证中心\nsso.company.com
 
     Browser->>Biz: 1. 访问商家后台
     Biz-->>Browser: 2. 302: 去认证中心登录
@@ -76,17 +76,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant B as 浏览器
-    participant C as 业务系统(CRM)<br/>:8080
-    participant A as 认证中心(SSO)<br/>:9000
+    participant C as 业务系统(CRM)\n:8080
+    participant A as 认证中心(SSO)\n:9000
 
     Note over B,A: ══════ 第一阶段：发起授权 ══════
 
     B->>C: GET /home (想访问首页)
     C-->>B: 302 /login (你没登录，去登录)
 
-    Note over C: 生成 PKCE 参数:<br/>code_verifier (随机字符串)<br/>code_challenge = SHA256(verifier)<br/>生成 state (防 CSRF 随机数)
+    Note over C: 生成 PKCE 参数:\ncode_verifier (随机字符串)\ncode_challenge = SHA256(verifier)\n生成 state (防 CSRF 随机数)
 
-    C-->>B: 302 → sso.company.com:9000/oauth2/authorize?<br/>client_id=crm_app&redirect_uri=...&<br/>code_challenge=xxx&state=yyy
+    C-->>B: 302 → sso.company.com:9000/oauth2/authorize?\nclient_id=crm_app&redirect_uri=...&\ncode_challenge=xxx&state=yyy
 
     Note over B,A: ══════ 第二阶段：用户登录 ══════
 
@@ -95,23 +95,23 @@ sequenceDiagram
     B->>A: POST /login (username=zhangsan&password=***)
     A->>A: 验证用户名密码，检查用户是否已登录(SSO)
 
-    Note over A: 生成一次性授权码 code (UUID)<br/>将 code + userId + code_challenge<br/>存入 Redis，TTL 60秒
+    Note over A: 生成一次性授权码 code (UUID)\n将 code + userId + code_challenge\n存入 Redis，TTL 60秒
 
-    A-->>B: 302 → crm.company.com:8080/login/oauth2/code/crm?<br/>code=abc123&state=yyy
+    A-->>B: 302 → crm.company.com:8080/login/oauth2/code/crm?\ncode=abc123&state=yyy
 
     Note over B,A: ══════ 第三阶段：换取 Token ══════
 
     B->>C: GET /login/oauth2/code/crm?code=abc123&state=yyy
 
-    Note over C: 校验 state 是否与步骤2一致<br/>(防 CSRF 攻击)
+    Note over C: 校验 state 是否与步骤2一致\n(防 CSRF 攻击)
 
-    C->>A: POST /oauth2/token (Server-to-Server)<br/>code=abc123&code_verifier=原始值&<br/>client_id=crm_app&client_secret=***
+    C->>A: POST /oauth2/token (Server-to-Server)\ncode=abc123&code_verifier=原始值&\nclient_id=crm_app&client_secret=***
 
-    Note over A: 从 Redis 取出 code 对应信息<br/>SHA256(code_verifier) == code_challenge ?<br/>校验通过 → 删除 code (一次性使用)
+    Note over A: 从 Redis 取出 code 对应信息\nSHA256(code_verifier) == code_challenge ?\n校验通过 → 删除 code (一次性使用)
 
     A-->>C: { access_token, id_token, refresh_token }
 
-    Note over C: 解析 ID Token 获取用户身份<br/>创建本地 Session<br/>存储 access_token + refresh_token
+    Note over C: 解析 ID Token 获取用户身份\n创建本地 Session\n存储 access_token + refresh_token
 
     C-->>B: 302 /home (登录成功)
 
@@ -1020,12 +1020,12 @@ sequenceDiagram
     C-->>B: 302 → 认证中心 /authorize
     B->>A: 跳转到登录页
     B->>A: 提交用户名密码
-    A->>A: 验证身份 → 生成 code<br/>code + userId + challenge → Redis
+    A->>A: 验证身份 → 生成 code\ncode + userId + challenge → Redis
     A-->>B: 302 → 业务系统回调?code=abc&state=yyy
     B->>C: 回调 (带上 code)
     C->>C: 校验 state
-    C->>A: POST /token (Server-to-Server)<br/>code + code_verifier + client_secret
-    A->>A: SHA256(verifier) == challenge ?<br/>通过 → 删除 code → 签发 Token
+    C->>A: POST /token (Server-to-Server)\ncode + code_verifier + client_secret
+    A->>A: SHA256(verifier) == challenge ?\n通过 → 删除 code → 签发 Token
     A-->>C: { id_token, access_token, refresh_token }
     C->>C: 解析 ID Token → 创建本地会话
     C-->>B: 登录成功

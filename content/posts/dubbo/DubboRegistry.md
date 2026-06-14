@@ -50,28 +50,28 @@ cover:
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph REGISTER [注册阶段]
-        P1[Provider 启动] --> P2["向 Nacos 注册<br/>ServiceName: order-provider<br/>IP: 192.168.1.10<br/>Port: 20880<br/>Interface: org.example.OrderService<br/>Methods: getOrderById, createOrder..."]
+        P1[Provider 启动] --> P2["向 Nacos 注册\nServiceName: order-provider\nIP: 192.168.1.10\nPort: 20880\nInterface: org.example.OrderService\nMethods: getOrderById, createOrder..."]
     end
 
     subgraph DISCOVER [发现阶段]
-        C1[Consumer 启动] --> C2["向 Nacos 订阅<br/>Interface: org.example.OrderService"]
-        C2 --> C3["Nacos 返回<br/>[192.168.1.10:20880<br/> 192.168.1.11:20880<br/> 192.168.1.12:20880]"]
+        C1[Consumer 启动] --> C2["向 Nacos 订阅\nInterface: org.example.OrderService"]
+        C2 --> C3["Nacos 返回\n[192.168.1.10:20880\n 192.168.1.11:20880\n 192.168.1.12:20880]"]
         C3 --> C4[Consumer 存到本地缓存]
-        C4 --> C5["选一个 Provider<br/>建立 TCP 长连接"]
+        C4 --> C5["选一个 Provider\n建立 TCP 长连接"]
     end
 
     subgraph HEARTBEAT [心跳阶段]
-        P2 --> H1["Provider 每 5s<br/>向 Nacos 发心跳"]
-        H1 --> H2{Nacos 15s<br/>没收到心跳?}
-        H2 -- "是" --> H3["标记为不健康<br/>30s 后剔除"]
-        H3 --> H4["推送变更通知<br/>给所有订阅的 Consumer"]
-        H4 --> C6[Consumer 更新<br/>本地地址缓存]
+        P2 --> H1["Provider 每 5s\n向 Nacos 发心跳"]
+        H1 --> H2{Nacos 15s\n没收到心跳?}
+        H2 -- "是" --> H3["标记为不健康\n30s 后剔除"]
+        H3 --> H4["推送变更通知\n给所有订阅的 Consumer"]
+        H4 --> C6[Consumer 更新\n本地地址缓存]
     end
 
     class P1,C1,C5 startEnd;

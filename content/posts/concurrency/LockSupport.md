@@ -48,6 +48,8 @@ cover:
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     A[ReentrantLock] -->|依赖| F[LockSupport]
     B[Semaphore] -->|依赖| F
     C[CountDownLatch] -->|依赖| F
@@ -57,6 +59,8 @@ flowchart TD
     F -->|调用| H[UNSAFE.unpark]
     G -->|系统调用| I[pthread_cond_wait]
     H -->|系统调用| J[pthread_cond_signal]
+
+class A,B,C,D,E,F,G,H,I,J process;
 ```
 
 ## 核心 API
@@ -385,6 +389,11 @@ AQS 是 LockSupport 的最大用户。以 `ReentrantLock` 竞争失败为例：
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
     A[线程调用 lock.lock] --> B{tryAcquire 成功?}
     B -->|是| C[获得锁，继续执行]
     B -->|否| D[创建 Node，入队]
@@ -396,6 +405,11 @@ flowchart TD
     G --> I[线程阻塞等待]
     C --> J[unlock 时 unpark 后继节点]
     J --> I
+
+class D,J branch;
+class B,F condition;
+class A,C,G,H,I process;
+class E reject;
 ```
 
 ## ❓ 面试高频问题汇总
@@ -453,6 +467,10 @@ Thread t = new Thread(() -> {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef highlight fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
     subgraph API[对外 API]
         B1[park / park-blocker]
         B2[unpark Thread]
@@ -474,6 +492,10 @@ flowchart TD
         E3[ReentrantLock / Semaphore]
     end
     API --> CORE --> IMPL --> SCENE
+
+class E1 data;
+class CORE highlight;
+class API,B1,B2,B3,C1,C2,C3,D1,D2,D3,E2,E3,IMPL,SCENE process;
 ```
 
 | 关键点 | 一句话总结 |

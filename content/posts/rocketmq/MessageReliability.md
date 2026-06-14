@@ -117,17 +117,17 @@ brokerRole = SYNC_MASTER
 ### 3.3 可靠性配置组合
 
 ```mermaid
-flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+flowchart LR
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    START([业务消息类型]) --> Q1{消息丢一条<br/>会怎样?}
-    Q1 -- "严重（金融/支付）" --> SYNC[SYNC_FLUSH + SYNC_MASTER<br/>每条消息同步刷盘 + 同步复制<br/>吞吐量约 1000 msg/s]
-    Q1 -- "一般（订单/通知）" --> ASYNC[ASYNC_FLUSH + SYNC_MASTER<br/>异步刷盘 + 同步复制<br/>吞吐量约 10000 msg/s]
-    Q1 -- "不重要（日志/埋点）" --> SIMPLE[ASYNC_FLUSH + ASYNC_MASTER<br/>单向发送 + 异步刷盘 + 异步复制<br/>吞吐量最高]
+    START([业务消息类型]) --> Q1{消息丢一条\n会怎样?}
+    Q1 -- "严重（金融/支付）" --> SYNC[SYNC_FLUSH + SYNC_MASTER\n每条消息同步刷盘 + 同步复制\n吞吐量约 1000 msg/s]
+    Q1 -- "一般（订单/通知）" --> ASYNC[ASYNC_FLUSH + SYNC_MASTER\n异步刷盘 + 同步复制\n吞吐量约 10000 msg/s]
+    Q1 -- "不重要（日志/埋点）" --> SIMPLE[ASYNC_FLUSH + ASYNC_MASTER\n单向发送 + 异步刷盘 + 异步复制\n吞吐量最高]
 
     class START startEnd;
     class Q1 condition;

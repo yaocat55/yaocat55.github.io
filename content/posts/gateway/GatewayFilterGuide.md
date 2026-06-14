@@ -520,8 +520,8 @@ public class GlobalRateLimitFilter implements GlobalFilter { ... }
 sequenceDiagram
     participant Client
     participant Gateway
-    participant Filter1 as AuthFilter<br/>@Order(-100)
-    participant Filter2 as LoggingFilter<br/>@Order(0)
+    participant Filter1 as AuthFilter\n@Order(-100)
+    participant Filter2 as LoggingFilter\n@Order(0)
     participant Filter3 as GatewayFilter
     participant Backend
 

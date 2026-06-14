@@ -44,13 +44,13 @@ cover:
 
 ```mermaid
 flowchart TD
-    classDef base fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold;
-    classDef core fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef lock fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef sync fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef coll fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef pool fill:#BBDEFB,stroke:#1976D2,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
-    classDef tl fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef base fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef core fill:#1e1b4b,stroke:#4f46e5,stroke-width:2px,color:#e0e7ff,font-weight:bold;
+classDef lock fill:#1e1b4b,stroke:#4f46e5,stroke-width:2px,color:#e0e7ff,font-weight:bold;
+classDef sync fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef coll fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef pool fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
+classDef tl fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     BASE[🔧 底层原语]
     BASE --> CAS[CAS\nUnsafe.compareAndSwapX]
@@ -679,47 +679,47 @@ set(T) → map.set(this, value)
 
 ```mermaid
 flowchart TB
-    classDef phase1 fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef phase2 fill:#F48FB1,stroke:#C2185B,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef phase3 fill:#FFE082,stroke:#FFB300,stroke-width:1.5px,color:#5D4037,font-weight:bold;
-    classDef phase4 fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef phase5 fill:#BBDEFB,stroke:#1976D2,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+classDef phase1 fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef phase2 fill:#701a4c,stroke:#e11d48,stroke-width:1.5px,color:#fce7f3,font-weight:bold;
+classDef phase3 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
+classDef phase4 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef phase5 fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
 
     subgraph P1["第一梯队：地基（必须最先读）"]
         direction TB
-        L1[LockSupport<br/>park/unpark]
-        L2[CAS<br/>Unsafe/VarHandle]
-        L3[volatile<br/>JMM可见性]
+        L1[LockSupport\npark/unpark]
+        L2[CAS\nUnsafe/VarHandle]
+        L3[volatile\nJMM可见性]
     end
 
     subgraph P2["第二梯队：核心框架"]
-        AQS[AQS<br/>AbstractQueuedSynchronizer]
+        AQS[AQS\nAbstractQueuedSynchronizer]
     end
 
     subgraph P3["第三梯队：AQS应用"]
         direction TB
-        SEM[1.Semaphore<br/>最简单的AQS应用]
-        CDL[2.CountDownLatch<br/>一次性共享模式]
-        RL2[3.ReentrantLock<br/>独占+重入+公平/非公平]
-        RW[4.ReentrantReadWriteLock<br/>state高低位拆分]
+        SEM[1.Semaphore\n最简单的AQS应用]
+        CDL[2.CountDownLatch\n一次性共享模式]
+        RL2[3.ReentrantLock\n独占+重入+公平/非公平]
+        RW[4.ReentrantReadWriteLock\nstate高低位拆分]
     end
 
     subgraph P4["第四梯队：并发集合+线程池"]
         direction TB
-        FUT[FutureTask<br/>简易AQS+Treiber栈]
-        BQU[BlockingQueue<br/>Condition协作]
-        COW[CopyOnWriteArrayList<br/>写时复制]
-        CLQ[ConcurrentLinkedQueue<br/>无锁队列]
-        CHM[ConcurrentHashMap<br/>无锁读+分段写]
-        TPE[ThreadPoolExecutor<br/>Worker+execute模型]
+        FUT[FutureTask\n简易AQS+Treiber栈]
+        BQU[BlockingQueue\nCondition协作]
+        COW[CopyOnWriteArrayList\n写时复制]
+        CLQ[ConcurrentLinkedQueue\n无锁队列]
+        CHM[ConcurrentHashMap\n无锁读+分段写]
+        TPE[ThreadPoolExecutor\nWorker+execute模型]
     end
 
     subgraph P5["第五梯队：进阶+独立实现"]
         direction TB
-        CB2[CyclicBarrier<br/>不用AQS的同步器]
-        STPE[ScheduledThreadPoolExecutor<br/>堆定时队列]
-        FJP[ForkJoinPool<br/>工作窃取]
-        TL2[ThreadLocal家族<br/>三层设计]
+        CB2[CyclicBarrier\n不用AQS的同步器]
+        STPE[ScheduledThreadPoolExecutor\n堆定时队列]
+        FJP[ForkJoinPool\n工作窃取]
+        TL2[ThreadLocal家族\n三层设计]
     end
 
     P1 --> P2
@@ -785,26 +785,26 @@ flowchart TB
 
 ```mermaid
 flowchart TD
-    classDef guide fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef item fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef guide fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef item fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     START[📖 JUC源码阅读路线]
 
-    START --> T1{已理解LockSupport<br/>CAS/volatile?}
-    T1 -- 否 --> L1["先读LockSupport<br/>+ AtomicInteger<br/>+ JMM基础"]
+    START --> T1{已理解LockSupport\nCAS/volatile?}
+    T1 -- 否 --> L1["先读LockSupport\n+ AtomicInteger\n+ JMM基础"]
     T1 -- 是 --> T2{已通读AQS?}
 
     L1 --> T2
 
-    T2 -- 否 --> L2["读AQS(2500行)<br/>独占/共享/Condition"]
+    T2 -- 否 --> L2["读AQS(2500行)\n独占/共享/Condition"]
     T2 -- 是 --> T3{选择方向}
 
     L2 --> T3
 
-    T3 --> DIR1["方向A:锁与同步器<br/>Semaphore→CountDownLatch<br/>→ReentrantLock→RWLock<br/>→CyclicBarrier→FutureTask"]
-    T3 --> DIR2["方向B:并发集合<br/>CopyOnWriteArrayList<br/>→ConcurrentLinkedQueue<br/>→BlockingQueue<br/>→ConcurrentHashMap"]
-    T3 --> DIR3["方向C:线程池<br/>ThreadPoolExecutor<br/>→ScheduledExecutor<br/>→ForkJoinPool"]
-    T3 --> DIR4["方向D:上下文传递<br/>ThreadLocal<br/>→InheritableThreadLocal<br/>→TransmittableThreadLocal"]
+    T3 --> DIR1["方向A:锁与同步器\nSemaphore→CountDownLatch\n→ReentrantLock→RWLock\n→CyclicBarrier→FutureTask"]
+    T3 --> DIR2["方向B:并发集合\nCopyOnWriteArrayList\n→ConcurrentLinkedQueue\n→BlockingQueue\n→ConcurrentHashMap"]
+    T3 --> DIR3["方向C:线程池\nThreadPoolExecutor\n→ScheduledExecutor\n→ForkJoinPool"]
+    T3 --> DIR4["方向D:上下文传递\nThreadLocal\n→InheritableThreadLocal\n→TransmittableThreadLocal"]
 
     DIR1 --> DONE["✅ 全部完成"]
     DIR2 --> DONE

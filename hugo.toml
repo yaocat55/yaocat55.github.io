@@ -47,7 +47,7 @@ math = true
   [params.profileMode]
     enabled = true
     title = "CatBlog"
-    subtitle = "一只会写代码的猫 🐱"
+    subtitle = "速度交给时代，深度留给自己 🚀🕳️"
     imageUrl = "/videos/giphy.mp4"
     imageTitle = "猫猫头像"
     imageWidth = 100

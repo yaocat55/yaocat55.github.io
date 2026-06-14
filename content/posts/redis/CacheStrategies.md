@@ -79,26 +79,26 @@ public void updateUser(User user) {
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[六大缓存策略全景]
     ROOT --> CAT1(读策略)
-    CAT1 --> S1[Cache-Aside<br/>应用层手动控制]
-    CAT1 --> S2[Read-Through<br/>缓存层自动加载DB]
-    CAT1 --> S3[Refresh-Ahead<br/>自动预加载即将过期数据]
+    CAT1 --> S1[Cache-Aside\n应用层手动控制]
+    CAT1 --> S2[Read-Through\n缓存层自动加载DB]
+    CAT1 --> S3[Refresh-Ahead\n自动预加载即将过期数据]
 
     ROOT --> CAT2(写策略)
-    CAT2 --> S4[Write-Through<br/>同步写缓存+DB]
-    CAT2 --> S5[Write-Behind<br/>只写缓存,异步写DB]
-    CAT2 --> S6[Write-Around<br/>只写DB,绕过缓存]
+    CAT2 --> S4[Write-Through\n同步写缓存+DB]
+    CAT2 --> S5[Write-Behind\n只写缓存,异步写DB]
+    CAT2 --> S6[Write-Around\n只写DB,绕过缓存]
 
     ROOT --> CAT3(复合模式)
-    CAT3 --> COMBO1[Cache-Aside<br/>+ Write-Behind]
-    CAT3 --> COMBO2[Read-Through<br/>+ Write-Through]
-    CAT3 --> COMBO3[Read-Through<br/>+ Write-Behind]
+    CAT3 --> COMBO1[Cache-Aside\n+ Write-Behind]
+    CAT3 --> COMBO2[Read-Through\n+ Write-Through]
+    CAT3 --> COMBO3[Read-Through\n+ Write-Behind]
 
     class ROOT root;
     class CAT1,CAT2,CAT3 branch;
@@ -186,27 +186,27 @@ public class RedisConfig {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef cache fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef cache fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 
     subgraph READ_FLOW ["读路径：Cache-Aside"]
         R1([应用层发起读请求]) --> R2{缓存命中?}
         R2 -- 命中 --> R3([返回缓存数据])
         R2 -- 未命中 --> R4[查MySQL]
-        R4 --> R5[(MySQL<br/>User 表)]
+        R4 --> R5[(MySQL\nUser 表)]
         R5 --> R6[回填Redis缓存]
-        R6 --> R7([Redis<br/>user:1001])
+        R6 --> R7([Redis\nuser:1001])
         R7 --> R8([返回数据])
     end
 
     subgraph WRITE_FLOW ["写路径：Cache-Aside"]
         W1([应用层发起写请求]) --> W2[更新MySQL]
-        W2 --> W3[(MySQL<br/>User 表)]
+        W2 --> W3[(MySQL\nUser 表)]
         W3 --> W4[删除Redis缓存]
-        W4 --> W5([Redis<br/>删除user:1001])
+        W4 --> W5([Redis\n删除user:1001])
         W5 --> W6([返回成功])
     end
 
@@ -345,11 +345,11 @@ public void cacheAsideWrite(String cacheKey, Runnable dbUpdater) {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef cache fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef cache fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 
     subgraph APP ["应用层"]
         A1([应用发起读请求])
@@ -361,8 +361,8 @@ flowchart TD
     end
 
     subgraph STORAGE ["存储层"]
-        R1([Redis<br/>user:1001])
-        M1[(MySQL<br/>User 表)]
+        R1([Redis\nuser:1001])
+        M1[(MySQL\nUser 表)]
     end
 
     A1 -->|get key| C1
@@ -536,17 +536,17 @@ public class UserService {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef cache fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef cache fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 
     subgraph WRITE_THROUGH ["Write-Through 同步写流程"]
         direction TD
         W1([应用发起写请求]) --> W2[写入Redis缓存]
-        W2 --> W3([Redis<br/>更新成功])
+        W2 --> W3([Redis\n更新成功])
         W3 --> W4[同步写入MySQL]
-        W4 --> W5[(MySQL<br/>数据持久化)]
+        W4 --> W5[(MySQL\n数据持久化)]
         W5 --> W6{两者都成功?}
         W6 -- 是 --> W7([返回成功])
         W6 -- 否 --> W8[回滚/重试]
@@ -657,15 +657,15 @@ writeThroughCache.writeThrough("product:stock:5001", 99, 3600, newStock -> {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef cache fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef async fill:#FFF3E0,stroke:#F57C00,stroke-width:1.5px,color:#E65100,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef cache fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef async fill:#431407,stroke:#ea580c,stroke-width:1.5px,color:#fed7aa,font-weight:bold;
 
     subgraph SYNC ["同步路径（极快）"]
         W1([应用发起写请求]) --> W2[只写Redis缓存]
-        W2 --> W3([Redis<br/>更新成功])
+        W2 --> W3([Redis\n更新成功])
         W3 --> W4([立即返回成功])
     end
 
@@ -673,7 +673,7 @@ flowchart TD
         W3 -.->|异步触发| A1[写入消息队列/BlockingQueue]
         A1 --> A2[批量聚合消费者]
         A2 --> A3[批量写入MySQL]
-        A3 --> A4[(MySQL<br/>批量持久化)]
+        A3 --> A4[(MySQL\n批量持久化)]
     end
 
     class W1,W4 startEnd;
@@ -814,26 +814,26 @@ engine.writeBehind("seckill:count:10001", 1500, 7200, count -> {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef cache fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef cache fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph READ ["读路径"]
         A1([应用读请求]) --> A2[读取Redis缓存]
-        A2 --> A3([Redis<br/>返回数据+TLL])
-        A3 --> A4{剩余TTL<br/>< 阈值?}
+        A2 --> A3([Redis\n返回数据+TLL])
+        A3 --> A4{剩余TTL\n< 阈值?}
         A4 -- 否 --> A5([直接返回])
-        A4 -- 是 --> A6[返回旧数据<br/>+ 触发异步刷新]
+        A4 -- 是 --> A6[返回旧数据\n+ 触发异步刷新]
     end
 
     subgraph REFRESH ["异步刷新路径"]
         A6 -.->|异步线程池| R1[查MySQL]
-        R1 --> R2[(MySQL<br/>最新数据)]
-        R2 --> R3[更新Redis缓存<br/>重置TTL]
-        R3 --> R4([Redis<br/>数据已刷新])
+        R1 --> R2[(MySQL\n最新数据)]
+        R2 --> R3[更新Redis缓存\n重置TTL]
+        R3 --> R4([Redis\n数据已刷新])
     end
 
     class A1,A5 startEnd;
@@ -963,28 +963,28 @@ Product product = cache.get("product:hot:5001", 1800, Product.class, bizId -> {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef cache fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef cache fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph WRITE ["写路径：绕过缓存"]
         W1([应用发起写请求]) --> W2[直接写MySQL]
-        W2 --> W3[(MySQL<br/>数据写入)]
+        W2 --> W3[(MySQL\n数据写入)]
         W3 --> W4([不更新Redis])
         W4 --> W5([返回成功])
     end
 
     subgraph READ ["读路径：回填缓存"]
         R1([应用发起读请求]) --> R2{缓存命中?}
-        R2 -- 命中 --> R3([Redis<br/>返回数据])
+        R2 -- 命中 --> R3([Redis\n返回数据])
         R3 --> R4([返回])
         R2 -- 未命中 --> R5[查MySQL]
-        R5 --> R6[(MySQL<br/>查询)]
+        R5 --> R6[(MySQL\n查询)]
         R6 --> R7[回填Redis]
-        R7 --> R8([Redis<br/>缓存新数据])
+        R7 --> R8([Redis\n缓存新数据])
         R8 --> R9([返回])
     end
 
@@ -1085,21 +1085,21 @@ LogEntry log = cache.read("log:2024-01-15:ops", 600, LogEntry.class, () -> {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    START([开始选型]) --> Q1{是否需要<br/>极高写入吞吐?}
-    Q1 -- 是 --> Q2{能否接受<br/>少量数据丢失?}
+    START([开始选型]) --> Q1{是否需要\n极高写入吞吐?}
+    Q1 -- 是 --> Q2{能否接受\n少量数据丢失?}
     Q2 -- 是 --> R1[Write-Behind]
     Q2 -- 否 --> R2[Write-Through]
 
-    Q1 -- 否 --> Q3{写操作是否<br/>远多于读操作?}
+    Q1 -- 否 --> Q3{写操作是否\n远多于读操作?}
     Q3 -- 是 --> R3[Write-Around]
-    Q3 -- 否 --> Q4{是否有<br/>热点数据过期击穿风险?}
+    Q3 -- 否 --> Q4{是否有\n热点数据过期击穿风险?}
     Q4 -- 是 --> R4[Refresh-Ahead]
-    Q4 -- 否 --> Q5{是否需要<br/>应用层完全控制缓存?}
+    Q4 -- 否 --> Q5{是否需要\n应用层完全控制缓存?}
     Q5 -- 是 --> R5[Cache-Aside]
     Q5 -- 否 --> R6[Read-Through]
 

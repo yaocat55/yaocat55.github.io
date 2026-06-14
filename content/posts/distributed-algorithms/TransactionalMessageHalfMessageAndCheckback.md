@@ -95,11 +95,11 @@ RocketMQ 事务消息的核心创新在于<strong>消息有了"中间态"</stron
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph normal["普通消息"]
         N1["生产者 → 发送 → Broker → 消费者立即可见"]:::process
@@ -107,11 +107,11 @@ flowchart TD
 
     subgraph transaction["事务消息——半消息"]
         T1["生产者 → 发送半消息 → Broker"]:::process
-        T1 --> T2["Broker 存储消息——但标记为<br/>'半消息'——消费者不可见"]:::highlight
+        T1 --> T2["Broker 存储消息——但标记为\n'半消息'——消费者不可见"]:::highlight
         T2 --> T3["生产者——执行本地事务"]:::process
-        T3 --> T4{"本地事务<br/>成功还是失败？"}:::data
-        T4 -->|"成功"| T5["生产者 → Broker: Commit<br/>半消息变成正常消息<br/>✅ 消费者可以消费"]:::data
-        T4 -->|"失败"| T6["生产者 → Broker: Rollback<br/>半消息被删除<br/>❌ 消费者永远不会知道"]:::reject
+        T3 --> T4{"本地事务\n成功还是失败？"}:::data
+        T4 -->|"成功"| T5["生产者 → Broker: Commit\n半消息变成正常消息\n✅ 消费者可以消费"]:::data
+        T4 -->|"失败"| T6["生产者 → Broker: Rollback\n半消息被删除\n❌ 消费者永远不会知道"]:::reject
     end
 ```
 
@@ -127,12 +127,12 @@ sequenceDiagram
 
     Note over P,C: ① 发送半消息
 
-    P->>B: 发送半消息<br/>Topic: ORDER_CREATED<br/>Body: {orderId: 12345}
-    B-->>P: OK——半消息已存储<br/>（此时消费者不可见）
+    P->>B: 发送半消息\nTopic: ORDER_CREATED\nBody: {orderId: 12345}
+    B-->>P: OK——半消息已存储\n（此时消费者不可见）
 
     Note over P,C: ② 执行本地事务
 
-    P->>P: INSERT INTO orders<br/>执行业务逻辑
+    P->>P: INSERT INTO orders\n执行业务逻辑
     P->>P: 本地事务 COMMIT ✅
 
     Note over P,C: ③ 通知 Broker 提交
@@ -166,18 +166,18 @@ sequenceDiagram
 
     Note over P,B: 正常流程——生产者发完半消息后宕机
 
-    B->>B: 半消息 #msg_001 已存储<br/>等待 Commit/Rollback...
+    B->>B: 半消息 #msg_001 已存储\n等待 Commit/Rollback...
     B->>B: 超时——一直没收到确认
 
     Note over B,P: 回查启动
 
     loop 每隔一段时间——直到收到明确答复
-        B->>P: 回查——msg_001 的本地事务<br/>成功了还是失败了？
-        P->>P: 查数据库——orderId=12345<br/>这条订单存不存在？
-        P-->>B: 存在 → Commit<br/>不存在 → Rollback
+        B->>P: 回查——msg_001 的本地事务\n成功了还是失败了？
+        P->>P: 查数据库——orderId=12345\n这条订单存不存在？
+        P-->>B: 存在 → Commit\n不存在 → Rollback
     end
 
-    B->>B: 收到 Commit → 标记正常消息<br/>收到 Rollback → 删除半消息
+    B->>B: 收到 Commit → 标记正常消息\n收到 Rollback → 删除半消息
 ```
 
 ### 4.2 回查的关键设计
@@ -205,19 +205,19 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    Q["一笔订单创建后<br/>需要做什么？"]:::highlight
+    Q["一笔订单创建后\n需要做什么？"]:::highlight
 
-    Q --> SYNC["同步操作: 扣库存<br/>→ 必须立刻知道<br/>库存够不够"]:::process
-    Q --> ASYNC["异步操作: 发优惠券<br/>→ 不用立刻知道<br/>发了没有"]:::process
+    Q --> SYNC["同步操作: 扣库存\n→ 必须立刻知道\n库存够不够"]:::process
+    Q --> ASYNC["异步操作: 发优惠券\n→ 不用立刻知道\n发了没有"]:::process
 
-    SYNC --> T1["2PC / TCC<br/>协调者同步等待<br/>每个参与者的结果"]:::data
-    ASYNC --> T2["事务消息<br/>半消息 + 回查<br/>异步保证最终一致"]:::data
+    SYNC --> T1["2PC / TCC\n协调者同步等待\n每个参与者的结果"]:::data
+    ASYNC --> T2["事务消息\n半消息 + 回查\n异步保证最终一致"]:::data
 
-    T1 --> COMPARE["关键区别:<br/>2PC/TCC = 请求-响应模式<br/>事务消息 = 发布-订阅模式<br/>前者同步等待——后者异步兜底"]:::process
+    T1 --> COMPARE["关键区别:\n2PC/TCC = 请求-响应模式\n事务消息 = 发布-订阅模式\n前者同步等待——后者异步兜底"]:::process
     T2 --> COMPARE
 ```
 
@@ -250,22 +250,22 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    Q["事务消息解决什么"]:::process --> Q1["数据库写入和消息发送<br/>不是同一套事务系统<br/>无法原子化"]:::process
-    Q --> Q2["先写库后发消息——<br/>后一步可能失败<br/>先发消息后写库——<br/>前一步无法撤回"]:::process
+    Q["事务消息解决什么"]:::process --> Q1["数据库写入和消息发送\n不是同一套事务系统\n无法原子化"]:::process
+    Q --> Q2["先写库后发消息——\n后一步可能失败\n先发消息后写库——\n前一步无法撤回"]:::process
 
-    Q1 --> A1["半消息<br/>先发消息——但对消费<br/>者不可见——本地事务<br/>成功→Commit<br/>失败→Rollback"]:::data
-    Q2 --> A2["回查<br/>Broker主动反向询问<br/>生产者——你那个<br/>事务到底是成是败"]:::data
+    Q1 --> A1["半消息\n先发消息——但对消费\n者不可见——本地事务\n成功→Commit\n失败→Rollback"]:::data
+    Q2 --> A2["回查\nBroker主动反向询问\n生产者——你那个\n事务到底是成是败"]:::data
 
-    A1 --> R["结果: 最终一致性<br/>不是实时的——靠回查兜底<br/>适合异步通知——日志<br/>——下游触发等场景"]:::data
+    A1 --> R["结果: 最终一致性\n不是实时的——靠回查兜底\n适合异步通知——日志\n——下游触发等场景"]:::data
     A2 --> R
 
-    R --> USE["RocketMQ 事务消息<br/>= 半消息 + 回查<br/>== 最终一致性的<br/>异步分布式事务"]:::highlight
+    R --> USE["RocketMQ 事务消息\n= 半消息 + 回查\n== 最终一致性的\n异步分布式事务"]:::highlight
 
-    USE --> NEXT["消息怎么投递——<br/>Dubbo 怎么选实例<br/>→ 下一篇: 负载均衡算法"]:::process
+    USE --> NEXT["消息怎么投递——\nDubbo 怎么选实例\n→ 下一篇: 负载均衡算法"]:::process
 ```
 
 <strong>一句话记住事务消息：先把消息"存"进 Broker 但不让任何人看到——办完事再决定是公开还是销毁——办事中途宕机了 Broker 主动来问结果。</strong>它和 2PC/TCC 不是替代关系——一个处理同步调用、一个处理异步消息，同一个分布式事务难题的两条不同赛道。

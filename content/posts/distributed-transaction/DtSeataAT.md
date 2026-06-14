@@ -51,12 +51,12 @@ Seata AT 的做法（攒反向 SQL——事后再补）：
 ## 二、🏗️ Seata 架构——TC / TM / RM 三角
 
 ```mermaid
-graph TD
-    TM["TM（Transaction Manager）<br/>全局事务管理者<br/>-- 标注 @GlobalTransactional"]
-    RM1["RM（Resource Manager）<br/>order-service<br/>-- 操作 order 数据库"]
-    RM2["RM（Resource Manager）<br/>product-service<br/>-- 操作 product 数据库"]
-    RM3["RM（Resource Manager）<br/>account-service<br/>-- 操作 account 数据库"]
-    TC["TC（Transaction Coordinator）<br/>Seata Server<br/>-- 协调全局事务——管理全局锁"]
+flowchart LR
+    TM["TM（Transaction Manager）\n全局事务管理者\n-- 标注 @GlobalTransactional"]
+    RM1["RM（Resource Manager）\norder-service\n-- 操作 order 数据库"]
+    RM2["RM（Resource Manager）\nproduct-service\n-- 操作 product 数据库"]
+    RM3["RM（Resource Manager）\naccount-service\n-- 操作 account 数据库"]
+    TC["TC（Transaction Coordinator）\nSeata Server\n-- 协调全局事务——管理全局锁"]
 
     TM -->|"① 开启全局事务"| TC
     TM -->|"② 调用 order-service"| RM1
@@ -71,9 +71,11 @@ graph TD
     TC -->|"⑨ 通知所有 RM 删除 undo_log"| RM2
     TC -->|"⑨ 通知所有 RM 删除 undo_log"| RM3
 
-    style TM fill:#FF9800,color:#fff
-    style TC fill:#F44336,color:#fff
-```
+
+classDef style_TM fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa;
+classDef style_TC fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+class TM style_TM;
+class TC style_TC;```
 
 | 角色 | 全称 | 作用 | 在哪里 |
 |------|------|------|------|
@@ -468,25 +470,25 @@ public class AccountService {
 
 ```mermaid
 sequenceDiagram
-    participant TM as order-service<br/>(TM + RM)
-    participant TC as Seata Server<br/>(TC)
-    participant RM2 as product-service<br/>(RM)
-    participant RM3 as account-service<br/>(RM)
+    participant TM as order-service\n(TM + RM)
+    participant TC as Seata Server\n(TC)
+    participant RM2 as product-service\n(RM)
+    participant RM3 as account-service\n(RM)
 
-    Note over TM: createOrder()<br/>@GlobalTransactional
+    Note over TM: createOrder()\n@GlobalTransactional
 
-    TM->>TC: ① 开启全局事务<br/>xid = 192.168.1.1:8091:2034567890
+    TM->>TC: ① 开启全局事务\nxid = 192.168.1.1:8091:2034567890
 
     Note over TM: INSERT INTO orders ...
-    TM->>TC: ② 注册分支事务 branch-1<br/>lock_key = order:1
+    TM->>TC: ② 注册分支事务 branch-1\nlock_key = order:1
 
     TM->>RM2: ③ Feign 调用——请求头带 xid
     Note over RM2: UPDATE product SET stock=...
-    RM2->>TC: ④ 注册分支事务 branch-2<br/>lock_key = product:1
+    RM2->>TC: ④ 注册分支事务 branch-2\nlock_key = product:1
 
     TM->>RM3: ⑤ Feign 调用——请求头带 xid
     Note over RM3: UPDATE account SET balance=...
-    RM3->>TC: ⑥ 注册分支事务 branch-3<br/>lock_key = account:1001
+    RM3->>TC: ⑥ 注册分支事务 branch-3\nlock_key = account:1001
 
     TM->>TC: ⑦ 所有分支事务成功——请求提交
 

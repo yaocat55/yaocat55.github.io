@@ -40,9 +40,9 @@ Nacos Dashboard 里看到服务是"健康"的——但 Feign 偶尔报 `Connecti
 
 ```mermaid
 sequenceDiagram
-    participant Provider as 服务提供方<br/>user-service
+    participant Provider as 服务提供方\nuser-service
     participant Nacos
-    participant Consumer as 服务调用方<br/>order-service
+    participant Consumer as 服务调用方\norder-service
 
     Provider->>Nacos: ① 注册：我是 user-service，地址 10.0.1.1:8081
     Note over Provider,Nacos: Provider 启动时向 Nacos 注册
@@ -57,7 +57,7 @@ sequenceDiagram
     Consumer->>Provider: ⑤ 直连调用——GET /api/users/1
     Note over Consumer,Provider: 选一个实例——通过负载均衡
 
-    Note over Nacos: 实例不发心跳 15s → 不健康<br/>30s → 剔除
+    Note over Nacos: 实例不发心跳 15s → 不健康\n30s → 剔除
 ```
 
 <strong>关键点——Nacos 不参与业务流量</strong>：服务注册/发现只在"找地址"阶段经过 Nacos。一旦 Consumer 拿到了实例列表——后续的 RPC 调用是直连 Provider——不经过 Nacos。

@@ -204,18 +204,18 @@ public List<DictDetailEntity> searchDictDetail(@RequestBody DictDetailQuery quer
 
 ```mermaid
 flowchart TD
-    classDef caffeine fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef redis fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef mysql fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef decision fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
+classDef caffeine fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
+classDef redis fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef mysql fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
 
-    R[Controller.searchDictDetail] --> L1{Caffeine<br/>dict_data::DictService_order_status<br/>命中?}
-    L1 -- 命中 --> RET1([返回<br/>0.001ms])
+    R[Controller.searchDictDetail] --> L1{Caffeine\ndict_data::DictService_order_status\n命中?}
+    L1 -- 命中 --> RET1([返回\n0.001ms])
     L1 -- 未命中 --> BEAN[执行 @Cacheable 方法体]
-    BEAN --> L2{Redis Hash<br/>dictData[order_status]<br/>有数据?}
+    BEAN --> L2{Redis Hash\ndictData[order_status]\n有数据?}
     L2 -- 有 --> SORT[排序]
-    SORT --> FILL_L1[回填 L1 Caffeine<br/>Spring 自动处理]
-    FILL_L1 --> RET2([返回<br/>0.5-2ms])
+    SORT --> FILL_L1[回填 L1 Caffeine\nSpring 自动处理]
+    FILL_L1 --> RET2([返回\n0.5-2ms])
     L2 -- 没有 --> RET3([返回空列表])
 
     class L1,FILL_L1 caffeine;
@@ -247,22 +247,22 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef caffeine fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef redis fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef mysql fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef decision fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
+classDef caffeine fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
+classDef redis fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef mysql fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
 
-    READ_REQ([读请求]) --> L1{本地缓存<br/>Caffeine 命中?}
-    L1 -- 命中 --> RETURN1([返回 L1 数据<br/>0.001ms])
-    L1 -- 未命中 --> L2{远程缓存<br/>Redis 命中?}
+    READ_REQ([读请求]) --> L1{本地缓存\nCaffeine 命中?}
+    L1 -- 命中 --> RETURN1([返回 L1 数据\n0.001ms])
+    L1 -- 未命中 --> L2{远程缓存\nRedis 命中?}
     L2 -- 命中 --> UPDATE_L1[回填 L1 Caffeine]
-    UPDATE_L1 --> RETURN2([返回 L2 数据<br/>0.5-2ms])
+    UPDATE_L1 --> RETURN2([返回 L2 数据\n0.5-2ms])
     L2 -- 未命中 --> DB[(MySQL)]
     DB --> FILL_ALL[同时回填 L2 + L1]
-    FILL_ALL --> RETURN3([返回 DB 数据<br/>3-10ms])
+    FILL_ALL --> RETURN3([返回 DB 数据\n3-10ms])
 
     L2 -- 连接失败/超时 --> FALLBACK{L1 有旧数据?}
-    FALLBACK -- 有 --> RETURN4([返回 L1 旧值<br/>降级保底])
+    FALLBACK -- 有 --> RETURN4([返回 L1 旧值\n降级保底])
     FALLBACK -- 没有 --> DB
 
     class L1,UPDATE_L1,FILL_ALL caffeine;
@@ -281,14 +281,14 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef caffeine fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef redis fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef mysql fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef decision fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
+classDef caffeine fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
+classDef redis fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef mysql fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
 
     WRITE_REQ([写请求]) --> UPDATE_DB[更新 MySQL]
     UPDATE_DB --> DELETE_REDIS[删除 Redis 缓存]
-    DELETE_REDIS --> PUBLISH[发布 MQ / Redis PubSub<br/>通知所有实例]
+    DELETE_REDIS --> PUBLISH[发布 MQ / Redis PubSub\n通知所有实例]
     PUBLISH --> INSTANCE1[实例1: 删除 Caffeine]
     PUBLISH --> INSTANCE2[实例2: 删除 Caffeine]
     PUBLISH --> INSTANCE3[实例3: 删除 Caffeine]

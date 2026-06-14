@@ -107,20 +107,20 @@ if (ok) {
 
 ```mermaid
 flowchart TD
-    start["order-service<br/>发起 RPC 调用"]:::startEnd
+    start["order-service\n发起 RPC 调用"]:::startEnd
 
     start --> choice{"网络发生了什么？"}:::condition
 
-    choice -->|"正常"| ok["响应到达<br/>✅ 期望的状态"]:::data
-    choice -->|"丢包"| loss["请求包或响应包<br/>在网络中丢失<br/>❌ 发送方永远不知道结果"]:::reject
-    choice -->|"延迟"| delay["包在路上<br/>10ms / 500ms / 30s<br/>⏳ 发送方只能等待"]:::highlight
-    choice -->|"分区"| partition["网络被切断<br/>两边都认为对方挂了<br/>❌ 各自为战"]:::reject
+    choice -->|"正常"| ok["响应到达\n✅ 期望的状态"]:::data
+    choice -->|"丢包"| loss["请求包或响应包\n在网络中丢失\n❌ 发送方永远不知道结果"]:::reject
+    choice -->|"延迟"| delay["包在路上\n10ms / 500ms / 30s\n⏳ 发送方只能等待"]:::highlight
+    choice -->|"分区"| partition["网络被切断\n两边都认为对方挂了\n❌ 各自为战"]:::reject
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 ```
 
 先说丢包。TCP 有重传机制——丢了就重发——为什么还有问题？<strong>因为重传解决不了"响应丢了"的情况。</strong>
@@ -179,18 +179,18 @@ sequenceDiagram
     G2->>M1: 同意——明天 6:00
     M1->>G1: 传递确认
 
-    Note over G1,G2: 等一下——A 不知道 B 是否收到了自己的确认<br/>如果携带确认的信使被抓——B 出发了——A 没有
+    Note over G1,G2: 等一下——A 不知道 B 是否收到了自己的确认\n如果携带确认的信使被抓——B 出发了——A 没有
 
     rect rgb(255, 205, 210)
         Note over G1,G2: 第二轮：A 发送"我收到你的同意了"
         G1->>M1: 收到——确认
         M1->>G2: 传递确认的确认
 
-        Note over G1,G2: 等一下——B 不知道 A 是否收到了"确认的确认"<br/>又回到了起点
+        Note over G1,G2: 等一下——B 不知道 A 是否收到了"确认的确认"\n又回到了起点
     end
 
     rect rgb(255, 243, 224)
-        Note over G1,G2: 第三轮/第四轮/第五轮……<br/>每次都需要多一轮确认来确保上一轮被收到<br/>无限递归——永远不会终止
+        Note over G1,G2: 第三轮/第四轮/第五轮……\n每次都需要多一轮确认来确保上一轮被收到\n无限递归——永远不会终止
     end
 ```
 
@@ -261,17 +261,17 @@ sequenceDiagram
     participant S as NTP 服务器 (time.apple.com)
 
     Note over C: 客户端本地时间：t1 = 1000
-    C->>S: 请求——"现在几点？"<br/>(发送时间戳 t1)
+    C->>S: 请求——"现在几点？"\n(发送时间戳 t1)
 
-    Note over S: 服务器在 t2 = 1005<br/>收到请求<br/>(这个 t2 是服务器时间)
+    Note over S: 服务器在 t2 = 1005\n收到请求\n(这个 t2 是服务器时间)
 
-    S->>C: 回复——"现在 t2=1005, t3=1006"<br/>(服务器收发时间戳)
+    S->>C: 回复——"现在 t2=1005, t3=1006"\n(服务器收发时间戳)
 
-    Note over C: 客户端在 t4 = 1010<br/>收到回复<br/>(这个 t4 是客户端本地时间)
+    Note over C: 客户端在 t4 = 1010\n收到回复\n(这个 t4 是客户端本地时间)
 
-    Note over C,S: 往返时间 = (t4 - t1) = 10<br/>服务器处理时间 = (t3 - t2) = 1<br/>网络传输时间 ≈ (10 - 1) / 2 = 4.5<br/><br/>客户端推算当前服务器时间 = 1006 + 4.5 ≈ 1010.5<br/>客户端调整时钟到大约 1010.5
+    Note over C,S: 往返时间 = (t4 - t1) = 10\n服务器处理时间 = (t3 - t2) = 1\n网络传输时间 ≈ (10 - 1) / 2 = 4.5\n\n客户端推算当前服务器时间 = 1006 + 4.5 ≈ 1010.5\n客户端调整时钟到大约 1010.5
 
-    Note over C: ⚠ 但这里有个致命假设：<br/>往返的网络延迟是对称的<br/>——去的时间和回来的时间一样<br/>实际网络：去 2ms, 回 8ms → 偏差 6ms<br/>算出来的时间错了
+    Note over C: ⚠ 但这里有个致命假设：\n往返的网络延迟是对称的\n——去的时间和回来的时间一样\n实际网络：去 2ms, 回 8ms → 偏差 6ms\n算出来的时间错了
 ```
 
 <strong>NTP 假设网络延迟对称——去和回一样快。但真实网络从来不对称。</strong>交换机缓冲、路由策略、链路负载——都可能导致"去 2ms 回来 8ms"。这个不对称本身就在几十毫秒级别。
@@ -307,14 +307,14 @@ flowchart TD
     end
 
     subgraph clockOrder["按各节点本地时钟排序"]
-        c1["order: 12:00:00.010<br/>机器 A 时钟快"] --> c2["payment: 11:59:50.020<br/>机器 B 时钟慢"] --> c3["stock: 12:00:01.050<br/>机器 C 时钟中等"]
+        c1["order: 12:00:00.010\n机器 A 时钟快"] --> c2["payment: 11:59:50.020\n机器 B 时钟慢"] --> c3["stock: 12:00:01.050\n机器 C 时钟中等"]
     end
 
     realOrder -.->|"❌ 矛盾"| clockOrder
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
     class c1,c2,c3 process
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 ```
 
 这就是为什么在分布式系统中——不能直接用物理时间戳来判断事件顺序（这也是 Logical Clock / Vector Clock 被发明的原因——留到后续文章展开）。
@@ -343,24 +343,24 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    net["网络不可靠<br/>丢包 / 延迟 / 分区"]:::reject
-    clock["时钟不可靠<br/>漂移 / NTP 不对称 / 闰秒"]:::reject
+    net["网络不可靠\n丢包 / 延迟 / 分区"]:::reject
+    clock["时钟不可靠\n漂移 / NTP 不对称 / 闰秒"]:::reject
 
-    net --> q1{"消息发出去了<br/>但没收到回复<br/>怎么办？"}:::condition
-    clock --> q2{"设置超时时间<br/>但两个节点时钟偏差未知<br/>超时该设多少？"}:::condition
+    net --> q1{"消息发出去了\n但没收到回复\n怎么办？"}:::condition
+    clock --> q2{"设置超时时间\n但两个节点时钟偏差未知\n超时该设多少？"}:::condition
 
-    q1 --> q3{"重试？<br/>可能重复执行<br/>可能超卖"}:::condition
+    q1 --> q3{"重试？\n可能重复执行\n可能超卖"}:::condition
     q2 --> q3
 
     q3 --> tradeoff["⚡ 必须做选择"]:::highlight
-    tradeoff --> a["方案 A：等足够久<br/>——可用性降低"]:::data
-    tradeoff --> b["方案 B：快速重试<br/>——可能不一致"]:::data
-    tradeoff --> c["方案 C：什么都不做<br/>——放弃这个请求"]:::data
+    tradeoff --> a["方案 A：等足够久\n——可用性降低"]:::data
+    tradeoff --> b["方案 B：快速重试\n——可能不一致"]:::data
+    tradeoff --> c["方案 C：什么都不做\n——放弃这个请求"]:::data
 
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 ```
 
 这就是为什么 CAP 定理不是"三选二"的游戏——<strong>而是网络和时间的双重不确定性迫使你在"等精确答案"和"快速给大致答案"之间选边站。</strong>

@@ -107,24 +107,24 @@ Consumer → [从注册中心拿到 Provider 列表] → 选一个 Provider → 
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    REQ["📥 新请求到达<br/>Consumer 需要选一个 Provider"]:::startEnd
+    REQ["📥 新请求到达\nConsumer 需要选一个 Provider"]:::startEnd
 
-    REQ --> CHECK["📊 遍历 Provider 列表<br/>检查每个实例的<br/>活跃请求数"]:::process
+    REQ --> CHECK["📊 遍历 Provider 列表\n检查每个实例的\n活跃请求数"]:::process
 
     CHECK --> A["实例A: 活跃数=12"]:::data
     CHECK --> B["实例B: 活跃数=3"]:::data
     CHECK --> C["实例C: 活跃数=8"]:::data
 
-    A --> PICK["🎯 选活跃数最小的<br/>实例B——只有3个待处理<br/>请求发到实例B"]:::highlight
+    A --> PICK["🎯 选活跃数最小的\n实例B——只有3个待处理\n请求发到实例B"]:::highlight
     B --> PICK
     C --> PICK
 
-    PICK --> UPDATE["实例B 活跃数 +1<br/>请求处理完 → 活跃数 -1"]:::process
+    PICK --> UPDATE["实例B 活跃数 +1\n请求处理完 → 活跃数 -1"]:::process
 ```
 
 每个 Consumer 内部维护一个计数器——发给实例 A 的请求还没收到返回——活跃数 +1；收到返回——活跃数 -1。选择时遍历所有实例，找活跃数最小的那个。如果有多个实例活跃数相同——随机选一个。
@@ -153,21 +153,21 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     subgraph ring["一致性哈希环 0 ~ 2^32-1"]
         direction LR
-        NA["节点A<br/>hash(IP_A)=100"]:::data
-        NB["节点B<br/>hash(IP_B)=3000"]:::data
-        NC["节点C<br/>hash(IP_C)=8000"]:::data
+        NA["节点A\nhash(IP_A)=100"]:::data
+        NB["节点B\nhash(IP_B)=3000"]:::data
+        NC["节点C\nhash(IP_C)=8000"]:::data
     end
 
     subgraph lookup["Key 到节点的映射规则"]
-        K1["Key1——hash=50<br/>→ 顺时针遇到节点A<br/>→ Key1 属于节点A"]:::highlight
-        K2["Key2——hash=2000<br/>→ 顺时针遇到节点B<br/>→ Key2 属于节点B"]:::highlight
-        K3["Key3——hash=9000<br/>→ 顺时针遇到节点A(绕过2^32)<br/>→ Key3 属于节点A"]:::highlight
+        K1["Key1——hash=50\n→ 顺时针遇到节点A\n→ Key1 属于节点A"]:::highlight
+        K2["Key2——hash=2000\n→ 顺时针遇到节点B\n→ Key2 属于节点B"]:::highlight
+        K3["Key3——hash=9000\n→ 顺时针遇到节点A(绕过2^32)\n→ Key3 属于节点A"]:::highlight
     end
 
     ring --> lookup
@@ -187,10 +187,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph before["移除节点B之前"]
         B1["A → B: 负责 key 100~3000"]:::process
@@ -200,12 +200,12 @@ flowchart TD
 
     subgraph after["移除节点B之后"]
         A1["A → C: 负责 key 100~8000"]:::process
-        A2["只有 B→C 这一段变了<br/>= 原来的 B→C + C→A"]:::data
+        A2["只有 B→C 这一段变了\n= 原来的 B→C + C→A"]:::data
     end
 
     before -->|"节点B宕机"| after
 
-    A2 --> RESULT["A 和 C 原本的 Key<br/>大部分不受影响<br/>只有 B 负责的那部分<br/>被 C 接管了"]:::data
+    A2 --> RESULT["A 和 C 原本的 Key\n大部分不受影响\n只有 B 负责的那部分\n被 C 接管了"]:::data
 ```
 
 ### 5.4 虚拟节点——解决数据倾斜
@@ -243,21 +243,21 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
-    Q["负载均衡算法解决什么"]:::process --> Q1["Consumer 拿到一堆<br/>Provider 地址——<br/>选哪个发请求？"]:::process
-    Q --> Q2["不同的选法——<br/>适合不同的场景"]:::process
+    Q["负载均衡算法解决什么"]:::process --> Q1["Consumer 拿到一堆\nProvider 地址——\n选哪个发请求？"]:::process
+    Q --> Q2["不同的选法——\n适合不同的场景"]:::process
 
-    Q1 --> WR["加权随机<br/>——按配置权重抽奖<br/>适合: 机器性能差异大"]:::data
-    Q2 --> LA["最少活跃<br/>——挑最闲的机器<br/>适合: 请求耗时差异大"]:::data
-    Q2 --> CH["一致性哈希<br/>——同一个Key总到同一台<br/>适合: 缓存——会话保持"]:::data
+    Q1 --> WR["加权随机\n——按配置权重抽奖\n适合: 机器性能差异大"]:::data
+    Q2 --> LA["最少活跃\n——挑最闲的机器\n适合: 请求耗时差异大"]:::data
+    Q2 --> CH["一致性哈希\n——同一个Key总到同一台\n适合: 缓存——会话保持"]:::data
 
-    WR --> USE["Dubbo 默认=最少活跃<br/>Consumer 端负载均衡<br/>不依赖中间代理"]:::process
+    WR --> USE["Dubbo 默认=最少活跃\nConsumer 端负载均衡\n不依赖中间代理"]:::process
     LA --> USE
     CH --> USE
 
-    USE --> NEXT["请求链路的最后一步<br/>—— 分布式追踪<br/>→ 下一篇: Dapper模型"]:::process
+    USE --> NEXT["请求链路的最后一步\n—— 分布式追踪\n→ 下一篇: Dapper模型"]:::process
 ```
 
 <strong>三种算法对应三种场景——配置异构用加权随机，请求耗时不均用最少活跃，需要同类请求到同台机器用一致性哈希。</strong>Dubbo 默认使用最少活跃——因为它最能适应线上真实环境的不确定性——谁也不知道哪个实例什么时候会变慢。

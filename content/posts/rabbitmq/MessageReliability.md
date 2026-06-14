@@ -65,30 +65,30 @@ Producer  →  [网络]  →  RabbitMQ  →  [网络]  →  Consumer
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     P([Producer]) -->|"① 网络发送"| NET1{发送成功?}
     NET1 -- 是 --> EX[Exchange]
-    NET1 -- 否 --> LOST1[❌ 丢失<br/>未到 Broker]
+    NET1 -- 否 --> LOST1[❌ 丢失\n未到 Broker]
 
     EX -->|"路由"| NET2{匹配到 Binding?}
     NET2 -- 是 --> Q[(Queue)]
-    NET2 -- 否 --> LOST2[❌ 丢失<br/>无匹配队列]
+    NET2 -- 否 --> LOST2[❌ 丢失\n无匹配队列]
 
     Q -->|"② 持久化到磁盘"| DISK{Broker宕机?}
     DISK -- 有持久化 --> SURVIVE[消息存活]
-    DISK -- 无持久化 --> LOST3[❌ 丢失<br/>内存消息随宕机消失]
+    DISK -- 无持久化 --> LOST3[❌ 丢失\n内存消息随宕机消失]
 
     SURVIVE -->|"③ 推送给消费者"| C([Consumer])
     C -->|"处理"| PROC{处理成功?}
-    PROC -- 是 --> ACK[✅ ACK<br/>消息删除]
+    PROC -- 是 --> ACK[✅ ACK\n消息删除]
     PROC -- 否 --> NACK{重试?}
     NACK -- 重新入队 --> Q
-    NACK -- 放弃 --> DLQ[Dead Letter Queue<br/>人工介入]
+    NACK -- 放弃 --> DLQ[Dead Letter Queue\n人工介入]
 
     class P,C startEnd;
     class EX,Q process;
@@ -407,15 +407,15 @@ public class DeadLetterConfig {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph NORMAL ["正常流程"]
         P([Producer]) --> EX[Exchange: order.direct]
-        EX --> BQ[Queue: queue.order.business<br/>deadLetterExchange=dlx.exchange<br/>deadLetterRoutingKey=order.dead]
+        EX --> BQ[Queue: queue.order.business\ndeadLetterExchange=dlx.exchange\ndeadLetterRoutingKey=order.dead]
         BQ --> C([Consumer])
         C -->|"basicAck"| DONE([✅ 完成])
     end
@@ -427,8 +427,8 @@ flowchart TD
         DL1 --> DLX[Exchange: dlx.exchange]
         DL2 --> DLX
         DL3 --> DLX
-        DLX --> DLQ[Queue: queue.dlx<br/>死信队列]
-        DLQ --> MONITOR([人工/监控系统<br/>处理坏消息])
+        DLX --> DLQ[Queue: queue.dlx\n死信队列]
+        DLQ --> MONITOR([人工/监控系统\n处理坏消息])
     end
 
     class P,C startEnd;

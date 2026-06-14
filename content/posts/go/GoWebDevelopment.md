@@ -61,22 +61,22 @@ Java 的 Web 框架生态是 Spring Boot 一家独大。Go 则完全不同——
 
 ```mermaid
 flowchart TD
-    Root["🐹 Go Web 框架生态"] --> Stdlib["📦 net/http<br/>标准库"]
+    Root["🐹 Go Web 框架生态"] --> Stdlib["📦 net/http\n标准库"]
     Root --> Micro["🏗️ HTTP 框架"]
     Root --> FullStack["🏢 微服务全家桶"]
 
-    Stdlib --> StdDesc["ServeMux + Handler<br/>Go 1.22 RESTful 路由<br/>自带连接池 + HTTP/2"]
+    Stdlib --> StdDesc["ServeMux + Handler\nGo 1.22 RESTful 路由\n自带连接池 + HTTP/2"]
 
-    Micro --> Gin["Gin<br/>最流行、高性能"]
-    Micro --> Echo["Echo<br/>极简、零依赖"]
-    Micro --> Fiber["Fiber<br/>Express.js 风格"]
+    Micro --> Gin["Gin\n最流行、高性能"]
+    Micro --> Echo["Echo\n极简、零依赖"]
+    Micro --> Fiber["Fiber\nExpress.js 风格"]
 
-    FullStack --> GoZero["go-zero<br/>代码生成 + 服务治理"]
-    FullStack --> Kratos["Kratos<br/>Bilibili 开源"]
+    FullStack --> GoZero["go-zero\n代码生成 + 服务治理"]
+    FullStack --> Kratos["Kratos\nBilibili 开源"]
 
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     class Root root
     class Stdlib,Micro,FullStack branch
@@ -351,20 +351,20 @@ user-api/
 ```mermaid
 flowchart TD
     APIFile[".api 接口定义文件"] --> Goctl["goctl 代码生成"]
-    Goctl --> Handler["Handler 层<br/>参数解析 + 响应序列化"]
-    Goctl --> Logic["Logic 层<br/>业务逻辑（手写）"]
-    Goctl --> Types["Types 层<br/>请求/响应结构体"]
-    Goctl --> SVC["ServiceContext<br/>依赖聚合"]
+    Goctl --> Handler["Handler 层\n参数解析 + 响应序列化"]
+    Goctl --> Logic["Logic 层\n业务逻辑（手写）"]
+    Goctl --> Types["Types 层\n请求/响应结构体"]
+    Goctl --> SVC["ServiceContext\n依赖聚合"]
 
     Handler --> Logic
-    Logic --> Model["Model 层<br/>数据访问"]
+    Logic --> Model["Model 层\n数据访问"]
     SVC --> Handler
     SVC --> Logic
     SVC --> Model
 
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     class APIFile,GOctl root
     class Handler,Logic,Types,SVC process
@@ -467,12 +467,12 @@ func InitializeApp() (*App, error) {
 
 ```mermaid
 flowchart TD
-    Manual["手动注入<br/>在 main() 中 new 所有依赖"] --> Pros1["✅ 编译期安全<br/>✅ 零运行时开销<br/>✅ 依赖关系显式<br/>❌ 大项目样板多"]
-    Wire["wire（Google）<br/>编译时生成注入代码"] --> Pros2["✅ 编译期安全<br/>✅ 零运行时开销<br/>✅ 自动生成代码<br/>❌ 需要写 Provider"]
-    Dig["dig（Uber）<br/>运行时反射注入"] --> Pros3["✅ 灵活装配<br/>✅ API 简洁<br/>❌ 运行时开销<br/>❌ 错误在运行时暴露"]
+    Manual["手动注入\n在 main() 中 new 所有依赖"] --> Pros1["✅ 编译期安全\n✅ 零运行时开销\n✅ 依赖关系显式\n❌ 大项目样板多"]
+    Wire["wire（Google）\n编译时生成注入代码"] --> Pros2["✅ 编译期安全\n✅ 零运行时开销\n✅ 自动生成代码\n❌ 需要写 Provider"]
+    Dig["dig（Uber）\n运行时反射注入"] --> Pros3["✅ 灵活装配\n✅ API 简洁\n❌ 运行时开销\n❌ 错误在运行时暴露"]
 
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     class Manual,Wire,Dig root
     class Pros1,Pros2,Pros3 leaf

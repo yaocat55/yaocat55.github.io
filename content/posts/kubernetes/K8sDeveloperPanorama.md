@@ -93,16 +93,16 @@ flowchart TD
   SVC2 --> POD2
   SVC3 --> POD3
 
-  classDef user fill:#ECEFF1,stroke:#90A4AE,stroke-width:1.5px,color:#212121
+classDef user fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe;
   class USER user
 
-  classDef ingress fill:#FFCCBC,stroke:#E64A19,stroke-width:2px,color:#212121,font-weight:bold
+classDef ingress fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class INGRESS,EP1,EP2,EP3 ingress
 
-  classDef svc fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#212121,font-weight:bold
+classDef svc fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class SVC1,SVC2,SVC3 svc
 
-  classDef pod fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20
+classDef pod fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
   class POD1,POD2,POD3 pod
 ```
 
@@ -184,7 +184,7 @@ curl -H "Host: api.example.local" http://localhost/users
 部署一个 MySQL 到 K8s，需要写 Deployment + Service + ConfigMap + Secret + PVC + ServiceAccount ——至少 6 个 YAML 文件。Helm 把这一套东西打包成 **Chart**（类似 `apt` 的 `.deb` 包或 `npm` 的 `package`），一条命令安装。
 
 ```mermaid
-flowchart TD
+flowchart LR
   CHART["Helm Chart&#a模板包"]
   VALUES["values.yaml&#a自定义参数"]
   RELEASE["Release&#a安装到集群后的实例"]
@@ -194,16 +194,16 @@ flowchart TD
   VALUES -->|"覆盖默认值"| RELEASE
   RELEASE --> RES
 
-  classDef chart fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef chart fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class CHART chart
 
-  classDef values fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef values fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class VALUES values
 
-  classDef release fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef release fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class RELEASE release
 
-  classDef res fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef res fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class RES res
 ```
 
@@ -310,13 +310,13 @@ flowchart TD
   C --> C1["KIND&#aDocker 里跑 K8s 节点, 启动快"]
   D --> D1["k3s&#a轻量 K8s, 512MB 就能跑"]
 
-  classDef q fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef q fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class Q1 q
 
-  classDef a fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef a fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class A1,B1,C1,D1 a
 
-  classDef scene fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef scene fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class A,B,C,D scene
 ```
 
@@ -476,11 +476,11 @@ flowchart TD
   OPS --> O8["管理节点 (扩缩/污点/标签)"]
   OPS --> O9["管理 Ingress Controller 本身"]
 
-  classDef dev fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef dev fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class DEV dev
   class D1,D2,D3,D4,D5,D6 dev
 
-  classDef ops fill:#FFCCBC,stroke:#E64A19,stroke-width:2px,color:#212121,font-weight:bold
+classDef ops fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class OPS ops
   class O1,O2,O3,O4,O5,O6,O7,O8,O9 ops
 ```
@@ -557,13 +557,13 @@ flowchart TD
   W3 --> W4
   W4 --> DONE
 
-  classDef start fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef start fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class TODAY start
 
-  classDef step fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef step fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class W1,W2,W3,W4 step
 
-  classDef done fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef done fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class DONE done
 ```
 

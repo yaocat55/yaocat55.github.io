@@ -38,18 +38,18 @@ cover:
 
 ```mermaid
 flowchart LR
-    RU["🔓 READ UNCOMMITTED<br/>（读未提交）"] --> RC["🔒 READ COMMITTED<br/>（读已提交）"]
-    RC --> RR["🔐 REPEATABLE READ<br/>（可重复读）"]
-    RR --> SR["🔑 SERIALIZABLE<br/>（串行化）"]
+    RU["🔓 READ UNCOMMITTED\n（读未提交）"] --> RC["🔒 READ COMMITTED\n（读已提交）"]
+    RC --> RR["🔐 REPEATABLE READ\n（可重复读）"]
+    RR --> SR["🔑 SERIALIZABLE\n（串行化）"]
     RU_label["脏读❌ 不可重复读❌ 幻读❌"] -.-> RU
     RC_label["不可重复读❌ 幻读❌"] -.-> RC
     RR_label["幻读⚠（部分解决）"] -.-> RR
     SR_label["全部解决✅"] -.-> SR
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class RU startEnd
     class RC process

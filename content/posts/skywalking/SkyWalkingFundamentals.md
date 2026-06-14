@@ -128,17 +128,17 @@ sequenceDiagram
     participant OS as order-service
     participant US as user-service
 
-    Note over GW: 收到请求——创建 Trace<br/>TraceId: t-123<br/>ParentSpanId: -1
+    Note over GW: 收到请求——创建 Trace\nTraceId: t-123\nParentSpanId: -1
     
-    GW->>OS: GET /api/orders/1<br/>Header: sw8: 1-t-123-s-gw-1-...
+    GW->>OS: GET /api/orders/1\nHeader: sw8: 1-t-123-s-gw-1-...
     Note over GW,OS: 把 Trace 信息放在 HTTP Header 中传给下一个服务
 
-    Note over OS: 收到 Header——解出 TraceId: t-123<br/>创建自己的 Segment (s-os-1)<br/>创建 Span (ParentSpanId = gw-span-1)
+    Note over OS: 收到 Header——解出 TraceId: t-123\n创建自己的 Segment (s-os-1)\n创建 Span (ParentSpanId = gw-span-1)
 
-    OS->>US: GET /api/users/1001<br/>Header: sw8: 1-t-123-s-os-1-...
+    OS->>US: GET /api/users/1001\nHeader: sw8: 1-t-123-s-os-1-...
     Note over OS,US: TraceId 不变——ParentSpanId 变成 order-service 的 SpanId
 
-    Note over US: 收到 Header——解出 TraceId: t-123<br/>创建自己的 Segment (s-us-1)
+    Note over US: 收到 Header——解出 TraceId: t-123\n创建自己的 Segment (s-us-1)
 
     US-->>OS: user 对象
     OS-->>GW: order 对象

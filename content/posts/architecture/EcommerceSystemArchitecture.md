@@ -72,11 +72,11 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
 
     %% ==========================================
     %% 正向流程
@@ -120,9 +120,9 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef branch fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[企业自营电商 领域划分]
 
@@ -173,11 +173,11 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef client fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef gateway fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef service fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef middleware fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold;
-    classDef data fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef client fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;;
+classDef gateway fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;;
+classDef service fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef middleware fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;;
+classDef data fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
 
     %% ==========================================
     %% 四层架构
@@ -341,31 +341,31 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
 
-    START([接收扣减请求<br/>productId, quantity, orderId])
+    START([接收扣减请求\nproductId, quantity, orderId])
 
-    START --> GENKEY[生成幂等键<br/>deduct:orderId:productId]
+    START --> GENKEY[生成幂等键\ndeduct:orderId:productId]
 
-    GENKEY --> SETNX{SETNX 幂等键<br/>60s过期}
+    GENKEY --> SETNX{SETNX 幂等键\n60s过期}
 
     SETNX -- 失败(已存在) --> DUP([返回: 重复请求])
 
-    SETNX -- 成功 --> RAND["随机选择分片索引<br/>shardIndex = random(1,N)"]
+    SETNX -- 成功 --> RAND["随机选择分片索引\nshardIndex = random(1,N)"]
 
-    RAND --> LUA["执行 Lua 脚本<br/>扣减 stock:product:shardIndex"]
+    RAND --> LUA["执行 Lua 脚本\n扣减 stock:product:shardIndex"]
 
     LUA --> CHECK{扣减结果?}
 
     CHECK -- 成功 --> MQ[发送库存预扣成功消息到MQ]
-    MQ --> MARK[标记分片已变更<br/>SADD changed_shards]
+    MQ --> MARK[标记分片已变更\nSADD changed_shards]
     MARK --> SUCCESS([返回: 扣减成功])
 
-    CHECK -- 库存不足 --> RETRY{已尝试次数<br/>< 3 ?}
+    CHECK -- 库存不足 --> RETRY{已尝试次数\n< 3 ?}
 
     RETRY -- 是 --> NEXT[选择下一个分片]
     NEXT --> LUA
@@ -582,49 +582,49 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
 
-    START([支付网关回调]) --> VERIFY[验证签名<br/>RSA/SM2 验签]
+    START([支付网关回调]) --> VERIFY[验证签名\nRSA/SM2 验签]
 
-    VERIFY --> CHECK_SIGN{签名<br/>正确?}
-    CHECK_SIGN -- 否 --> BAD_SIGN([返回失败<br/>让网关重试])
+    VERIFY --> CHECK_SIGN{签名\n正确?}
+    CHECK_SIGN -- 否 --> BAD_SIGN([返回失败\n让网关重试])
 
     CHECK_SIGN -- 是 --> QUERY_ORDER[查询本地支付单]
 
-    QUERY_ORDER --> CHECK_PAY{支付单<br/>状态?}
+    QUERY_ORDER --> CHECK_PAY{支付单\n状态?}
 
-    CHECK_PAY -- 已处理 --> DUP_RESP([返回成功<br/>幂等:不重复处理])
+    CHECK_PAY -- 已处理 --> DUP_RESP([返回成功\n幂等:不重复处理])
 
-    CHECK_PAY -- 未处理 --> IDEM_KEY[获取支付单幂等锁<br/>SETNX pay:lock:payNo]
+    CHECK_PAY -- 未处理 --> IDEM_KEY[获取支付单幂等锁\nSETNX pay:lock:payNo]
 
-    IDEM_KEY --> CHECK_LOCK{获取<br/>成功?}
-    CHECK_LOCK -- 否(并发冲突) --> RETRY_LATER([返回失败<br/>稍后重试])
+    IDEM_KEY --> CHECK_LOCK{获取\n成功?}
+    CHECK_LOCK -- 否(并发冲突) --> RETRY_LATER([返回失败\n稍后重试])
 
-    CHECK_LOCK -- 是 --> CAS_ORDER[CAS更新订单状态<br/>WHERE status=支付中]
+    CHECK_LOCK -- 是 --> CAS_ORDER[CAS更新订单状态\nWHERE status=支付中]
 
-    CAS_ORDER --> CHECK_CAS{更新<br/>行数?}
+    CAS_ORDER --> CHECK_CAS{更新\n行数?}
 
-    CHECK_CAS -- affected=0 --> CHECK_EXP{查询订单<br/>当前状态?}
+    CHECK_CAS -- affected=0 --> CHECK_EXP{查询订单\n当前状态?}
 
-    CHECK_EXP -- 已取消/已过期 --> REFUND[发起自动退款<br/>通知支付网关退款]
+    CHECK_EXP -- 已取消/已过期 --> REFUND[发起自动退款\n通知支付网关退款]
     REFUND --> RELEASE[释放幂等锁]
-    RELEASE --> EXP_END([返回成功<br/>已发起退款])
+    RELEASE --> EXP_END([返回成功\n已发起退款])
 
     CHECK_EXP -- 其他异常 --> ALERT[人工介入告警]
     ALERT --> RELEASE2[释放幂等锁]
-    RELEASE2 --> ERR_END([返回成功<br/>已告警])
+    RELEASE2 --> ERR_END([返回成功\n已告警])
 
     CHECK_CAS -- affected=1(成功) --> UPDATE_PAY[更新支付单状态=已支付]
 
-    UPDATE_PAY --> SEND_MQ[发送支付成功MQ消息<br/>topic: order_paid]
+    UPDATE_PAY --> SEND_MQ[发送支付成功MQ消息\ntopic: order_paid]
 
-    SEND_MQ --> NOTIFY_STOCK[通知库存服务:<br/>确认库存预扣→实际扣减]
+    SEND_MQ --> NOTIFY_STOCK[通知库存服务:\n确认库存预扣→实际扣减]
 
-    NOTIFY_STOCK --> NOTIFY_LOG[通知物流服务:<br/>创建发货单]
+    NOTIFY_STOCK --> NOTIFY_LOG[通知物流服务:\n创建发货单]
 
     NOTIFY_LOG --> RELEASE3[释放幂等锁]
 
@@ -679,20 +679,20 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
 
     %% ==========================================
     %% 场景一
     %% ==========================================
     subgraph S1 ["场景一: Redis扣减成功 但订单创建失败"]
-        S1A[Redis Lua 扣减成功] --> S1B[发送库存回滚延迟消息<br/>delay: 10秒]
-        S1B --> S1C{10秒内订单<br/>创建成功?}
-        S1C -- 是 --> S1D[取消回滚消息<br/>不做任何操作]
-        S1C -- 否 --> S1E[执行库存回滚<br/>Redis INCRBY 恢复库存]
+        S1A[Redis Lua 扣减成功] --> S1B[发送库存回滚延迟消息\ndelay: 10秒]
+        S1B --> S1C{10秒内订单\n创建成功?}
+        S1C -- 是 --> S1D[取消回滚消息\n不做任何操作]
+        S1C -- 否 --> S1E[执行库存回滚\nRedis INCRBY 恢复库存]
     end
 
     %% ==========================================
@@ -701,16 +701,16 @@ flowchart TD
     subgraph S2 ["场景二: 支付成功 但订单状态更新失败"]
         S2A[支付回调到达] --> S2B[CAS 更新订单状态]
         S2B --> S2C{affected > 0?}
-        S2C -- 否 --> S2D[支付回调重试<br/>指数退避: 1min/5min/30min]
+        S2C -- 否 --> S2D[支付回调重试\n指数退避: 1min/5min/30min]
         S2D --> S2B
-        S2C -- 多次重试仍失败 --> S2E[人工对账介入<br/>查询支付网关确认款项]
+        S2C -- 多次重试仍失败 --> S2E[人工对账介入\n查询支付网关确认款项]
     end
 
     %% ==========================================
     %% 场景三
     %% ==========================================
     subgraph S3 ["场景三: 库存同步到DB失败"]
-        S3A[定时任务扫描<br/>changed_shards集合] --> S3B[批量读取Redis分片库存]
+        S3A[定时任务扫描\nchanged_shards集合] --> S3B[批量读取Redis分片库存]
         S3B --> S3C[UPDATE stock SET quantity=Redis值]
         S3C --> S3D{更新成功?}
         S3D -- 否 --> S3E[记录失败队列]
@@ -997,23 +997,23 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef infra fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef svc fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef mid fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold;
+classDef infra fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef svc fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;;
+classDef mid fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;;
 
     subgraph K8S ["K8s 集群 - Namespace: ecommerce-prod"]
         subgraph SVC_GROUP ["业务服务"]
-            GW[网关服务<br/>3副本 × 2C4G]
-            ORDER[订单服务<br/>5副本 × 4C8G]
-            STOCK[库存服务<br/>3副本 × 4C8G]
-            PAY[支付服务<br/>2副本 × 2C4G]
-            PRODUCT[商品服务<br/>5副本 × 4C8G]
+            GW[网关服务\n3副本 × 2C4G]
+            ORDER[订单服务\n5副本 × 4C8G]
+            STOCK[库存服务\n3副本 × 4C8G]
+            PAY[支付服务\n2副本 × 2C4G]
+            PRODUCT[商品服务\n5副本 × 4C8G]
         end
 
         subgraph MID_GROUP ["中间件（独立集群/物理机）"]
-            REDIS_CLUSTER[Redis Cluster<br/>3主3从 × 16G]
-            MQ_CLUSTER[RocketMQ<br/>4主4从]
-            MYSQL_CLUSTER[MySQL<br/>8分片 × 主从]
+            REDIS_CLUSTER[Redis Cluster\n3主3从 × 16G]
+            MQ_CLUSTER[RocketMQ\n4主4从]
+            MYSQL_CLUSTER[MySQL\n8分片 × 主从]
         end
     end
 

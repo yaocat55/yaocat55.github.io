@@ -1087,6 +1087,12 @@ public List<ProductVO> recommendProduct() {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[管理后台 CRUD] --> B{操作类型}
     B -->|秒杀商品| C[SeckillProductService]
     B -->|普通商品| D[ProductCommandService]
@@ -1116,6 +1122,12 @@ flowchart TD
     W --> Z[RecommendProductService.recommendProduct]
     Z --> AA[Redis GET 推荐ID]
     AA --> BB[ES IdsQuery 批量取商品]
+
+class C,D branch;
+class B condition;
+class AA,BB,E,F,G,I,J,L,M,N,O,P,Q,T,V,X,Y data;
+class A,K,R,U,W process;
+class H,S,Z startEnd;
 ```
 
 ---

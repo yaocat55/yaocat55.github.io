@@ -51,13 +51,19 @@ Java 对象在堆中的内存布局分为四个区域。理解这个布局是理
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     subgraph OBJ[堆中的Java对象]
-        MW[Mark Word<br/>8字节] --> KP[Klass Pointer<br/>4字节 压缩后]
-        KP --> DATA[实例数据<br/>变长]
-        DATA --> PAD[对齐填充<br/>补齐到8字节倍数]
+        MW[Mark Word\n8字节] --> KP[Klass Pointer\n4字节 压缩后]
+        KP --> DATA[实例数据\n变长]
+        DATA --> PAD[对齐填充\n补齐到8字节倍数]
     end
-    MW -->|标记字| MW_DETAIL[锁状态 / hash / GC年龄<br/>共64bit]
-    KP -->|指向方法区| KLASS[InstanceKlass<br/>类元数据]
+    MW -->|标记字| MW_DETAIL[锁状态 / hash / GC年龄\n共64bit]
+    KP -->|指向方法区| KLASS[InstanceKlass\n类元数据]
+
+class DATA,KLASS,OBJ data;
+class KP,MW,MW_DETAIL,PAD process;
 ```
 
 | 区域                    |               大小（64位JVM，开启压缩）               | 说明                                                            |
@@ -73,39 +79,43 @@ Mark Word 的 64 位中，最后 3 位是 **biased_lock** （1 位）+ **lock** 
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     subgraph NOLOCK[无锁状态]
         direction LR
-        A1["unused<br/>25bit"]
-        A2["identity_hashcode<br/>31bit"]
-        A3["unused<br/>1bit"]
-        A4["GC age<br/>4bit"]
-        A5["biased_lock<br/>0"]
-        A6["lock<br/>01"]
+        A1["unused\n25bit"]
+        A2["identity_hashcode\n31bit"]
+        A3["unused\n1bit"]
+        A4["GC age\n4bit"]
+        A5["biased_lock\n0"]
+        A6["lock\n01"]
     end
     subgraph BIASED[偏向锁]
         direction LR
-        B1["Thread ID<br/>54bit"]
-        B2["epoch<br/>2bit"]
-        B3["unused<br/>1bit"]
-        B4["GC age<br/>4bit"]
-        B5["biased_lock<br/>1"]
-        B6["lock<br/>01"]
+        B1["Thread ID\n54bit"]
+        B2["epoch\n2bit"]
+        B3["unused\n1bit"]
+        B4["GC age\n4bit"]
+        B5["biased_lock\n1"]
+        B6["lock\n01"]
     end
     subgraph LIGHT[轻量级锁]
         direction LR
-        C1["ptr_to_lock_record<br/>62bit"]
-        C2["lock<br/>00"]
+        C1["ptr_to_lock_record\n62bit"]
+        C2["lock\n00"]
     end
     subgraph HEAVY[重量级锁]
         direction LR
-        D1["ptr_to_ObjectMonitor<br/>62bit"]
-        D2["lock<br/>10"]
+        D1["ptr_to_ObjectMonitor\n62bit"]
+        D2["lock\n10"]
     end
     subgraph GC[GC标记]
         direction LR
-        E1["forward_ptr<br/>62bit"]
-        E2["lock<br/>11"]
+        E1["forward_ptr\n62bit"]
+        E2["lock\n11"]
     end
+
+class A1,A2,A3,A4,A5,A6,B1,B2,B3,B4,B5,B6,BIASED,C1,C2,D1,D2,E1,E2,GC,HEAVY,LIGHT,NOLOCK process;
 ```
 
 将这五种状态汇总为一张判断表。JVM 在进入 synchronized 块时，读取的就是这最后 3 位：
@@ -197,9 +207,9 @@ OFFSET  SIZE   TYPE DESCRIPTION            VALUE
 ```mermaid
 stateDiagram-v2
     [*] --> 无锁
-    无锁 --> 偏向锁 : 第一个线程获取锁<br/>CAS将ThreadID写入Mark Word
-    偏向锁 --> 轻量级锁 : 另一个线程尝试获取锁<br/>撤销偏向
-    轻量级锁 --> 重量级锁 : CAS自旋超过阈值<br/>或等待队列长度>1
+    无锁 --> 偏向锁 : 第一个线程获取锁\nCAS将ThreadID写入Mark Word
+    偏向锁 --> 轻量级锁 : 另一个线程尝试获取锁\n撤销偏向
+    轻量级锁 --> 重量级锁 : CAS自旋超过阈值\n或等待队列长度>1
     重量级锁 --> [*]
 
     note right of 无锁 : Mark Word低3位=001
@@ -277,19 +287,19 @@ synchronized (lock) { /* ... */ }
 
 ```mermaid
 sequenceDiagram
-    participant T1 as 线程T1<br/>偏向持有者
+    participant T1 as 线程T1\n偏向持有者
     participant MW as Mark Word
-    participant T2 as 线程T2<br/>竞争线程
-    participant VM as JVM<br/>Safepoint
+    participant T2 as 线程T2\n竞争线程
+    participant VM as JVM\nSafepoint
 
-    T2->>MW: 尝试获取锁<br/>读取低3位 = 101（偏向锁）<br/>ThreadID = T1（不是自己！）
+    T2->>MW: 尝试获取锁\n读取低3位 = 101（偏向锁）\nThreadID = T1（不是自己！）
     T2->>VM: 发起偏向锁撤销请求
-    VM->>VM: 等待全局Safepoint<br/>所有线程暂停
+    VM->>VM: 等待全局Safepoint\n所有线程暂停
     VM->>T1: 检查T1的栈帧
     alt T1已退出同步块
-        VM->>MW: 恢复为无锁（001）<br/>然后T2通过CAS获取轻量级锁
+        VM->>MW: 恢复为无锁（001）\n然后T2通过CAS获取轻量级锁
     else T1仍在同步块内
-        VM->>VM: 膨胀为轻量级锁<br/>T1持有该轻量级锁<br/>T2竞争轻量级锁
+        VM->>VM: 膨胀为轻量级锁\nT1持有该轻量级锁\nT2竞争轻量级锁
     end
     VM->>VM: 恢复所有线程
     Note over T2: T2继续执行
@@ -357,22 +367,28 @@ public class BiasedLockDemo {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     subgraph STACK[线程T1的栈]
         SF[栈帧]
         LR[Lock Record]
-        LR_DW["displaced_mark_word<br/>（保存对象的原始Mark Word）"]
-        LR_OWNER["_owner<br/>（指向被锁的Java对象）"]
+        LR_DW["displaced_mark_word\n（保存对象的原始Mark Word）"]
+        LR_OWNER["_owner\n（指向被锁的Java对象）"]
         SF --- LR
         LR --- LR_DW
         LR --- LR_OWNER
     end
     subgraph HEAP[堆]
         OBJ[Java对象lock]
-        MW["Mark Word<br/>（指向Stack中的Lock Record）<br/>lock=00"]
+        MW["Mark Word\n（指向Stack中的Lock Record）\nlock=00"]
     end
-    LR_DW -.->|"保存了"| OLD_MW["原始Mark Word<br/>（无锁时的值）"]
+    LR_DW -.->|"保存了"| OLD_MW["原始Mark Word\n（无锁时的值）"]
     MW -->|"指针→"| LR
     LR_OWNER -.->|"指向"| OBJ
+
+class HEAP data;
+class LR,LR_DW,LR_OWNER,MW,OBJ,OLD_MW,SF,STACK process;
 ```
 
 HotSpot 中 Lock Record 的定义（`basicLock.hpp`）：
@@ -404,13 +420,13 @@ sequenceDiagram
     participant STACK as T1栈帧
     participant MW as 对象Mark Word
 
-    T1->>STACK: 1. 在线程栈上<br/>创建Lock Record
-    T1->>MW: 2. 读取当前Mark Word<br/>（假设无锁：hash|age|001）
-    T1->>STACK: 3. 将Mark Word原值保存到<br/>Lock Record.displaced_mark_word
-    T1->>MW: 4. CAS(&mark_word,<br/>  old = 无锁值,<br/>  new = ptr_to_lock_record | 00)
+    T1->>STACK: 1. 在线程栈上\n创建Lock Record
+    T1->>MW: 2. 读取当前Mark Word\n（假设无锁：hash|age|001）
+    T1->>STACK: 3. 将Mark Word原值保存到\nLock Record.displaced_mark_word
+    T1->>MW: 4. CAS(&mark_word,\n  old = 无锁值,\n  new = ptr_to_lock_record | 00)
     alt CAS成功
-        MW->>MW: Mark Word变为<br/>ptr_to_LockRecord | lock=00
-        Note over T1: 获得轻量级锁<br/>进入同步块
+        MW->>MW: Mark Word变为\nptr_to_LockRecord | lock=00
+        Note over T1: 获得轻量级锁\n进入同步块
     else CAS失败
         Note over T1: 见5.3节：自旋或膨胀
     end
@@ -457,13 +473,19 @@ void lightweightLock(Object obj) {
 
 ```mermaid
 flowchart TD
-    CAS[CAS 尝试将 Mark Word<br/>指向自己的 Lock Record] -->|成功| ENTER[进入同步块]
-    CAS -->|失败| CHECK{是否已经<br/>持有该锁？}
-    CHECK -->|是 锁重入| REENTER[创建新Lock Record<br/>displaced_header=null]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+    CAS[CAS 尝试将 Mark Word\n指向自己的 Lock Record] -->|成功| ENTER[进入同步块]
+    CAS -->|失败| CHECK{是否已经\n持有该锁？}
+    CHECK -->|是 锁重入| REENTER[创建新Lock Record\ndisplaced_header=null]
     CHECK -->|否 其他线程持有| SPIN[自旋等待]
     SPIN --> SPIN_LOOP[CAS重试]
     SPIN_LOOP -->|成功| ENTER
-    SPIN_LOOP -->|超时/自旋失败| INFLATE[锁膨胀<br/>→ 重量级锁]
+    SPIN_LOOP -->|超时/自旋失败| INFLATE[锁膨胀\n→ 重量级锁]
+
+class CHECK condition;
+class CAS,ENTER,INFLATE,REENTER,SPIN,SPIN_LOOP process;
 ```
 
 **自适应自旋的决策逻辑** ：
@@ -565,28 +587,38 @@ public class LightweightLockDemo {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     subgraph HEAP[堆]
         OBJ[Java对象 lock]
-        MW["Mark Word<br/>ptr_to_ObjectMonitor<br/>lock=10"]
+        MW["Mark Word\nptr_to_ObjectMonitor\nlock=10"]
     end
     subgraph NATIVE[Native Memory]
         OM["ObjectMonitor"]
         subgraph OWNER[线程控制]
-            OM_OWNER["_owner: Thread*<br/>持有锁的线程"]
-            OM_REC["_recursions: intptr_t<br/>重入计数"]
-            OM_SUCC["_succ: Thread*<br/>继承者线程"]
+            OM_OWNER["_owner: Thread*\n持有锁的线程"]
+            OM_REC["_recursions: intptr_t\n重入计数"]
+            OM_SUCC["_succ: Thread*\n继承者线程"]
         end
         subgraph QUEUE[队列管理]
-            OM_CXQ["_cxq: ObjectWaiter*<br/>竞争队列头指针"]
-            OM_ELIST["_EntryList: ObjectWaiter*<br/>BLOCKED 等待获取锁"]
-            OM_WSET["_WaitSet: ObjectWaiter*<br/>WAITING wait()"]
+            OM_CXQ["_cxq: ObjectWaiter*\n竞争队列头指针"]
+            OM_ELIST["_EntryList: ObjectWaiter*\nBLOCKED 等待获取锁"]
+            OM_WSET["_WaitSet: ObjectWaiter*\nWAITING wait()"]
         end
-        OM_CNT["_count: intptr_t<br/>竞争计数近似值"]
+        OM_CNT["_count: intptr_t\n竞争计数近似值"]
     end
     MW --> OM
     OM --> OWNER
     OM --> QUEUE
     OM --> OM_CNT
+
+class HEAP,OM_CXQ,QUEUE data;
+class MW,NATIVE,OBJ,OM,OM_CNT,OM_OWNER,OM_REC,OM_SUCC,OM_WSET,OWNER process;
+class OM_ELIST root;
+class wait startEnd;
 ```
 
 关键字段说明（HotSpot 源码 `objectMonitor.hpp`）：
@@ -607,34 +639,34 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant T1 as 线程T1<br/>已持有轻量级锁
-    participant T2 as 线程T2<br/>CAS竞争失败
-    participant MW as Mark Word<br/>（堆中对象）
-    participant OM as ObjectMonitor<br/>（Native Memory）
+    participant T1 as 线程T1\n已持有轻量级锁
+    participant T2 as 线程T2\nCAS竞争失败
+    participant MW as Mark Word\n（堆中对象）
+    participant OM as ObjectMonitor\n（Native Memory）
 
     T2->>MW: CAS写入自己的Lock Record指针
     MW->>T2: CAS失败！（已被T1的Lock Record占据）
     T2->>T2: 开始自旋
     Note over T2: 自旋超时或放弃
 
-    T2->>OM: 调用inflate()<br/>创建/获取ObjectMonitor
+    T2->>OM: 调用inflate()\n创建/获取ObjectMonitor
     OM->>OM: _owner = T1
-    OM->>OM: T2包装为ObjectWaiter<br/>加入_cxq队列
+    OM->>OM: T2包装为ObjectWaiter\n加入_cxq队列
 
-    T2->>MW: CAS(&mark_word,<br/>旧=ptr_to_LockRecord, 新=ptr_to_OM | 10)
-    Note over MW: Mark Word变为<br/>┌ ptr_to_OM ┐ 10<br/>lock位=10
+    T2->>MW: CAS(&mark_word,\n旧=ptr_to_LockRecord, 新=ptr_to_OM | 10)
+    Note over MW: Mark Word变为\n┌ ptr_to_OM ┐ 10\nlock位=10
 
-    T2->>OM: pthread_mutex_lock()<br/>挂起，状态→BLOCKED
+    T2->>OM: pthread_mutex_lock()\n挂起，状态→BLOCKED
 
-    T1->>MW: 尝试释放轻量级锁<br/>CAS恢复旧Mark Word
+    T1->>MW: 尝试释放轻量级锁\nCAS恢复旧Mark Word
     MW->>T1: CAS失败！（Mark Word已指向OM）
     T1->>OM: 走heavyweight_unlock路径
 
-    OM->>OM: _recursions == 0<br/>_owner = null
-    OM->>OM: 从_EntryList取出T2<br/>移入_cxq→_EntryList
-    OM->>OM: pthread_mutex_unlock()<br/>唤醒T2
+    OM->>OM: _recursions == 0\n_owner = null
+    OM->>OM: 从_EntryList取出T2\n移入_cxq→_EntryList
+    OM->>OM: pthread_mutex_unlock()\n唤醒T2
     OM->>OM: _owner = T2
-    Note over T2: 状态→RUNNABLE<br/>获得重量级锁
+    Note over T2: 状态→RUNNABLE\n获得重量级锁
 ```
 
 关键细节：`<span style="color:red">`膨胀过程中，T1 仍然持有锁（先通过轻量级锁，膨胀后 Mark Word 指向 OM，OM._owner = T1）。膨胀不影响 T1 的执行——T1 甚至不知道自己持有的锁已经被膨胀了。只有 T1 尝试退出同步块时，才会发现 CAS 恢复 Mark Word 失败，转而走重量级锁的退出路径。
@@ -645,24 +677,24 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant T1 as 线程T1<br/>持有锁
+    participant T1 as 线程T1\n持有锁
     participant OM as ObjectMonitor
     participant WS as _WaitSet
     participant EL as _EntryList
-    participant T2 as 线程T2<br/>被唤醒
+    participant T2 as 线程T2\n被唤醒
 
     T1->>OM: lock.wait()
-    OM->>WS: 将T1包装为ObjectWaiter<br/>加入_WaitSet
-    OM->>OM: _owner = null<br/>_recursions = 0
-    OM->>EL: 唤醒_EntryList中下一个线程<br/>（如果有的话）
-    Note over T1: 状态→WAITING<br/>等待notify唤醒
+    OM->>WS: 将T1包装为ObjectWaiter\n加入_WaitSet
+    OM->>OM: _owner = null\n_recursions = 0
+    OM->>EL: 唤醒_EntryList中下一个线程\n（如果有的话）
+    Note over T1: 状态→WAITING\n等待notify唤醒
 
-    Note over T2: 另一个线程调用<br/>lock.notify()
+    Note over T2: 另一个线程调用\nlock.notify()
     T2->>WS: 从_WaitSet取出一个线程
     WS->>EL: 移动到_EntryList
-    Note over T1: 状态→BLOCKED<br/>等待重新获取锁
+    Note over T1: 状态→BLOCKED\n等待重新获取锁
 
-    OM->>T1: T1被调度为_owner后<br/>从wait()返回<br/>重新获取到锁
+    OM->>T1: T1被调度为_owner后\n从wait()返回\n重新获取到锁
 ```
 
 `wait()` 的三个关键步骤：
@@ -688,6 +720,8 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     subgraph S1["无锁 biased_lock=0 lock=01"]
         S1A["unused:25"]
         S1B["identity_hashcode:31"]
@@ -716,24 +750,30 @@ flowchart TD
         S5A["forwarding_ptr:62"]
         S5B["11"]
     end
+
+class S1,S1A,S1B,S1C,S1D,S1E,S1F,S2,S2A,S2B,S2C,S2D,S2E,S2F,S3,S3A,S3B,S4,S4A,S4B,S5,S5A,S5B process;
 ```
 
 ### ⚙️ 7.2 锁升级的判断逻辑（JVM 核心决策树）
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     ENTER[synchronized进入] --> READ[读取Mark Word低3位]
     READ --> BITS{低3位 = ?}
 
     BITS -->|"001 无锁"| CHECK_BIAS{偏向锁是否启用？}
-    CHECK_BIAS -->|是| DO_BIAS[CAS写入ThreadID<br/>→ 偏向锁]
-    CHECK_BIAS -->|否| DO_LIGHT[CAS写入LockRecord指针<br/>→ 轻量级锁]
+    CHECK_BIAS -->|是| DO_BIAS[CAS写入ThreadID\n→ 偏向锁]
+    CHECK_BIAS -->|否| DO_LIGHT[CAS写入LockRecord指针\n→ 轻量级锁]
 
     BITS -->|"101 偏向锁"| CHECK_THREAD{ThreadID == 当前线程？}
     CHECK_THREAD -->|是| ENTERED[直接进入同步块]
-    CHECK_THREAD -->|否| REVOKE[撤销偏向锁<br/>→ 升级为轻量级锁]
+    CHECK_THREAD -->|否| REVOKE[撤销偏向锁\n→ 升级为轻量级锁]
 
-    BITS -->|"00 轻量级锁"| LIGHT_CAS{CAS写入自己的<br/>LockRecord指针}
+    BITS -->|"00 轻量级锁"| LIGHT_CAS{CAS写入自己的\nLockRecord指针}
     LIGHT_CAS -->|成功| ENTERED
     LIGHT_CAS -->|失败| LIGHT_CHECK{持有者是当前线程？}
     LIGHT_CHECK -->|是 锁重入| ENTERED
@@ -742,9 +782,13 @@ flowchart TD
     BITS -->|"10 重量级锁"| HEAVY_ENTER[操作ObjectMonitor]
     HEAVY_ENTER --> OWNER_CHECK{_owner == 当前线程？}
     OWNER_CHECK -->|是 锁重入| INCREC[_recursions++]
-    OWNER_CHECK -->|否| OS_LOCK[pthread_mutex_lock<br/>挂起等待]
+    OWNER_CHECK -->|否| OS_LOCK[pthread_mutex_lock\n挂起等待]
 
-    BITS -->|"11 GC标记"| GC_WAIT[等待GC完成<br/>重读Mark Word]
+    BITS -->|"11 GC标记"| GC_WAIT[等待GC完成\n重读Mark Word]
+
+class BITS,CHECK_BIAS,CHECK_THREAD,LIGHT_CAS,LIGHT_CHECK,OWNER_CHECK condition;
+class DO_BIAS,DO_LIGHT,ENTER,ENTERED,HEAVY_ENTER,INCREC,OS_LOCK,READ,REVOKE,SPIN_DECIDE process;
+class GC_WAIT startEnd;
 ```
 
 ### 🔢 7.3 锁状态转换总表

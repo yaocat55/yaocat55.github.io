@@ -204,13 +204,13 @@ public class UserController {
 
 ```mermaid
 flowchart LR
-    classDef start fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef mid fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef final fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef start fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef mid fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef final fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    S1[单体应用] --> S2[拆分 + Feign<br/>快速验证架构]
-    S2 --> S3[服务稳定后<br/>Gateway 统一入口]
-    S3 --> S4[性能瓶颈出现<br/>Feign → Dubbo/gRPC]
+    S1[单体应用] --> S2[拆分 + Feign\n快速验证架构]
+    S2 --> S3[服务稳定后\nGateway 统一入口]
+    S3 --> S4[性能瓶颈出现\nFeign → Dubbo/gRPC]
 
     class S1,S2 start;
     class S3 mid;

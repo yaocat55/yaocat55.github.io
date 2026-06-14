@@ -62,12 +62,12 @@ sequenceDiagram
 
     C->>N: POST /login
     N->>S1: 转发到服务器1
-    S1->>S1: 验证密码，创建Session<br/>存入内存
+    S1->>S1: 验证密码，创建Session\n存入内存
     S1-->>C: JSESSIONID=ABC123
 
     C->>N: GET /info (Cookie: JSESSIONID=ABC123)
     N->>S2: 转发到服务器2
-    S2->>S2: 查找 Session ABC123<br/>找不到！
+    S2->>S2: 查找 Session ABC123\n找不到！
     S2-->>C: 401 未登录（实际已登录）
 ```
 
@@ -95,22 +95,22 @@ eyJhbGciOiJIUzI1NiJ9
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    JWT[JWT Token<br/>Header.Payload.Signature]
+    JWT[JWT Token\nHeader.Payload.Signature]
 
-    JWT --> H[Header 头部<br/>Base64编码]
-    H --> H1["alg: HS256<br/>(签名算法)"]
-    H --> H2["typ: JWT<br/>(令牌类型)"]
+    JWT --> H[Header 头部\nBase64编码]
+    H --> H1["alg: HS256\n(签名算法)"]
+    H --> H2["typ: JWT\n(令牌类型)"]
 
-    JWT --> P[Payload 载荷<br/>Base64编码]
-    P --> P1["sub: 用户ID<br/>(主题)"]
-    P --> P2["iat: 签发时间<br/>(Issued At)"]
-    P --> P3["exp: 过期时间<br/>(Expiration)"]
-    P --> P4["自定义字段<br/>username, role ..."]
+    JWT --> P[Payload 载荷\nBase64编码]
+    P --> P1["sub: 用户ID\n(主题)"]
+    P --> P2["iat: 签发时间\n(Issued At)"]
+    P --> P3["exp: 过期时间\n(Expiration)"]
+    P --> P4["自定义字段\nusername, role ..."]
 
     JWT --> S[Signature 签名]
     S --> S1["HMAC-SHA256(\n  Base64Url(Header)\n  + '.' +\n  Base64Url(Payload),\n  secret\n)"]
@@ -187,17 +187,17 @@ Signature = HMAC-SHA256(
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     RECEIVE([收到JWT]) --> SPLIT[按.分割为三段]
-    SPLIT --> RECALC[用secret对Header.Payload<br/>重新计算签名]
+    SPLIT --> RECALC[用secret对Header.Payload\n重新计算签名]
     RECALC --> COMPARE{"重新计算的签名\n== 收到的签名 ?"}
 
-    COMPARE -- 一致 --> TRUST[Payload未被篡改<br/>可信任其中的用户信息]
-    COMPARE -- 不一致 --> REJECT([签名无效<br/>拒绝请求])
+    COMPARE -- 一致 --> TRUST[Payload未被篡改\n可信任其中的用户信息]
+    COMPARE -- 不一致 --> REJECT([签名无效\n拒绝请求])
 
     TRUST --> CHECK_EXP{"exp > 当前时间 ?"}
     CHECK_EXP -- 是 --> OK([Token有效, 放行])
@@ -443,22 +443,22 @@ public JwtVerifyResult verifyToken(String token) {
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[双令牌机制]
 
-    ROOT --> AT[Access Token<br/>访问令牌]
+    ROOT --> AT[Access Token\n访问令牌]
     AT --> AT1["有效期: 短 (15 ~ 30 分钟)"]
-    AT --> AT2["职责: 每次请求携带<br/>用于访问业务接口"]
-    AT --> AT3["存储: 客户端内存<br/>(变量/localStorage)"]
+    AT --> AT2["职责: 每次请求携带\n用于访问业务接口"]
+    AT --> AT3["存储: 客户端内存\n(变量/localStorage)"]
 
-    ROOT --> RT[Refresh Token<br/>刷新令牌]
+    ROOT --> RT[Refresh Token\n刷新令牌]
     RT --> RT1["有效期: 长 (7 ~ 30 天)"]
-    RT --> RT2["职责: 仅用于获取<br/>新的Access Token"]
-    RT --> RT3["存储: HttpOnly Cookie<br/>或安全存储"]
+    RT --> RT2["职责: 仅用于获取\n新的Access Token"]
+    RT --> RT3["存储: HttpOnly Cookie\n或安全存储"]
     RT --> RT4["仅暴露给 /refresh 接口"]
 
     class ROOT root;
@@ -475,28 +475,28 @@ sequenceDiagram
     participant DB as 数据库
 
     Note over C,DB: ====== 阶段一：登录 ======
-    C->>S: POST /login<br/>用户名 + 密码
+    C->>S: POST /login\n用户名 + 密码
     S->>DB: 查询用户，验证密码
     DB-->>S: 用户信息
-    S->>S: 生成 Access Token (30分钟)<br/>生成 Refresh Token (7天)
+    S->>S: 生成 Access Token (30分钟)\n生成 Refresh Token (7天)
     S-->>C: { accessToken, refreshToken }
 
     Note over C,DB: ====== 阶段二：正常请求 ======
-    C->>S: GET /api/users<br/>Authorization: Bearer {accessToken}
+    C->>S: GET /api/users\nAuthorization: Bearer {accessToken}
     S->>S: 验证AccessToken签名+过期
     S-->>C: 200 用户数据
 
     Note over C,DB: ====== 阶段三：Token过期，刷新 ======
-    C->>S: GET /api/users<br/>Authorization: Bearer {accessToken}
+    C->>S: GET /api/users\nAuthorization: Bearer {accessToken}
     S-->>C: 401 AccessToken过期
 
-    C->>S: POST /refresh<br/>携带 RefreshToken
-    S->>S: 验证RefreshToken<br/>（签名 + 过期 + 未被撤销）
-    S->>S: 生成新的AccessToken (30分钟)<br/>生成新的RefreshToken (7天)
+    C->>S: POST /refresh\n携带 RefreshToken
+    S->>S: 验证RefreshToken\n（签名 + 过期 + 未被撤销）
+    S->>S: 生成新的AccessToken (30分钟)\n生成新的RefreshToken (7天)
     S-->>C: { newAccessToken, newRefreshToken }
 
     Note over C,DB: ====== 阶段四：RefreshToken也过期 ======
-    C->>S: POST /refresh<br/>携带 RefreshToken
+    C->>S: POST /refresh\n携带 RefreshToken
     S-->>C: 401 请重新登录
 ```
 
@@ -926,20 +926,20 @@ public ResponseEntity<LoginResponse> login(...) {
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     SUMMARY[(JWT 与双令牌)]
 
     SUMMARY --> CORE[JWT 核心结构]
-    CORE --> C1["Header.Payload.Signature<br/>三段式, 用.分隔"]
-    CORE --> C2["Base64 编码, 非加密<br/>不可放敏感信息"]
-    CORE --> C3["Signature 防篡改<br/>修改Payload → 签名失效"]
+    CORE --> C1["Header.Payload.Signature\n三段式, 用.分隔"]
+    CORE --> C2["Base64 编码, 非加密\n不可放敏感信息"]
+    CORE --> C3["Signature 防篡改\n修改Payload → 签名失效"]
 
     SUMMARY --> DUAL[双令牌设计]
-    DUAL --> D1["Access Token: 短期<br/>携带用户信息, 访问接口"]
-    DUAL --> D2["Refresh Token: 长期<br/>仅用于刷新, 存HttpOnly Cookie"]
+    DUAL --> D1["Access Token: 短期\n携带用户信息, 访问接口"]
+    DUAL --> D2["Refresh Token: 长期\n仅用于刷新, 存HttpOnly Cookie"]
 
     SUMMARY --> FLOW[刷新流程]
     FLOW --> F1["Access过期 → 401"]

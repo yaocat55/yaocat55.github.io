@@ -253,30 +253,30 @@ Gateway 每秒处理 10 万请求：
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     START([新项目选序列化器]) --> Q1{你用 SpringBoot 吗？}
-    Q1 -- "是（大多数场景）" --> Q2{依赖阿里系中间件<br/>Dubbo/RocketMQ/Nacos?}
+    Q1 -- "是（大多数场景）" --> Q2{依赖阿里系中间件\nDubbo/RocketMQ/Nacos?}
     Q1 -- "否" --> Q3{项目是国内团队维护的吗？}
 
     Q2 -- "是" --> Q4{中间件版本？}
-    Q2 -- "否" --> JACKSON[Jackson<br/>SpringBoot 默认<br/>零配置上手]
+    Q2 -- "否" --> JACKSON[Jackson\nSpringBoot 默认\n零配置上手]
 
-    Q4 -- "旧版本——还在用 Fastjson 1" --> Q5{是否必须<br/>升级中间件版本？}
-    Q4 -- "新版本——已切 Fastjson2" --> FASTJSON[Fastjson2<br/>和中间件序列化一致<br/>避免两个 JSON 库共存]
+    Q4 -- "旧版本——还在用 Fastjson 1" --> Q5{是否必须\n升级中间件版本？}
+    Q4 -- "新版本——已切 Fastjson2" --> FASTJSON[Fastjson2\n和中间件序列化一致\n避免两个 JSON 库共存]
 
     Q5 -- "是——可以升级" --> FASTJSON
-    Q5 -- "否——不能升" --> BOTH["Jackson（应用层）<br/>+ Fastjson 1（中间件内部）<br/>→ 两个库共存——接受现实"]
+    Q5 -- "否——不能升" --> BOTH["Jackson（应用层）\n+ Fastjson 1（中间件内部）\n→ 两个库共存——接受现实"]
 
-    Q3 -- "是——国内团队" --> Q6{在乎中文文档和<br/>国内社区支持？}
+    Q3 -- "是——国内团队" --> Q6{在乎中文文档和\n国内社区支持？}
     Q3 -- "否——国际化团队" --> JACKSON
 
     Q6 -- "不在乎" --> JACKSON
-    Q6 -- "在乎" --> FASTJSON2_ALT[Fastjson2<br/>中文文档更好<br/>国内社区响应快]
+    Q6 -- "在乎" --> FASTJSON2_ALT[Fastjson2\n中文文档更好\n国内社区响应快]
 
     class START startEnd;
     class Q1,Q2,Q3,Q4,Q5,Q6 condition;

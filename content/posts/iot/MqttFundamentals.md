@@ -54,27 +54,27 @@ MQTT 协议定义了三种角色。大部分文章对它们的介绍含糊其词
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[MQTT 角色体系]
 
     ROOT --> PUB[Publisher 发布者]
-    PUB --> P1["📤 向指定 Topic 发布消息<br/>无需知道谁在订阅"]
-    PUB --> P2["🔌 与 Broker 建立 TCP 长连接<br/>通过 MQTT 协议帧通信"]
-    PUB --> P3["📋 常见形态<br/>• 温湿度传感器<br/>• GPS 定位模块<br/>• 门磁/烟雾报警器"]
+    PUB --> P1["📤 向指定 Topic 发布消息\n无需知道谁在订阅"]
+    PUB --> P2["🔌 与 Broker 建立 TCP 长连接\n通过 MQTT 协议帧通信"]
+    PUB --> P3["📋 常见形态\n• 温湿度传感器\n• GPS 定位模块\n• 门磁/烟雾报警器"]
 
     ROOT --> BROKER[Broker 代理服务器]
-    BROKER --> B1["🔄 消息路由核心<br/>接收发布 → 查找订阅 → 转发消息"]
-    BROKER --> B2["🗄️ 状态管理<br/>• 维护所有客户端连接<br/>• 管理 Topic 订阅关系<br/>• 存储会话状态与离线消息"]
-    BROKER --> B3["📋 常见实现<br/>• EMQX<br/>• Mosquitto<br/>• NanoMQ<br/>• HiveMQ"]
+    BROKER --> B1["🔄 消息路由核心\n接收发布 → 查找订阅 → 转发消息"]
+    BROKER --> B2["🗄️ 状态管理\n• 维护所有客户端连接\n• 管理 Topic 订阅关系\n• 存储会话状态与离线消息"]
+    BROKER --> B3["📋 常见实现\n• EMQX\n• Mosquitto\n• NanoMQ\n• HiveMQ"]
 
     ROOT --> SUB[Subscriber 订阅者]
-    SUB --> S1["📥 订阅指定 Topic<br/>接收该 Topic 下的所有消息"]
-    SUB --> S2["🔌 与 Broker 建立 TCP 长连接<br/>通过 MQTT 协议帧通信"]
-    SUB --> S3["📋 常见形态<br/>• 手机 App<br/>• 业务后台服务<br/>• 数据存储服务"]
+    SUB --> S1["📥 订阅指定 Topic\n接收该 Topic 下的所有消息"]
+    SUB --> S2["🔌 与 Broker 建立 TCP 长连接\n通过 MQTT 协议帧通信"]
+    SUB --> S3["📋 常见形态\n• 手机 App\n• 业务后台服务\n• 数据存储服务"]
 
     class ROOT root;
     class PUB,BROKER,SUB branch;
@@ -120,35 +120,35 @@ Broker 是 MQTT 系统的 **核心中枢** 。它负责：
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph BROKER_INTERNALS ["Broker 内部消息处理流程"]
         direction TB
-        RECEIVE["📥 收到 PUBLISH 报文<br/>来自某个 Publisher"]
+        RECEIVE["📥 收到 PUBLISH 报文\n来自某个 Publisher"]
 
-        AUTH{"🔒 认证检查<br/>该 Client 是否有<br/>此 Topic 的发布权限 ?"}
+        AUTH{"🔒 认证检查\n该 Client 是否有\n此 Topic 的发布权限 ?"}
         AUTH -->|拒绝| DROP[(丢弃 + DISCONNECT)]
-        AUTH -->|通过| TOPIC_MATCH["🔍 Topic 匹配<br/>遍历订阅关系表<br/>找出所有匹配的订阅者"]
+        AUTH -->|通过| TOPIC_MATCH["🔍 Topic 匹配\n遍历订阅关系表\n找出所有匹配的订阅者"]
 
         TOPIC_MATCH --> SUB_LIST["📋 生成目标订阅者列表"]
 
-        SUB_LIST --> CHECK_QOS{"✂️ 消息的 QoS<br/>降级处理"}
+        SUB_LIST --> CHECK_QOS{"✂️ 消息的 QoS\n降级处理"}
 
-        CHECK_QOS --> QOS_DOWNGRADE["根据订阅者的 QoS 订阅<br/>取 min(消息QoS, 订阅QoS)<br/>例如: 消息 QoS=2, 订阅 QoS=1 → 按 QoS 1 投递"]
+        CHECK_QOS --> QOS_DOWNGRADE["根据订阅者的 QoS 订阅\n取 min(消息QoS, 订阅QoS)\n例如: 消息 QoS=2, 订阅 QoS=1 → 按 QoS 1 投递"]
 
         QOS_DOWNGRADE --> FOR_EACH_SUB["🔄 遍历每个匹配的订阅者"]
 
-        FOR_EACH_SUB --> CHECK_ONLINE{"该订阅者<br/>当前在线 ?"}
+        FOR_EACH_SUB --> CHECK_ONLINE{"该订阅者\n当前在线 ?"}
 
-        CHECK_ONLINE -->|在线| DIRECT_SEND["📤 直接向该 Client<br/>发送 PUBLISH 报文<br/>（根据 QoS 处理确认）"]
+        CHECK_ONLINE -->|在线| DIRECT_SEND["📤 直接向该 Client\n发送 PUBLISH 报文\n（根据 QoS 处理确认）"]
 
-        CHECK_ONLINE -->|离线| CHECK_SESSION{"该 Client 是否<br/>有持久会话<br/>(Clean Start=false) ?"}
+        CHECK_ONLINE -->|离线| CHECK_SESSION{"该 Client 是否\n有持久会话\n(Clean Start=false) ?"}
 
-        CHECK_SESSION -->|是持久会话| QUEUE_OFFLINE["📦 将消息存入<br/>该 Client 的离线消息队列<br/>待其重连后批量推送"]
+        CHECK_SESSION -->|是持久会话| QUEUE_OFFLINE["📦 将消息存入\n该 Client 的离线消息队列\n待其重连后批量推送"]
         CHECK_SESSION -->|非持久会话| DISCARD_OFFLINE[(丢弃消息)]
     end
 
@@ -196,7 +196,7 @@ sequenceDiagram
     PUB->>BROKER: PUBLISH (Topic=sensor/temperature/livingroom, QoS=1, Payload="25.6°C")
     BROKER-->>PUB: PUBACK (QoS 1 确认)
 
-    BROKER->>BROKER: Topic 匹配: sensor/temperature/livingroom<br/>匹配 sensor/+/temperature → SUB1, SUB2
+    BROKER->>BROKER: Topic 匹配: sensor/temperature/livingroom\n匹配 sensor/+/temperature → SUB1, SUB2
 
     BROKER->>SUB1: PUBLISH (Topic=sensor/temperature/livingroom, QoS=1, Payload="25.6°C")
     SUB1-->>BROKER: PUBACK
@@ -228,11 +228,11 @@ MQTT 定义了 3 个 QoS 级别：
 
 ```mermaid
 flowchart LR
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
-    PUB[Publisher] -->|"QoS 1<br/>发布端 QoS"| BROKER[Broker]
-    BROKER -->|"QoS 0<br/>订阅端 QoS"| SUB[Subscriber]
+    PUB[Publisher] -->|"QoS 1\n发布端 QoS"| BROKER[Broker]
+    BROKER -->|"QoS 0\n订阅端 QoS"| SUB[Subscriber]
 
     class PUB,SUB process;
     class BROKER highlight;
@@ -250,8 +250,8 @@ sequenceDiagram
     participant RECEIVER as 接收方 (Broker)
 
     SENDER->>RECEIVER: PUBLISH (QoS=0, PacketId=0)
-    Note over SENDER: 发送完毕，立即忘记<br/>不做任何重试
-    Note over RECEIVER: 收到后直接处理<br/>不回复任何确认
+    Note over SENDER: 发送完毕，立即忘记\n不做任何重试
+    Note over RECEIVER: 收到后直接处理\n不回复任何确认
 ```
 
 **适用场景** ：
@@ -274,12 +274,12 @@ sequenceDiagram
     participant RECEIVER as 接收方 (Broker)
 
     SENDER->>RECEIVER: PUBLISH (QoS=1, PacketId=1001, Payload="开门指令")
-    Note over SENDER: 启动重传计时器<br/>等待 PUBACK
+    Note over SENDER: 启动重传计时器\n等待 PUBACK
 
-    Note over RECEIVER: 收到消息，持久化存储<br/>（如果是 Broker 则转发给订阅者）
+    Note over RECEIVER: 收到消息，持久化存储\n（如果是 Broker 则转发给订阅者）
 
     RECEIVER-->>SENDER: PUBACK (PacketId=1001)
-    Note over SENDER: 收到 PUBACK<br/>停止计时器，删除消息副本
+    Note over SENDER: 收到 PUBACK\n停止计时器，删除消息副本
 
     Note over SENDER,RECEIVER: --- 以下演示重传场景 ---
 
@@ -289,7 +289,7 @@ sequenceDiagram
 
     Note over SENDER: ⏰ 超时！未收到 PUBACK
     SENDER->>RECEIVER: PUBLISH (QoS=1, PacketId=1002, Payload="关门指令", DUP=true)
-    Note over RECEIVER: 收到重复消息（DUP=true）<br/>根据 PacketId 判断是否已处理
+    Note over RECEIVER: 收到重复消息（DUP=true）\n根据 PacketId 判断是否已处理
 
     RECEIVER-->>SENDER: PUBACK (PacketId=1002)
     Note over SENDER: 收到 PUBACK，停止重传
@@ -323,23 +323,23 @@ sequenceDiagram
 
     Note over SENDER,RECEIVER: ═══ 第一次交互：发送消息 ═══
     SENDER->>RECEIVER: ① PUBLISH (QoS=2, PacketId=2001, Payload="紧急停机")
-    Note over SENDER: 存储消息副本<br/>启动重传计时器<br/>状态 → AWAITING_PUBREC
-    Note over RECEIVER: 存储消息<br/>但不立即投递给上层应用
+    Note over SENDER: 存储消息副本\n启动重传计时器\n状态 → AWAITING_PUBREC
+    Note over RECEIVER: 存储消息\n但不立即投递给上层应用
 
     Note over SENDER,RECEIVER: ═══ 第二次交互：接收确认 ═══
     RECEIVER-->>SENDER: ② PUBREC (PacketId=2001)
-    Note over SENDER: 收到 PUBREC<br/>停止 PUBLISH 重传<br/>状态 → AWAITING_PUBREL
+    Note over SENDER: 收到 PUBREC\n停止 PUBLISH 重传\n状态 → AWAITING_PUBREL
     Note over RECEIVER: 状态 → AWAITING_PUBREL
 
     Note over SENDER,RECEIVER: ═══ 第三次交互：释放确认 ═══
     SENDER-->>RECEIVER: ③ PUBREL (PacketId=2001)
     Note over SENDER: 启动 PUBREL 重传计时器
-    Note over RECEIVER: 收到 PUBREL<br/>消息投递给上层应用<br/>状态 → AWAITING_COMPLETE
+    Note over RECEIVER: 收到 PUBREL\n消息投递给上层应用\n状态 → AWAITING_COMPLETE
 
     Note over SENDER,RECEIVER: ═══ 第四次交互：完成确认 ═══
     RECEIVER-->>SENDER: ④ PUBCOMP (PacketId=2001)
-    Note over SENDER: 收到 PUBCOMP<br/>删除消息副本<br/>释放 PacketId<br/>流程结束
-    Note over RECEIVER: 释放 PacketId<br/>流程结束
+    Note over SENDER: 收到 PUBCOMP\n删除消息副本\n释放 PacketId\n流程结束
+    Note over RECEIVER: 释放 PacketId\n流程结束
 ```
 
 每一步都有独立的超时重传机制：
@@ -516,25 +516,25 @@ CONNECT (
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph ALIYUN ["阿里云 MQTT 资源层级"]
         direction TB
-        INSTANCE["🏗️ 实例 (Instance)<br/>对应一个独立的 MQTT Broker<br/>有独立的接入点域名和端口"]
-        INSTANCE --> GROUP1["📦 Group ID: GID_TEMP_SENSOR<br/>设备的逻辑分组<br/>同一 Group 的设备共享认证凭据"]
-        INSTANCE --> GROUP2["📦 Group ID: GID_BACKEND<br/>后台服务的逻辑分组"]
+        INSTANCE["🏗️ 实例 (Instance)\n对应一个独立的 MQTT Broker\n有独立的接入点域名和端口"]
+        INSTANCE --> GROUP1["📦 Group ID: GID_TEMP_SENSOR\n设备的逻辑分组\n同一 Group 的设备共享认证凭据"]
+        INSTANCE --> GROUP2["📦 Group ID: GID_BACKEND\n后台服务的逻辑分组"]
 
-        GROUP1 --> DEV1["🔌 Device: sensor_001<br/>具体的温度传感器"]
-        GROUP1 --> DEV2["🔌 Device: sensor_002<br/>另一个温度传感器"]
-        GROUP2 --> DEV3["🔌 Device: backend_writer<br/>数据入库服务"]
-        GROUP2 --> DEV4["🔌 Device: app_controller<br/>手机控制端"]
+        GROUP1 --> DEV1["🔌 Device: sensor_001\n具体的温度传感器"]
+        GROUP1 --> DEV2["🔌 Device: sensor_002\n另一个温度传感器"]
+        GROUP2 --> DEV3["🔌 Device: backend_writer\n数据入库服务"]
+        GROUP2 --> DEV4["🔌 Device: app_controller\n手机控制端"]
 
-        INSTANCE --> TOPIC1["🏷️ 一级 Topic: /sensor/temperature<br/>需在控制台预先创建"]
-        TOPIC1 --> SUB1["二级 Topic<br/>/sensor/temperature/livingroom<br/>代码中自由使用"]
-        TOPIC1 --> SUB2["二级 Topic<br/>/sensor/temperature/bedroom"]
+        INSTANCE --> TOPIC1["🏷️ 一级 Topic: /sensor/temperature\n需在控制台预先创建"]
+        TOPIC1 --> SUB1["二级 Topic\n/sensor/temperature/livingroom\n代码中自由使用"]
+        TOPIC1 --> SUB2["二级 Topic\n/sensor/temperature/bedroom"]
     end
 
     class INSTANCE highlight;
@@ -583,9 +583,9 @@ TCP 接入点:        mqtt-cn-xxx123.mqtt.aliyuncs.com:1883
 ```mermaid
 sequenceDiagram
     participant CONSOLE as 阿里云控制台
-    participant PUB as 发布者<br/>(温度传感器)
-    participant BROKER as 阿里云MQTT Broker<br/>(mqtt-cn-xxx.mqtt.aliyuncs.com)
-    participant SUB as 订阅者<br/>(后台数据入库服务)
+    participant PUB as 发布者\n(温度传感器)
+    participant BROKER as 阿里云MQTT Broker\n(mqtt-cn-xxx.mqtt.aliyuncs.com)
+    participant SUB as 订阅者\n(后台数据入库服务)
 
     Note over CONSOLE,SUB: ═══ 准备阶段 ═══
     CONSOLE->>BROKER: 创建实例 (mqtt-cn-xxx123)
@@ -1012,24 +1012,24 @@ max_keepalive 120      # 心跳超时（秒）
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph SUMMARY ["MQTT 核心知识总览"]
         direction TB
 
-        ROLE["👥 三种角色<br/>Publisher: 产生消息，只关心 Topic<br/>Broker: 中枢路由，匹配 + 转发<br/>Subscriber: 消费消息，通过通配符订阅"]
+        ROLE["👥 三种角色\nPublisher: 产生消息，只关心 Topic\nBroker: 中枢路由，匹配 + 转发\nSubscriber: 消费消息，通过通配符订阅"]
 
-        QOS["📊 三级 QoS<br/>QoS 0: 最多一次，无确认<br/>QoS 1: 至少一次，PUBACK 确认<br/>QoS 2: 仅一次，四次握手"]
+        QOS["📊 三级 QoS\nQoS 0: 最多一次，无确认\nQoS 1: 至少一次，PUBACK 确认\nQoS 2: 仅一次，四次握手"]
 
-        TOPIC["🏷️ Topic 设计<br/>分层结构 / 分隔<br/>+ 单层通配符<br/># 多层通配符<br/>版本号/设备类型/设备ID/数据类型"]
+        TOPIC["🏷️ Topic 设计\n分层结构 / 分隔\n+ 单层通配符\n# 多层通配符\n版本号/设备类型/设备ID/数据类型"]
 
-        FEATURES["⚙️ Broker 特性<br/>持久会话: Clean Start=false<br/>保留消息: Retain=true<br/>遗嘱消息: Will Message"]
+        FEATURES["⚙️ Broker 特性\n持久会话: Clean Start=false\n保留消息: Retain=true\n遗嘱消息: Will Message"]
 
-        TOOLS["🔧 主流实现<br/>阿里云MQTT: 免运维托管<br/>Mosquitto: 轻量单机<br/>EMQX: 企业集群<br/>NanoMQ: 超轻边缘"]
+        TOOLS["🔧 主流实现\n阿里云MQTT: 免运维托管\nMosquitto: 轻量单机\nEMQX: 企业集群\nNanoMQ: 超轻边缘"]
     end
 
     class ROLE,QOS,TOPIC,FEATURES,TOOLS process;

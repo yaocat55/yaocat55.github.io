@@ -69,10 +69,10 @@ public class CyclicBarrier {
 
 ```mermaid
 flowchart TD
-    classDef lock fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef field fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef gen fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef lock fill:#1e1b4b,stroke:#4f46e5,stroke-width:2px,color:#e0e7ff,font-weight:bold;
+classDef field fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef gen fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     CB["⚙️ CyclicBarrier实例"]
 
@@ -175,7 +175,7 @@ sequenceDiagram
 
     CB->>CB: 执行barrierCommand.run()
     CB->>CB: nextGeneration()
-    Note over CB: 1.trip.signalAll()唤醒所有等待线程<br/>2.count重置为parties<br/>3.创建新Generation
+    Note over CB: 1.trip.signalAll()唤醒所有等待线程\n2.count重置为parties\n3.创建新Generation
 
     CB->>TRIP: trip.signalAll()
     TRIP-->>T1: 唤醒线程1
@@ -185,7 +185,7 @@ sequenceDiagram
 
     Note over T1,T2: === 阶段3:线程继续执行 ===
     T1->>T1: 检查generation是否变化+broken状态
-    Note over T1: generation已更新,broke=false<br/>正常返回
+    Note over T1: generation已更新,broke=false\n正常返回
     T2->>T2: 同样检查
     Note over T2: 正常返回
 ```
@@ -622,10 +622,10 @@ public class ConcurrentTest {
 
 ```mermaid
 flowchart TD
-    classDef core fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef mech fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef diff fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef detail fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
+classDef core fill:#1e1b4b,stroke:#4f46e5,stroke-width:2px,color:#e0e7ff,font-weight:bold;
+classDef mech fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef diff fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef detail fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     CB[🔒 CyclicBarrier]
     CB --> CORE[核心机制]

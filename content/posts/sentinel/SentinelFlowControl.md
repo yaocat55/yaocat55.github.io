@@ -248,13 +248,13 @@ createOrder 被限流的原因是"payOrder 的压力太大了——控制上游�
 
 ```mermaid
 flowchart LR
-    classDef normal fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20;
-    classDef throttled fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315;
+classDef normal fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
+classDef throttled fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
 
-    CO[createOrder<br/>上游创建订单] --> PO[payOrder<br/>下游支付]
+    CO[createOrder\n上游创建订单] --> PO[payOrder\n下游支付]
 
-    PO -- "QPS 正常<br/>没触发阈值" --> CO_OK[createOrder 正常放行]
-    PO -- "QPS 过高<br/>超过关联阈值" --> CO_LIMIT[createOrder 被限流]
+    PO -- "QPS 正常\n没触发阈值" --> CO_OK[createOrder 正常放行]
+    PO -- "QPS 过高\n超过关联阈值" --> CO_LIMIT[createOrder 被限流]
 
     class CO_OK normal;
     class CO_LIMIT throttled;

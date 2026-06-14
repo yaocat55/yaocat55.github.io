@@ -502,10 +502,10 @@ sequenceDiagram
     participant DB as MySQL(ShardingSphere)
 
     U->>API: 提交订单
-    API->>DB: TransactionTemplate<br/>tradeMapper.insert +<br/>tradeItemMapper.batchInsert
+    API->>DB: TransactionTemplate\ntradeMapper.insert +\ntradeItemMapper.batchInsert
     API->>MQ: asyncSend(topic, tradeEntity, delayLevel=16)
-    Note right of API: 消息在 Broker 侧<br/>等 30 分钟后才投递
-    Note over MQ: delayLevel 16 = 30min<br/>RocketMQ 18 个预设级别
+    Note right of API: 消息在 Broker 侧\n等 30 分钟后才投递
+    Note over MQ: delayLevel 16 = 30min\nRocketMQ 18 个预设级别
     MQ-->>API: SendCallback.onSuccess(记日志)
     API-->>U: 下单成功
 
@@ -517,7 +517,7 @@ sequenceDiagram
     opt 订单仍未支付
         JOB->>DB: update orderStatus=CANCEL
         opt 秒杀订单
-            JOB->>MQ: send(overTimeCancelTradeTopic, trade)<br/>通知库存恢复
+            JOB->>MQ: send(overTimeCancelTradeTopic, trade)\n通知库存恢复
         end
     end
 ```

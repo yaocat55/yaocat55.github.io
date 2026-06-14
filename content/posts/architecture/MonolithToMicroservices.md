@@ -41,14 +41,14 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef problem fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef question fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;;
+classDef problem fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef question fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
 
     subgraph MONOLITH ["单体架构现状"]
-        M[单个 Spring Boot 进程<br/>所有模块耦合在一起] --> S1[代码冲突频繁<br/>18 人改同一仓库]
-        M --> S2[部署互相阻塞<br/>改订单要等 UI 构建]
-        M --> S3[故障无隔离<br/>内存泄漏拖垮全站]
+        M[单个 Spring Boot 进程\n所有模块耦合在一起] --> S1[代码冲突频繁\n18 人改同一仓库]
+        M --> S2[部署互相阻塞\n改订单要等 UI 构建]
+        M --> S3[故障无隔离\n内存泄漏拖垮全站]
     end
 
     subgraph DECISION ["你需要回答四个问题"]
@@ -75,23 +75,23 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef signal fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold;
-    classDef consequence fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef decision fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef signal fill:#431407,stroke:#ea580c,stroke-width:1.5px,color:#fed7aa,font-weight:bold;;
+classDef consequence fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef decision fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
 
     subgraph SIGNALS ["六大拆分信号"]
-        SG1["📈 团队规模膨胀<br/>单模块超过 8 ~ 10 人，代码合并冲突成为日常"]
-        SG2["🚫 部署互相阻塞<br/>A 模块改一行代码，等 B 模块的 30 分钟测试跑完才能上线"]
-        SG3["⚡ 模块负载不均<br/>秒杀模块需要 20 台机器，后台管理模块 2 台就够——但只能整体扩缩容"]
-        SG4["🔧 技术栈差异化需求<br/>推荐引擎需要 Python/Go，订单模块继续 Java，单体无法混合技术栈"]
-        SG5["💥 故障隔离失效<br/>非核心模块（如数据报表导出）OOM 拖垮核心支付链路"]
-        SG6["🗂️ 数据边界模糊<br/>多业务域共用一个数据库，表结构变更需要全团队协调，无法独立演进"]
+        SG1["📈 团队规模膨胀\n单模块超过 8 ~ 10 人，代码合并冲突成为日常"]
+        SG2["🚫 部署互相阻塞\nA 模块改一行代码，等 B 模块的 30 分钟测试跑完才能上线"]
+        SG3["⚡ 模块负载不均\n秒杀模块需要 20 台机器，后台管理模块 2 台就够——但只能整体扩缩容"]
+        SG4["🔧 技术栈差异化需求\n推荐引擎需要 Python/Go，订单模块继续 Java，单体无法混合技术栈"]
+        SG5["💥 故障隔离失效\n非核心模块（如数据报表导出）OOM 拖垮核心支付链路"]
+        SG6["🗂️ 数据边界模糊\n多业务域共用一个数据库，表结构变更需要全团队协调，无法独立演进"]
     end
 
     subgraph CHECK ["判断标准"]
-        C1{"六个信号中<br/>出现 ≥ 3 个？"}
+        C1{"六个信号中\n出现 ≥ 3 个？"}
         C1 -->|是| GO[启动拆分计划]
-        C1 -->|否| HOLD[暂不拆分<br/>优化单体架构即可]
+        C1 -->|否| HOLD[暂不拆分\n优化单体架构即可]
     end
 
     SG1 -.-> C1
@@ -163,11 +163,11 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef branch fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
-    ROOT[电商系统<br/>限界上下文划分]
+    ROOT[电商系统\n限界上下文划分]
 
     ROOT --> BC1(用户上下文)
     BC1 --> BC1A["注册/登录/认证"]
@@ -242,25 +242,25 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef chain fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef strong fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef eventual fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037,font-weight:bold;
-    classDef decision fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
+classDef chain fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
+classDef strong fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;;
+classDef eventual fill:#431407,stroke:#ea580c,stroke-width:1.5px,color:#fed7aa,font-weight:bold;;
+classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
 
     subgraph SPLIT ["拆分数据边界决策"]
-        D{"这个业务流程<br/>涉及多个服务吗？"}
-        D -->|否| LOCAL[保持本地事务<br/>不需要分布式方案]
-        D -->|是| CHAIN{"能否抽象为<br/>链式调用？\n（A→B→C串联，单步补偿）"}
-        CHAIN -->|是| CHAIN_OK["链式调用 + 补偿<br/>每个服务仅做本地事务<br/>失败时回调上游补偿<br/>无需分布式事务框架"]
-        CHAIN -->|否<br/>需要并行写多个服务| S{"业务上允许<br/>短暂不一致吗？\n（秒级到分钟级）"}
-        S -->|是| EV["最终一致性方案<br/>消息队列 + 重试 + 补偿"]
-        S -->|否| ST["强一致性方案<br/>分布式事务 Seata/TCC"]
+        D{"这个业务流程\n涉及多个服务吗？"}
+        D -->|否| LOCAL[保持本地事务\n不需要分布式方案]
+        D -->|是| CHAIN{"能否抽象为\n链式调用？\n（A→B→C串联，单步补偿）"}
+        CHAIN -->|是| CHAIN_OK["链式调用 + 补偿\n每个服务仅做本地事务\n失败时回调上游补偿\n无需分布式事务框架"]
+        CHAIN -->|否\n需要并行写多个服务| S{"业务上允许\n短暂不一致吗？\n（秒级到分钟级）"}
+        S -->|是| EV["最终一致性方案\n消息队列 + 重试 + 补偿"]
+        S -->|否| ST["强一致性方案\n分布式事务 Seata/TCC"]
     end
 
     subgraph EXAMPLES ["实际场景分类"]
-        E1["下订单 → 扣库存 → 生成物流单<br/>→ 链式调用 + 本地补偿（无分布式事务）"]
-        E2["支付成功 → 标记订单已付 + 发放积分<br/>→ 可并行，允许短暂不一致<br/>→ 最终一致性（消息队列）"]
-        E3["支付成功 → 扣款 + 入账<br/>→ 不允许任何不一致<br/>→ 强一致性（TCC/Saga）"]
+        E1["下订单 → 扣库存 → 生成物流单\n→ 链式调用 + 本地补偿（无分布式事务）"]
+        E2["支付成功 → 标记订单已付 + 发放积分\n→ 可并行，允许短暂不一致\n→ 最终一致性（消息队列）"]
+        E3["支付成功 → 扣款 + 入账\n→ 不允许任何不一致\n→ 强一致性（TCC/Saga）"]
     end
 
     D -.-> E1
@@ -311,30 +311,30 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef sync fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
-    classDef async fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef decision fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef scenario fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#5D4037;
+classDef sync fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;;
+classDef async fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
+classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;;
+classDef scenario fill:#431407,stroke:#ea580c,stroke-width:1.5px,color:#fed7aa;
 
     subgraph CHOOSE ["通信方式选型决策"]
-        C1{"调用方需要<br/>立即拿到结果吗？"}
+        C1{"调用方需要\n立即拿到结果吗？"}
         C1 -->|是| SYN[同步调用]
         C1 -->|否| ASY[异步消息]
 
-        SYN --> S1{"调用方是<br/>多语言环境吗？"}
+        SYN --> S1{"调用方是\n多语言环境吗？"}
         S1 -->|是| REST[HTTP REST + JSON]
         S1 -->|否,都是JVM生态| GRPC[gRPC / Dubbo]
 
-        ASY --> A1{"消息量级和<br/>延迟要求？"}
+        ASY --> A1{"消息量级和\n延迟要求？"}
         A1 -->|高吞吐、毫秒级| ROCKET[RocketMQ]
         A1 -->|超高吞吐、日志类| KAFKA[Kafka]
         A1 -->|标准吞吐、协议丰富| RABBIT[RabbitMQ]
     end
 
     subgraph SCENARIOS ["具体场景对应"]
-        SCN1["支付确认 → 扣款<br/>→ 同步 REST/gRPC"]
-        SCN2["订单支付成功 → 发积分<br/>→ 异步 RocketMQ"]
-        SCN3["用户行为埋点 → 数据仓库<br/>→ 异步 Kafka"]
+        SCN1["支付确认 → 扣款\n→ 同步 REST/gRPC"]
+        SCN2["订单支付成功 → 发积分\n→ 异步 RocketMQ"]
+        SCN3["用户行为埋点 → 数据仓库\n→ 异步 Kafka"]
     end
 
     S1 -.-> SCN1
@@ -445,36 +445,36 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef layer fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
-    classDef component fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef recommended fill:#C8E6C9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef layer fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;;
+classDef component fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef recommended fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;;
 
     subgraph GW ["🔷 流量层"]
-        GW1["Spring Cloud Gateway<br/>（Java 生态首选）"]
-        GW2["Kong<br/>（多语言/OpenResty 场景）"]
-        GW3["APISIX<br/>（高性能动态路由）"]
+        GW1["Spring Cloud Gateway\n（Java 生态首选）"]
+        GW2["Kong\n（多语言/OpenResty 场景）"]
+        GW3["APISIX\n（高性能动态路由）"]
     end
 
     subgraph REG ["🔷 服务治理层"]
-        REG1["Nacos<br/>注册+配置二合一<br/>（推荐）"]
-        REG2["Eureka<br/>（仅注册，Spring 生态）"]
-        REG3["Consul<br/>（注册+配置+健康检查）"]
+        REG1["Nacos\n注册+配置二合一\n（推荐）"]
+        REG2["Eureka\n（仅注册，Spring 生态）"]
+        REG3["Consul\n（注册+配置+健康检查）"]
     end
 
     subgraph CFG ["🔷 配置管理层"]
-        CFG1["Nacos Config<br/>（实时推送、灰度发布）"]
-        CFG2["Apollo<br/>（携程开源、Portal UI 强）"]
+        CFG1["Nacos Config\n（实时推送、灰度发布）"]
+        CFG2["Apollo\n（携程开源、Portal UI 强）"]
     end
 
     subgraph MQ ["🔷 消息层"]
-        MQ1["RocketMQ<br/>（业务消息首选）"]
-        MQ2["Kafka<br/>（日志/埋点/流计算）"]
+        MQ1["RocketMQ\n（业务消息首选）"]
+        MQ2["Kafka\n（日志/埋点/流计算）"]
     end
 
     subgraph OBS ["🔷 可观测性层"]
-        OBS1["SkyWalking<br/>（APM 首选，Java 原生探针）"]
-        OBS2["Jaeger<br/>（OpenTracing 标准，多语言）"]
-        OBS3["ELK / Loki<br/>（日志聚合）"]
+        OBS1["SkyWalking\n（APM 首选，Java 原生探针）"]
+        OBS2["Jaeger\n（OpenTracing 标准，多语言）"]
+        OBS3["ELK / Loki\n（日志聚合）"]
     end
 
     GW1 -.->|路由到| REG1
@@ -528,16 +528,16 @@ flowchart TD
 不要试图一次性拆完所有模块。推荐的迁移路径是 **绞杀者模式** （Strangler Fig Pattern）：每次只拆出一个服务，验证稳定后再拆下一个。
 
 ```mermaid
-flowchart TD
+flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef step fill:#BBDEFB,stroke:#1565C0,stroke-width:2px,color:#0D47A1,font-weight:bold;
-    classDef current fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,font-weight:bold;
+classDef step fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef current fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;;
 
-    PHASE1["🔵 第一阶段<br/>拆分边缘模块<br/>（数据报表、文件处理等与核心链路无关的模块）"] --> PHASE2["🔵 第二阶段<br/>拆分读多写少模块<br/>（商品浏览、用户查询等查询密集模块）"]
-    PHASE2 --> PHASE3["🔵 第三阶段<br/>拆分核心写链路<br/>（订单、支付、库存——需要分布式事务支持）"]
-    PHASE3 --> DONE(["✅ 全部迁移完成<br/>逐步下线单体中的对应功能"])
+    PHASE1["🔵 第一阶段\n拆分边缘模块\n（数据报表、文件处理等与核心链路无关的模块）"] --> PHASE2["🔵 第二阶段\n拆分读多写少模块\n（商品浏览、用户查询等查询密集模块）"]
+    PHASE2 --> PHASE3["🔵 第三阶段\n拆分核心写链路\n（订单、支付、库存——需要分布式事务支持）"]
+    PHASE3 --> DONE(["✅ 全部迁移完成\n逐步下线单体中的对应功能"])
 
     class PHASE1,PHASE2,PHASE3 step;
     class DONE current;
@@ -560,11 +560,11 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;;
+classDef branch fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa,font-weight:bold;;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
-    ROOT[单体到微服务<br/>全链路决策]
+    ROOT[单体到微服务\n全链路决策]
 
     ROOT --> D1(该不该拆？)
     D1 --> D1A["6 个信号 ≥ 3 个才拆"]

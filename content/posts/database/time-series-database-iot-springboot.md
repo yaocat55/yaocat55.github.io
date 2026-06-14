@@ -68,8 +68,8 @@ flowchart TD
 
     row -.-> col
 
-    classDef default fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef default fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
     class r1,r2,r3,c_ts,c_temp,c_hum,c_loc default
     class r1,c_temp highlight
 ```
@@ -88,19 +88,19 @@ TSDB 几乎清一色使用 <strong>LSM-Tree（Log-Structured Merge-Tree，日志
 
 ```mermaid
 flowchart TD
-    write["📝 数据写入请求"] --> wal["📋 WAL 顺序写盘<br/>先记日志，崩溃恢复用"]
-    wal --> mem["🖥️ MemTable 内存有序结构<br/>通常用 SkipList 实现"]
+    write["📝 数据写入请求"] --> wal["📋 WAL 顺序写盘\n先记日志，崩溃恢复用"]
+    wal --> mem["🖥️ MemTable 内存有序结构\n通常用 SkipList 实现"]
     mem --> flush_cond{"MemTable 写满？"}
-    flush_cond -->|"是"| flush["💾 刷盘生成 SSTable<br/>不可变有序文件"]
+    flush_cond -->|"是"| flush["💾 刷盘生成 SSTable\n不可变有序文件"]
     flush_cond -->|"否"| mem
-    flush --> level0["📄 Level0: 最新SSTable<br/>文件间可能有Key重叠"]
-    level0 --> compact["🔄 Compaction 后台合并<br/>去重、清理过期数据"]
-    compact --> leveln["📄 LevelN: 合并后的SSTable<br/>文件间Key不重叠，有序"]
+    flush --> level0["📄 Level0: 最新SSTable\n文件间可能有Key重叠"]
+    level0 --> compact["🔄 Compaction 后台合并\n去重、清理过期数据"]
+    compact --> leveln["📄 LevelN: 合并后的SSTable\n文件间Key不重叠，有序"]
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef start fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef start fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
 
     class write start
     class wal,mem,flush,compact process
@@ -114,32 +114,32 @@ LSM-Tree 的写入流程把随机IO完全转化为了顺序IO——WAL 是顺序
 
 ```mermaid
 flowchart TD
-    mem["🖥️ MemTable（内存有序表）<br/>新数据写入入口，SkipList 实现"]
+    mem["🖥️ MemTable（内存有序表）\n新数据写入入口，SkipList 实现"]
 
     subgraph L0["Level 0 — 刚刷盘"]
-        sst0["SSTable<br/>Key 0 ~ 100"]
-        sst1["SSTable<br/>Key 50 ~ 150"]
+        sst0["SSTable\nKey 0 ~ 100"]
+        sst1["SSTable\nKey 50 ~ 150"]
     end
 
     subgraph L1["Level 1 — Compaction 合并后"]
-        sst2["SSTable<br/>Key 0 ~ 50"]
-        sst3["SSTable<br/>Key 51 ~ 100"]
-        sst4["SSTable<br/>Key 101 ~ 150"]
+        sst2["SSTable\nKey 0 ~ 50"]
+        sst3["SSTable\nKey 51 ~ 100"]
+        sst4["SSTable\nKey 101 ~ 150"]
     end
 
     subgraph L2["Level 2 — 继续合并下沉"]
-        sst5["SSTable<br/>Key 0 ~ 75"]
-        sst6["SSTable<br/>Key 76 ~ 150"]
+        sst5["SSTable\nKey 0 ~ 75"]
+        sst6["SSTable\nKey 76 ~ 150"]
     end
 
     mem -->|"写满刷盘"| L0
     L0 -->|"后台 Compaction"| L1
     L1 -->|"继续 Compaction"| L2
 
-    classDef memStyle fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef level0 fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#BF360C
-    classDef level1 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#4A148C
-    classDef level2 fill:#BBDEFB,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1
+classDef memStyle fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef level0 fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
+classDef level1 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe;
+classDef level2 fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe;
 
     class mem memStyle
     class sst0,sst1 level0
@@ -223,25 +223,25 @@ flowchart TD
 
     subgraph rdbms_path["RDBMS 查询路径"]
         direction TB
-        r1["扫描时间索引 + 回表"] --> r2["加载完整行<br/>含不需用的湿度、气压等列"]
+        r1["扫描时间索引 + 回表"] --> r2["加载完整行\n含不需用的湿度、气压等列"]
         r2 --> r3["内存中逐行计算AVG"]
-        r3 --> r4["返回结果<br/>大量无用IO已发生"]
+        r3 --> r4["返回结果\n大量无用IO已发生"]
     end
 
     subgraph tsdb_path["TSDB 查询路径"]
         direction TB
-        t1["定位时间分区<br/>1小时数据在1~2个分区内"] --> t2["只读温度列数据块"]
-        t2 --> t3["直接读取预聚合值<br/>或列式计算"]
-        t3 --> t4["返回结果<br/>IO最小化"]
+        t1["定位时间分区\n1小时数据在1~2个分区内"] --> t2["只读温度列数据块"]
+        t2 --> t3["直接读取预聚合值\n或列式计算"]
+        t3 --> t4["返回结果\nIO最小化"]
     end
 
     split --> rdbms_path
     split --> tsdb_path
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef start fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef start fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
 
     class query start
     class r1,r2,r3,t1,t2,t3 process

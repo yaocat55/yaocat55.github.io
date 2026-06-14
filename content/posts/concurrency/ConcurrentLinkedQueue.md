@@ -49,13 +49,19 @@ cover:
 
 ```mermaid
 flowchart TD
-    HEAD[head 指针<br/>volatile]
-    TAIL[tail 指针<br/>volatile]
-    HEAD --> N1["Node#1<br/>item=null<br/>next→"]
-    N1 --> N2["Node#2<br/>item='A'<br/>next→"]
-    N2 --> N3["Node#3<br/>item='B'<br/>next→"]
-    N3 --> N4["Node#4<br/>item='C'<br/>next=null"]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+    HEAD[head 指针\nvolatile]
+    TAIL[tail 指针\nvolatile]
+    HEAD --> N1["Node#1\nitem=null\nnext→"]
+    N1 --> N2["Node#2\nitem='A'\nnext→"]
+    N2 --> N3["Node#3\nitem='B'\nnext→"]
+    N3 --> N4["Node#4\nitem='C'\nnext=null"]
     TAIL -.-> N4
+
+class N1,N2,N3,N4 branch;
+class HEAD,TAIL process;
 ```
 
 `head` 总是指向链表中的第一个节点（该节点 item 可能为 null，即"已出队"状态），`tail` 指向最后一个节点或倒数第二个节点。
@@ -150,6 +156,12 @@ public ConcurrentLinkedQueue() {
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[offer e] --> B{checkNotNull e}
     B -->|e==null| C[抛出 NullPointerException]
     B -->|e!=null| D[new Node e]
@@ -161,14 +173,20 @@ flowchart TD
     I --> J{CAS 成功?}
     J -->|否| E
     J -->|是| K{p != t?}
-    K -->|是：tail 滞后了| L["CAS: tail 从 t→newNode<br/>（失败也无妨）"]
+    K -->|是：tail 滞后了| L["CAS: tail 从 t→newNode\n（失败也无妨）"]
     K -->|否：tail 就是尾节点| M[返回 true]
     L --> M
     H -->|否：p 不是尾节点| N{p == q?}
     N -->|是：自引用哨兵| O[从 head 重新定位]
-    N -->|否| P["p 向后移动<br/>（p = q）"]
+    N -->|否| P["p 向后移动\n（p = q）"]
     O --> E
     P --> G
+
+class D,I branch;
+class B,H,J,K,N condition;
+class A,E,F,G,O,P process;
+class C,L reject;
+class M startEnd;
 ```
 
 ### 📖 源码逐段分析
@@ -219,7 +237,7 @@ sequenceDiagram
     participant T2 as 线程T2
     participant Q as ConcurrentLinkedQueue
 
-    Note over Q: 初始：tail→Node(N1)<br/>N1.next=null
+    Note over Q: 初始：tail→Node(N1)\nN1.next=null
 
     T1->>Q: offer("A")
     Q->>Q: p=tail=N1, q=p.next=null
@@ -229,7 +247,7 @@ sequenceDiagram
 
     T2->>Q: offer("B")
     Q->>Q: t=tail=N1, p=N1, q=N1.next=Node(A)
-    Note over Q: q!=null 且 p!=q<br/>p 移到 Node(A)
+    Note over Q: q!=null 且 p!=q\np 移到 Node(A)
     Q->>Q: p=Node(A), q=p.next=null
     Q->>Q: CAS: Node(A).next null→Node(B)
     Note over Q: CAS 成功。p!=t → casTail(N1→Node(B))
@@ -244,6 +262,11 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[poll] --> B[p = head]
     B --> C[q = p.next]
     C --> D{是否 slot 为空?}
@@ -261,6 +284,11 @@ flowchart TD
     M -->|是：自引用| B
     M -->|否| N[p 向后移动]
     N --> C
+
+class H branch;
+class D,F,G,J,M condition;
+class A,B,C,E,K,N process;
+class I,L startEnd;
 ```
 
 ### 📖 源码逐段分析
@@ -368,12 +396,24 @@ CAS 竞争失败时，线程重新循环重试——这是 **无锁算法**（lo
 
 ```mermaid
 flowchart TD
-    A["offer() 入队"] --> B["CAS: p.next<br/>null→newNode"]
-    B --> C{"p != t?<br/>(tail 已滞后?)"}
-    C -->|"否（p==t）"| D["不更新 tail<br/>省一次 CAS"]
-    C -->|"是（tail 滞后≥1）"| E["尝试 casTail<br/>（失败也无妨）"]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+    A["offer() 入队"] --> B["CAS: p.next\nnull→newNode"]
+    B --> C{"p != t?\n(tail 已滞后?)"}
+    C -->|"否（p==t）"| D["不更新 tail\n省一次 CAS"]
+    C -->|"是（tail 滞后≥1）"| E["尝试 casTail\n（失败也无妨）"]
     D --> F["返回"]
     E --> F
+
+class B branch;
+class C condition;
+class A,D process;
+class E reject;
+class F,n,offer startEnd;
 ```
 
 具体策略：
@@ -582,13 +622,21 @@ Task t = nonBlockingQ.poll();  // 立即返回 null 也不阻塞
 
 ```mermaid
 flowchart TD
-    WARNINGS[ConcurrentLinkedQueue<br/>使用注意事项]
-    WARNINGS --> W1["禁止 null 元素<br/>offer/add 传入 null 抛 NPE"]
-    WARNINGS --> W2["size() 是 O(n)<br/>每次遍历整个链表<br/>返回值是近似值"]
-    WARNINGS --> W3["remove/contains 是<br/>O(n) + 弱一致性<br/>并发下结果不可靠"]
-    WARNINGS --> W4["poll/peek 空队列<br/>返回 null 而非阻塞<br/>需要等待特性时用 BlockingQueue"]
-    WARNINGS --> W5["迭代器是弱一致性<br/>遍历过程中入队/出队<br/>的元素不一定被看到"]
-    WARNINGS --> W6["无界队列注意内存<br/>生产者持续快于消费者<br/>可能导致 OOM"]
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    WARNINGS[ConcurrentLinkedQueue\n使用注意事项]
+    WARNINGS --> W1["禁止 null 元素\noffer/add 传入 null 抛 NPE"]
+    WARNINGS --> W2["size() 是 O(n)\n每次遍历整个链表\n返回值是近似值"]
+    WARNINGS --> W3["remove/contains 是\nO(n) + 弱一致性\n并发下结果不可靠"]
+    WARNINGS --> W4["poll/peek 空队列\n返回 null 而非阻塞\n需要等待特性时用 BlockingQueue"]
+    WARNINGS --> W5["迭代器是弱一致性\n遍历过程中入队/出队\n的元素不一定被看到"]
+    WARNINGS --> W6["无界队列注意内存\n生产者持续快于消费者\n可能导致 OOM"]
+
+class W6,WARNINGS data;
+class W1,W3,W5 process;
+class O,W2,W4,nO,size startEnd;
 ```
 
 ### ⚠️ 注意事项速查表
@@ -619,15 +667,23 @@ flowchart TD
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     Q1{需要阻塞等待?}
     Q1 -->|是| Q2{需要容量限制?}
-    Q2 -->|是| ABQ[ArrayBlockingQueue<br/>有界数组 + 单锁<br/>内存紧凑]
-    Q2 -->|否| LBQ[LinkedBlockingQueue<br/>可设容量 + 双锁<br/>高吞吐]
+    Q2 -->|是| ABQ[ArrayBlockingQueue\n有界数组 + 单锁\n内存紧凑]
+    Q2 -->|否| LBQ[LinkedBlockingQueue\n可设容量 + 双锁\n高吞吐]
     Q1 -->|否| Q3{需要精确size?}
     Q3 -->|是| Q4{超高并发?}
-    Q4 -->|是| LBQ2[LinkedBlockingQueue<br/>无界模式下使用]
-    Q4 -->|否| SYNC[Collections.synchronizedList<br/>+ LinkedList]
-    Q3 -->|否| CLQ[ConcurrentLinkedQueue<br/>无锁CAS+volatile<br/>最高并发吞吐量]
+    Q4 -->|是| LBQ2[LinkedBlockingQueue\n无界模式下使用]
+    Q4 -->|否| SYNC[Collections.synchronizedList\n+ LinkedList]
+    Q3 -->|否| CLQ[ConcurrentLinkedQueue\n无锁CAS+volatile\n最高并发吞吐量]
+
+class Q1,Q2,Q3,Q4 condition;
+class ABQ,CLQ,LBQ,LBQ2 data;
+class SYNC process;
 ```
 
 ## 🎯 总结
@@ -636,20 +692,30 @@ flowchart TD
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
     CLQ[ConcurrentLinkedQueue] --> NODE[Node 内部类]
     CLQ --> HEAD[volatile head 指针]
     CLQ --> TAIL[volatile tail 指针]
-    NODE --> ITEM[volatile item<br/>null=已出队]
-    NODE --> NEXT[volatile next<br/>null=尾节点]
-    NODE --> CAS_OP[casItem / casNext<br/>UNSAFE.compareAndSwapObject]
+    NODE --> ITEM[volatile item\nnull=已出队]
+    NODE --> NEXT[volatile next\nnull=尾节点]
+    NODE --> CAS_OP[casItem / casNext\nUNSAFE.compareAndSwapObject]
     CLQ --> OFFER[offer 入队]
     CLQ --> POLL[poll 出队]
-    OFFER --> OFFER_STEP["① 遍历找尾节点<br/>② CAS: next null→newNode<br/>③ HOPS 检查：p!=t 时更新 tail"]
-    POLL --> POLL_STEP["① 遍历找有效节点<br/>② CAS: item→null<br/>③ HOPS 检查：p!=h 时 updateHead"]
+    OFFER --> OFFER_STEP["① 遍历找尾节点\n② CAS: next null→newNode\n③ HOPS 检查：p!=t 时更新 tail"]
+    POLL --> POLL_STEP["① 遍历找有效节点\n② CAS: item→null\n③ HOPS 检查：p!=h 时 updateHead"]
     CLQ --> SAFE[并发安全三层机制]
     SAFE --> V["volatile 可见性"]
     SAFE --> C["CAS 原子操作"]
     SAFE --> H["HOPS 减少 CAS 竞争"]
+
+class NEXT,NODE branch;
+class OFFER_STEP,POLL_STEP condition;
+class CLQ data;
+class C,CAS_OP,H,HEAD,ITEM,OFFER,POLL,SAFE,TAIL,V process;
 ```
 
 ### 📋 核心概念速查

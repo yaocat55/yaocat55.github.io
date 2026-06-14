@@ -812,25 +812,28 @@ After（DDD）：
 ### 4.1 一张决策图
 
 ```mermaid
-graph TD
-    Start["这个服务应该用 DDD 吗？"] --> Q1{"业务逻辑复杂吗？<br/>（不是纯 CRUD）"}
+flowchart TD
+    Start["这个服务应该用 DDD 吗？"] --> Q1{"业务逻辑复杂吗？\n（不是纯 CRUD）"}
     
-    Q1 -->|"不复杂<br/>（查改删）"| MVC["保持 MVC<br/>user-service 就是这类型"]
-    Q1 -->|"复杂"| Q2{"有复杂的状态迁移吗？<br/>（> 3 个状态）"}
+    Q1 -->|"不复杂\n（查改删）"| MVC["保持 MVC\nuser-service 就是这类型"]
+    Q1 -->|"复杂"| Q2{"有复杂的状态迁移吗？\n（> 3 个状态）"}
     
-    Q2 -->|"没有"| Light["轻量充血模型<br/>product-service 就是这类型<br/>给 Domain 对象加业务方法<br/>不建完整四层"]
-    Q2 -->|"有"| Q3{"有跨聚合/跨表的<br/>不变量需要保护吗？"}
+    Q2 -->|"没有"| Light["轻量充血模型\nproduct-service 就是这类型\n给 Domain 对象加业务方法\n不建完整四层"]
+    Q2 -->|"有"| Q3{"有跨聚合/跨表的\n不变量需要保护吗？"}
     
     Q3 -->|"没有"| Light
-    Q3 -->|"有"| Q4{"Service 膨胀了吗？<br/>（> 200 行或 > 10 个方法）"}
+    Q3 -->|"有"| Q4{"Service 膨胀了吗？\n（> 200 行或 > 10 个方法）"}
     
     Q4 -->|"没有"| Light
-    Q4 -->|"膨胀了"| DDD["完整 DDD<br/>order-service 就是这类型<br/>四层架构 + 聚合根 +<br/>Domain Service + 防腐层"]
+    Q4 -->|"膨胀了"| DDD["完整 DDD\norder-service 就是这类型\n四层架构 + 聚合根 +\nDomain Service + 防腐层"]
     
-    style MVC fill:#4CAF50,color:#fff
-    style Light fill:#FF9800,color:#fff
-    style DDD fill:#F44336,color:#fff
-```
+
+classDef style_MVC fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
+classDef style_Light fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa;
+classDef style_DDD fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+class MVC style_MVC;
+class Light style_Light;
+class DDD style_DDD;```
 
 ### 4.2 三档方案的适用范围
 

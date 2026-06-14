@@ -50,6 +50,10 @@ cover:
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[客户端请求] --> B[Filter]
     B --> C[DispatcherServlet]
     C --> D[Interceptor.preHandle]
@@ -60,6 +64,10 @@ flowchart TD
     H --> I[Interceptor.afterCompletion]
     I --> J[Filter 返回]
     J --> K[客户端响应]
+
+class E,G data;
+class A,B,C,D,F,H,I,K process;
+class J startEnd;
 ```
 
 这张图只需要记住一个核心原则： **Filter 在最外层，Interceptor 在中间层，Advice 在最内层（紧贴 Controller）。** 请求进来从外到内，响应出去从内到外。
@@ -76,11 +84,17 @@ Filter 的 `doFilter` 方法将请求包裹起来，`chain.doFilter()` 之前是
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     F1[Filter.doFilter 前置逻辑] --> F2[chain.doFilter]
     F2 --> F3[后续 Filter 链]
     F3 --> F4[DispatcherServlet]
     F4 --> F3_ret[返回]
     F3_ret --> F5[Filter.doFilter 后置逻辑]
+
+class F1,F2,F3,F4,F5 process;
+class F3_ret startEnd;
 ```
 
 ### 日常开发中能做什么
@@ -172,12 +186,18 @@ Interceptor 有三个回调时机：
 
 ```mermaid
 flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[DispatcherServlet 分发] --> B["preHandle()\nController 执行前"]
     B -->|返回true| C[Controller 方法执行]
     B -->|返回false| X[请求终止]
     C --> D["postHandle()\nController 执行后、视图渲染前"]
     D --> E[视图渲染]
     E --> F["afterCompletion()\n请求完成后，无论成功或异常"]
+
+class A,B,C,D,E process;
+class F,X,afterCompletion,postHandle,preHandle startEnd;
 ```
 
 ### 日常开发中能做什么
@@ -269,11 +289,19 @@ public class WebConfig implements WebMvcConfigurer {
 ### 执行位置
 
 ```mermaid
-flowchart TD
+flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
     A[HTTP 请求体 JSON] --> B[HttpMessageConverter\n反序列化为 Java 对象]
     B --> C["RequestBodyAdvice.beforeBodyRead()\n读取前回调"]
     C --> D["RequestBodyAdvice.afterBodyRead()\n读取后、可修改 body 对象"]
     D --> E[Controller 方法执行\n接收处理后的参数]
+
+class B,C,D data;
+class A,E process;
+class afterBodyRead,beforeBodyRead startEnd;
 ```
 
 关键点：`afterBodyRead` 返回的 body 对象会 **替代** 原始反序列化结果，直接传给 Controller。
@@ -350,10 +378,18 @@ public Result createUser(@RequestBody @Decrypt UserDTO dto) {
 ### 执行位置
 
 ```mermaid
-flowchart TD
+flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     A[Controller 方法返回结果] --> B["ResponseBodyAdvice.beforeBodyWrite()\n拦截返回值，可修改/包装"]
     B --> C[HttpMessageConverter\n序列化为 JSON]
     C --> D[HTTP 响应体 JSON]
+
+class C data;
+class D process;
+class A,B,beforeBodyWrite startEnd;
 ```
 
 ### 日常开发中能做什么

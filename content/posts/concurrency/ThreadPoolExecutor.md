@@ -231,11 +231,11 @@ flowchart TD
     %% ==========================================
     %% 全新高对比度样式定义（坚固防瞎版）
     %% ==========================================
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     %% ==========================================
     %% 第一部分：核心数据结构展示
@@ -327,18 +327,18 @@ flowchart TD
 ```mermaid
 stateDiagram-v2
     [*] --> RUNNING
-    RUNNING: 接收新任务<br/>处理队列任务
-    SHUTDOWN: 不接收新任务<br/>处理队列剩余任务
-    STOP: 不接收新任务<br/>不处理队列任务<br/>中断执行中线程
-    TIDYING: 所有任务终止<br/>workerCount=0<br/>即将执行terminated()
-    TERMINATED: terminated()<br/>执行完毕
+    RUNNING: 接收新任务\n处理队列任务
+    SHUTDOWN: 不接收新任务\n处理队列剩余任务
+    STOP: 不接收新任务\n不处理队列任务\n中断执行中线程
+    TIDYING: 所有任务终止\nworkerCount=0\n即将执行terminated()
+    TERMINATED: terminated()\n执行完毕
 
     RUNNING --> SHUTDOWN: shutdown()
     RUNNING --> STOP: shutdownNow()
     SHUTDOWN --> STOP: shutdownNow()
-    SHUTDOWN --> TIDYING: 队列为空<br/>workerCount=0
+    SHUTDOWN --> TIDYING: 队列为空\nworkerCount=0
     STOP --> TIDYING: workerCount=0
-    TIDYING --> TERMINATED: terminated()<br/>钩子执行完毕
+    TIDYING --> TERMINATED: terminated()\n钩子执行完毕
 ```
 
 五种状态对应的 `ctl` 值：
@@ -377,8 +377,13 @@ private static int ctlOf(int rs, int wc) { return rs | wc;       }  // 合并（
 图解一个 int 的 32 位布局：
 
 ```mermaid
-flowchart TD
-    BIT["32 位 int 布局<br/><br/>bit31 bit30 bit29│bit28 ... bit0<br/>──── 高 3 位 ────│──── 低 29 位 ────<br/>  运行状态      │    Worker 数量<br/>  RUNNING=111   │   最多约 5.37 亿<br/>  SHUTDOWN=000  │<br/>  STOP=001      │<br/>  TIDYING=010   │<br/>  TERMINATED=011│"]
+flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    BIT["32 位 int 布局\n\nbit31 bit30 bit29│bit28 ... bit0\n──── 高 3 位 ────│──── 低 29 位 ────\n  运行状态      │    Worker 数量\n  RUNNING=111   │   最多约 5.37 亿\n  SHUTDOWN=000  │\n  STOP=001      │\n  TIDYING=010   │\n  TERMINATED=011│"]
+
+
+class BIT process;
 ```
 
 设计要点：
@@ -792,9 +797,9 @@ sequenceDiagram
     Note over MAIN: 调用 shutdown()
     MAIN->>MAIN: advanceRunState(SHUTDOWN)
     MAIN->>W1: interruptIdleWorkers → tryLock
-    Note over W1: tryLock 失败（AQS state=1）<br/>正在执行任务，跳过
+    Note over W1: tryLock 失败（AQS state=1）\n正在执行任务，跳过
     MAIN->>W2: interruptIdleWorkers → tryLock
-    Note over W2: tryLock 成功（AQS state=0）<br/>空闲，interrupt()
+    Note over W2: tryLock 成功（AQS state=0）\n空闲，interrupt()
     W2->>W2: getTask() 中 take() 被中断
     W2->>W2: 检测到 SHUTDOWN → 返回 null
     W2->>W2: processWorkerExit → 正常退出
@@ -1118,11 +1123,16 @@ public class DtpMonitor {
 ### 📌 1. 流量是动态变化的
 
 ```mermaid
-flowchart TD
+flowchart LR
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     MORNING[早晚高峰 QPS 2000] --> IDLE[凌晨低谷 QPS 50]
     IDLE --> EVENT[大促秒杀 QPS 20000]
     EVENT --> NORMAL[日常平均 QPS 500]
     NORMAL --> MORNING
+
+
+class EVENT,IDLE,MORNING,NORMAL process;
 ```
 
 固定参数无法同时适配峰值和低谷。峰值时不够导致积压和拒绝，低谷时线程闲置浪费资源。
@@ -1167,10 +1177,10 @@ flowchart LR
     %% ==========================================
     %% 全新高对比度样式定义（兼容亮/暗色模式）
     %% ==========================================
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     %% ==========================================
     %% 根节点

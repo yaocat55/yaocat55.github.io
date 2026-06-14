@@ -83,30 +83,30 @@ cover:
 
 ```mermaid
 flowchart TD
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     subgraph window["滑动窗口 —— 1秒——10个分片——每片100ms"]
         direction LR
-        S0["0~100ms<br/>计数: 12"]:::data
-        S1["100~200ms<br/>计数: 8"]:::data
-        S2["200~300ms<br/>计数: 15"]:::data
-        S3["300~400ms<br/>计数: 10"]:::data
-        S4["400~500ms<br/>计数: 9"]:::data
-        S5["500~600ms<br/>计数: 11"]:::data
-        S6["600~700ms<br/>计数: 7"]:::data
-        S7["700~800ms<br/>计数: 13"]:::data
-        S8["800~900ms<br/>计数: 6"]:::data
-        S9["900~1000ms<br/>当前分片——计数中"]:::highlight
+        S0["0~100ms\n计数: 12"]:::data
+        S1["100~200ms\n计数: 8"]:::data
+        S2["200~300ms\n计数: 15"]:::data
+        S3["300~400ms\n计数: 10"]:::data
+        S4["400~500ms\n计数: 9"]:::data
+        S5["500~600ms\n计数: 11"]:::data
+        S6["600~700ms\n计数: 7"]:::data
+        S7["700~800ms\n计数: 13"]:::data
+        S8["800~900ms\n计数: 6"]:::data
+        S9["900~1000ms\n当前分片——计数中"]:::highlight
     end
 
     subgraph calc["统计最近一秒QPS"]
-        C1["过去1秒内所有分片计数之和<br/>12+8+15+10+9+11+7+13+6+? = QPS"]:::process
+        C1["过去1秒内所有分片计数之和\n12+8+15+10+9+11+7+13+6+? = QPS"]:::process
     end
 
     window --> calc
-    S9 -.->|"窗口滑动——下个100ms<br/>S0被覆盖——S1~S9+新分片"| window
+    S9 -.->|"窗口滑动——下个100ms\nS0被覆盖——S1~S9+新分片"| window
 ```
 
 > ⚠️ 新手提示：分片越细（比如 100 个 vs 10 个），精度越高，但计算量也越大。Sentinel 默认使用 2 个分片（500ms 一个），这已经足够绝大多数场景使用——对于 QPS 统计来说，毫秒级精度没有太大意义。
@@ -133,23 +133,23 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    REQ["🌊 请求涌入<br/>时快时慢——忽大忽小"]:::startEnd
+    REQ["🌊 请求涌入\n时快时慢——忽大忽小"]:::startEnd
 
-    REQ --> BUCKET["🪣 漏桶——容量上限N<br/>请求先进入桶中排队"]:::data
+    REQ --> BUCKET["🪣 漏桶——容量上限N\n请求先进入桶中排队"]:::data
 
     BUCKET --> CHECK{"桶满了吗？"}:::condition
-    CHECK -->|"满了"| DROP["❌ 溢出——直接拒绝<br/>返回限流错误"]:::reject
+    CHECK -->|"满了"| DROP["❌ 溢出——直接拒绝\n返回限流错误"]:::reject
     CHECK -->|"没满"| QUEUE["请求在桶中排队等待"]:::process
 
-    QUEUE --> DRAIN["💧 桶底小洞——<br/>以恒定速率处理请求"]:::process
-    DRAIN --> OK["✅ 请求被处理<br/>匀速——一个接一个"]:::data
+    QUEUE --> DRAIN["💧 桶底小洞——\n以恒定速率处理请求"]:::process
+    DRAIN --> OK["✅ 请求被处理\n匀速——一个接一个"]:::data
 ```
 
 ### 4.2 漏桶的特点
@@ -180,20 +180,20 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    GENERATOR["⏱ 令牌生成器<br/>恒定速率——每秒N个"]:::process
-    GENERATOR -->|"放入令牌"| BUCKET["🎫 令牌桶<br/>最多存M个令牌<br/>满了就丢弃多余令牌"]:::data
+    GENERATOR["⏱ 令牌生成器\n恒定速率——每秒N个"]:::process
+    GENERATOR -->|"放入令牌"| BUCKET["🎫 令牌桶\n最多存M个令牌\n满了就丢弃多余令牌"]:::data
 
     REQ["📥 请求到达"]:::startEnd
     REQ --> CHECK{"桶里有令牌吗？"}:::condition
-    CHECK -->|"有——拿走一个令牌"| OK["✅ 请求通过<br/>令牌 - 1"]:::data
-    CHECK -->|"没有"| DROP["❌ 拒绝或排队<br/>返回限流错误"]:::reject
+    CHECK -->|"有——拿走一个令牌"| OK["✅ 请求通过\n令牌 - 1"]:::data
+    CHECK -->|"没有"| DROP["❌ 拒绝或排队\n返回限流错误"]:::reject
 ```
 
 ### 5.2 令牌桶的三个关键参数
@@ -225,24 +225,24 @@ Sentinel（阿里巴巴开源的流量控制组件）是这三种算法的经典
 
 ```mermaid
 flowchart TD
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     REQ["📥 请求进入"]:::highlight
 
-    REQ --> SW["📊 滑动窗口统计<br/>计算当前QPS<br/>——回答'现在多快了？'"]:::process
+    REQ --> SW["📊 滑动窗口统计\n计算当前QPS\n——回答'现在多快了？'"]:::process
 
-    SW --> DECIDE{"QPS是否<br/>超过阈值？"}:::highlight
+    SW --> DECIDE{"QPS是否\n超过阈值？"}:::highlight
 
     DECIDE -->|"没超——放行"| PASS["✅ 正常处理"]:::data
-    DECIDE -->|"超了"| TB["🎫 令牌桶/漏桶限流<br/>——回答'能不能放？'"]:::process
+    DECIDE -->|"超了"| TB["🎫 令牌桶/漏桶限流\n——回答'能不能放？'"]:::process
 
     TB --> TOKEN{"有令牌/容量？"}:::highlight
     TOKEN -->|"有"| PASS
-    TOKEN -->|"没有"| BLOCK["❌ 拒绝<br/>返回限流异常"]:::data
+    TOKEN -->|"没有"| BLOCK["❌ 拒绝\n返回限流异常"]:::data
 
-    BLOCK --> FALLBACK["🔄 降级处理<br/>返回默认值/跳转/排队"]:::process
+    BLOCK --> FALLBACK["🔄 降级处理\n返回默认值/跳转/排队"]:::process
 ```
 
 <strong>滑动窗口负责"感知"</strong>——统计当前的 QPS 是多少。它是一个传感器，不做决策。
@@ -272,21 +272,21 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
-    Q["流控算法解决什么问题"]:::process --> Q1["系统处理能力有限<br/>请求来得太猛<br/>需要拒掉多余的"]:::process
-    Q --> Q2["不能等系统崩溃了<br/>才反应过来<br/>需要主动防御"]:::process
+    Q["流控算法解决什么问题"]:::process --> Q1["系统处理能力有限\n请求来得太猛\n需要拒掉多余的"]:::process
+    Q --> Q2["不能等系统崩溃了\n才反应过来\n需要主动防御"]:::process
 
-    Q1 --> SW["滑动窗口<br/>—— 统计现在多快<br/>(传感器)"]:::data
-    Q2 --> LB_TB["漏桶 / 令牌桶<br/>—— 决定放不放<br/>(执行器)"]:::data
+    Q1 --> SW["滑动窗口\n—— 统计现在多快\n(传感器)"]:::data
+    Q2 --> LB_TB["漏桶 / 令牌桶\n—— 决定放不放\n(执行器)"]:::data
 
-    SW --> COMBO["传感器 + 执行器<br/>= 完整的流控体系"]:::process
+    SW --> COMBO["传感器 + 执行器\n= 完整的流控体系"]:::process
     LB_TB --> COMBO
 
-    COMBO --> USE["Sentinel = 滑动窗口统计QPS<br/>+ 令牌桶执行限流<br/>+ 降级策略兜底"]:::data
+    COMBO --> USE["Sentinel = 滑动窗口统计QPS\n+ 令牌桶执行限流\n+ 降级策略兜底"]:::data
 
-    USE --> NEXT["当请求被限流拒绝后<br/>系统还能做什么？<br/>→ 下一篇——分布式事务<br/>保证跨服务的数据一致"]:::process
+    USE --> NEXT["当请求被限流拒绝后\n系统还能做什么？\n→ 下一篇——分布式事务\n保证跨服务的数据一致"]:::process
 ```
 
 <strong>三个算法分工明确——滑动窗口当眼睛（统计），漏桶当阀门（平滑），令牌桶当节奏器（允许突发）。</strong>实际项目中，绝大多数场景用"滑动窗口 + 令牌桶"就足够了——不需要漏桶那种绝对的匀速。除非你的下游服务真的极其脆弱、一点波动都扛不住，才需要漏桶来强制削峰。

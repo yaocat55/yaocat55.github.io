@@ -40,12 +40,13 @@
 
 | 维度 | 修改项 | 涉及文件 |
 |------|--------|----------|
-| 布局 | 文章页 Mermaid 支持 | `layouts/_default/single.html` |
-| 布局 | B 站视频短代码 | `layouts/shortcodes/bilibili.html` |
+| 布局 | 文章页 Mermaid 支持 / 自定义 baseof | `layouts/_default/single.html`, `layouts/_default/baseof.html` |
+| 布局 | 自定义首页 Profile 模板 | `layouts/partials/index_profile.html` |
+| 布局 | B 站视频短代码（封面预览/分P/弹幕/BV复制） | `layouts/shortcodes/bilibili.html` |
 | 布局 | Mermaid 代码块渲染钩子 | `layouts/_default/_markup/render-codeblock-mermaid.html` |
 | 样式 | 完整主题配色 + 智能代码高亮 | `assets/css/extended/custom.css` |
-| 功能 | Mermaid / KaTeX / 图片缩放 / Pjax | `layouts/partials/extend_head.html` |
-| 功能 | Live2D 看板娘 / 猫爪特效 / Cat Radio | `layouts/partials/extend_footer.html` |
+| 功能 | Mermaid / KaTeX / 图片缩放 / 字体 | `layouts/partials/extend_head.html` |
+| 功能 | Live2D 看板娘 / 猫爪特效 / Cat Radio | `layouts/partials/extend_footer.html`, `layouts/partials/music-player.html` |
 
 ---
 
@@ -67,46 +68,58 @@
 {{</* bilibili bvid="BV1xx411c7mD" */>}}
 ```
 
-- 支持 `bvid` 和 `page`（分 P）参数
+- 支持参数：`bvid`（必填）、`page`（分 P）、`danmaku`（弹幕开关）、`theme`、`autoplay`
+- 封面预览模式：点击封面后才加载 iframe 播放器，节省流量
+- 通过 B 站 API 自动获取视频标题和分 P 列表
+- 分 P 下拉菜单，切换分 P 无需刷新页面
+- 弹幕开关实时控制
+- 一键复制 BV 号按钮
 - 响应式 16:9 容器，自适应宽度
 
 ### 1.3 Mermaid 渲染钩子 (`layouts/_default/_markup/render-codeblock-mermaid.html`)
 
 将 ` ```mermaid ` 代码块渲染为 `<pre class="mermaid">`，并通过 `.Page.Store` 标记页面，触发 single.html 中的 Mermaid 初始化脚本。
 
+### 1.4 基础 HTML 骨架 (`layouts/_default/baseof.html`)
+
+覆盖 PaperMod 默认 `baseof.html`：
+- 在 `<body>` 底部注入 `extend_footer.html`（看板娘 + 猫爪特效）和 `music-player.html`（Cat Radio）
+- 保留 PaperMod 原有的 header、main、footer 结构和主题切换逻辑
+
 ---
 
 ## 二、样式层修改 (`assets/css/extended/custom.css`)
 
-共约 **1400 行**，覆盖 PaperMod 默认样式，分为 20 个模块：
+共约 **1600 行**，覆盖 PaperMod 默认样式，分为约 20 个模块：
 
 ### 2.1 字体系统
 
-- **正文字体：** Inter → PingFang SC → Microsoft YaHei（中西文混排优化）
-- **代码字体：** JetBrains Mono → Cascadia Code → Fira Code → Consolas
-- 启用 `font-synthesis: none` 避免字体合成伪粗/伪斜
-- 通过 Google Fonts 加载 Inter + JetBrains Mono（见 `extend_head.html`）
+- **正文字体：** Inter → system-ui 字体栈（含 PingFang SC / Microsoft YaHei / Noto Sans CJK SC 中文字体回退）
+- **代码字体：** JetBrains Mono → Fira Code → Cascadia Code → SF Mono → Monaco
+- 通过 fonts.loli.net 加载 Inter + JetBrains Mono（见 `extend_head.html`）
 
-### 2.2 浅色主题 — 「晨雾竹林」配色
-
-| 角色 | 色值 | 说明 |
-|------|------|------|
-| 背景 | `#dadfce` / `#e8f0e6` | 柔和晨雾绿 |
-| 卡片 | `#f2efdf` | 米白带绿 |
-| 标题 | `#2a4a20` | 深墨绿 |
-| 正文 | `#2c3825` | 深灰绿，保证阅读舒适 |
-| 链接 | `#3d6b35` | 清新醒目绿 |
-| 代码块背景 | `#e2e8d6` | 浅绿底 |
-
-### 2.3 深色主题 — IDEA Darcula 配色
+### 2.2 浅色主题 — 柔和护眼配色
 
 | 角色 | 色值 | 说明 |
 |------|------|------|
-| 背景 | `#2b2b2b` | IDE 经典暗色 |
-| 卡片 | `#323232` | 稍亮分层 |
-| 标题 | `#ffc66d` | 金黄色强调 |
-| 正文 | `#a9b7c6` | 柔和高可读 |
-| 链接 | `#ffc66d` | 金色链接 |
+| 背景 | `#c8d0b4` | 柔绿底 |
+| 卡片 | `#f0ecd8` | 米白 |
+| 标题 | `#3a6b28` | 深草绿 |
+| 正文 | `#1e2a16` | 深绿灰，保证阅读舒适 |
+| 链接 | `#3a6b28` | 醒目草绿 |
+| 代码块背景 | `#dce4cc` | 浅绿底 |
+| body-bg | `#c0c8a8` | 比背景稍深 |
+
+### 2.3 深色主题 — Material Design 3 暗色配色
+
+| 角色 | 色值 | 说明 |
+|------|------|------|
+| 背景 | `#1c1e1c` | 深灰绿底 |
+| 卡片 | `#2c2f2c` | 稍亮分层 |
+| 标题 | `#ffc66d` / `#88c0d0` / `#b48ead` / `#a3be8c` | h1-h4 多彩标题 |
+| 正文 | `#e0e3da` | 柔和高可读 |
+| 链接 | `#c9b86a` | 金色链接 |
+| 代码块背景 | `#252725` | 略亮于背景 |
 
 ### 2.4 智能代码高亮（按语言分 IDE 配色）
 
@@ -122,19 +135,20 @@
 
 | 模块 | 主要修改 |
 |------|----------|
-| 文章卡片 | 圆角 16px、阴影、hover 上浮 4px |
-| 标题系统 | h1-h4 独立配色、h2 底部边框、h3 hover 平移 |
-| 代码块 | 圆角 12px、自定义滚动条、hover 阴影 |
-| 行内代码 | 浅色绿底/深色半透明白底、hover 加深 |
+| 文章卡片 | 圆角 16px、阴影、hover 上浮 2px |
+| 标题系统 | h1-h4 独立配色（浅色/深色各不同）、h2 底部边框、h3 hover 平移 |
+| 代码块 | 圆角 12px、自定义滚动条、hover 阴影、按语言 IDE 主题适配 |
+| 行内代码 | 浅色绿底/深色半透明白底 |
 | 表格 | 斑马纹、hover 高亮行、移动端横向滚动 |
-| 引用块 | 左边框强调、hover 平移、嵌套支持 |
-| 图片 | 居中圆角阴影、hover 放大 1.02x |
-| 目录 (TOC) | 三断点响应式（大屏固定侧边栏 / 中屏 / 移动端折叠） |
+| 引用块 | 半透明毛玻璃、左侧彩色条、hover 上浮 |
+| 列表 | marker 主题色、hover 平移、嵌套缩进 |
+| 图片 | 居中圆角阴影、hover 放大 1.01x |
+| 目录 (TOC) | 三断点响应式（大屏固定侧边栏 / 中屏 / 移动端折叠）、半透明毛玻璃 |
 | 标签云 | 胶囊形状、hover 上浮变色 |
-| 搜索框 | 主题适配背景 |
+| 搜索框 | 半透明毛玻璃、圆角 28px |
 | 代码复制按钮 | hover 显示、主题适配 |
-| 个人头像 | 圆形 150px、hover 放大 |
-| 脚注 | 顶部分隔线、代码字体编号 |
+| 个人头像 | 圆形 150px、hover 放大 1.03x |
+| 脚注 | 渐变色顶部分隔线、代码字体编号 |
 | 打印样式 | 隐藏装饰、黑白输出 |
 | 无障碍 | `prefers-reduced-motion` 支持 |
 
@@ -142,11 +156,13 @@
 
 ## 三、功能增强 (`layouts/partials/extend_head.html`)
 
+（还包含大屏 TOC 固定侧边栏定位、图片缩放容器等 CSS 样式）
+
 ### 3.1 Mermaid 图表
 
-- CDN 加载 `mermaid.min.js`
-- 从 PaperMod CSS 变量继承主题色
-- 支持 Pjax 后重新初始化
+- CDN 加载 Mermaid（jsdelivr）
+- 通过 `getComputedStyle` 读取当前主题 CSS 变量作为 Mermaid 配色
+- 通过一次性初始化守卫防止重复加载
 
 ### 3.2 图片 & Mermaid 缩放
 
@@ -161,22 +177,16 @@
 - CDN 加载 KaTeX 0.16.11 + auto-render
 - 支持 `$...$`（行内）和 `$$...$$`（块级）
 - 自动跳过 `<pre>`、`<code>`、代码高亮块等——避免与代码块中的 `$` 冲突
-- 支持 Pjax 后重新渲染
+- 通过一次性初始化守卫防止重复渲染
 
-### 3.4 InstantClick Pjax
+### 3.4 字体加载
 
-- CDN 加载 InstantClick 3.1
-- `mousedown` 预加载，实现无刷新页面切换
-- Pjax 完成后自动重新初始化所有动态组件（Mermaid、KaTeX、图片缩放）
-- 触发自定义 `pjax:complete` 事件供其他脚本（如 Cat Radio）监听
-
-### 3.5 字体加载
-
-- Google Fonts 预连接 + 异步加载 Inter 和 JetBrains Mono
+- fonts.loli.net 预连接 + 异步加载 Inter 和 JetBrains Mono
+- 通过 `font-display: swap` 确保文字在字体加载期间可见
 
 ---
 
-## 四、交互增强 (`layouts/partials/extend_footer.html`)
+## 四、交互增强 (`layouts/partials/extend_footer.html` + `music-player.html`)
 
 ### 4.1 Live2D 看板娘
 
@@ -196,15 +206,15 @@
 
 ### 4.3 Cat Radio 音乐播放器
 
-- 固定在右下角（看板娘左侧）的悬浮音乐播放器
-- 内置 5 首背景音乐（`/music/` 目录下 mp3 文件）
+- 固定在右下角（看板娘左侧）的悬浮音乐播放器（独立 `music-player.html` partial）
+- 内置 8 首背景音乐（`/music/` 目录下 mp3 文件）
 - 左键点击：播放/暂停
-- 右键点击：随机切歌
+- 右键点击：顺序切歌（下一首）
 - 自动播放下一首
-- 3 秒定时保存播放进度，支持页面切换后恢复
+- 3 秒定时保存播放进度到 localStorage，支持页面切换后断点续播
 - 深色/浅色模式适配
 - 移动端自动隐藏歌名标签
-- 通过看板娘气泡或自定义 tip 显示当前播放信息
+- 页面可见性变化时自动恢复播放
 
 ---
 
@@ -238,20 +248,23 @@ quickstart/
 ├── assets/
 │   └── css/
 │       └── extended/
-│           └── custom.css          # 核心：1400 行深度定制样式
+│           └── custom.css          # 核心：1600 行深度定制样式
 ├── layouts/
 │   ├── _default/
+│   │   ├── baseof.html             # 基础 HTML 骨架（加载 music-player 等全局组件）
 │   │   ├── single.html             # 文章页 + Mermaid 支持
 │   │   └── _markup/
 │   │       └── render-codeblock-mermaid.html  # Mermaid 渲染钩子
 │   ├── partials/
-│   │   ├── extend_head.html        # 头部注入（Mermaid/KaTeX/Pjax/字体/图片缩放）
-│   │   └── extend_footer.html      # 页脚注入（Live2D/猫爪特效/Cat Radio）
+│   │   ├── extend_head.html        # 头部注入（Mermaid/KaTeX/字体/图片缩放/TOC定位）
+│   │   ├── extend_footer.html      # 页脚注入（Live2D/猫爪特效）
+│   │   ├── index_profile.html      # 首页 Profile 模板（支持 mp4 头像）
+│   │   └── music-player.html       # Cat Radio 音乐播放器
 │   └── shortcodes/
-│       └── bilibili.html           # B 站视频短代码
+│       └── bilibili.html           # B 站视频短代码（封面预览/分P/弹幕/BV复制）
 ├── static/
 │   ├── images/                     # 博客图片 & SVG 图表
-│   └── music/                      # Cat Radio 音乐文件（5 首 mp3）
+│   └── music/                      # Cat Radio 音乐文件（8 首 mp3）
 ├── hugo.toml                       # 站点配置
 └── themes/
     └── PaperMod/                   # 上游主题（Git Submodule，未修改）

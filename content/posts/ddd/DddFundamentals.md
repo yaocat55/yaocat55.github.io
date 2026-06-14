@@ -459,26 +459,32 @@ orderMapper.insert(order);           // ← 创建订单
 ```
 
 ```mermaid
-graph TD
+flowchart TD
+%% 半暗底色 + 高亮描边：完美适配博客深色/浅色双主题 %%
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     subgraph "聚合：订单（Order）——聚合根是 Order"
-        Order["Order（聚合根）<br/>orderNo, userId, status"]
-        OrderItem1["OrderItem<br/>productId, quantity, price"]
-        OrderItem2["OrderItem<br/>productId, quantity, price"]
+        Order["Order（聚合根）\norderNo, userId, status"]
+        OrderItem1["OrderItem\nproductId, quantity, price"]
+        OrderItem2["OrderItem\nproductId, quantity, price"]
     end
 
     subgraph "聚合：商品（Product）"
-        Product["Product（聚合根）<br/>productId, name, stock"]
+        Product["Product（聚合根）\nproductId, name, stock"]
     end
 
     subgraph "聚合：账户（Account）"
-        Account["Account（聚合根）<br/>accountId, balance"]
+        Account["Account（聚合根）\naccountId, balance"]
     end
 
     Order --- OrderItem1
     Order --- OrderItem2
 
-    Order -.->|"领域事件<br/>OrderCreatedEvent"| Product
-    Order -.->|"领域事件<br/>OrderCreatedEvent"| Account
+    Order -.->|"领域事件\nOrderCreatedEvent"| Product
+    Order -.->|"领域事件\nOrderCreatedEvent"| Account
+
+class OrderItem1,OrderItem2 process;
+class Account,Order,Product root;
 ```
 
 <strong>关键规则——四条铁律</strong>：
@@ -854,8 +860,8 @@ public class InventoryEventHandler {
 ```mermaid
 sequenceDiagram
     participant Client
-    participant AppService as Application<br/>Service
-    participant OrderRepo as Order<br/>Repository
+    participant AppService as Application\nService
+    participant OrderRepo as Order\nRepository
     participant EventBus as EventBus / MQ
     participant Inventory
     participant Marketing
@@ -863,7 +869,7 @@ sequenceDiagram
     Client->>AppService: createOrder()
     AppService->>OrderRepo: findById()
     AppService->>Order: order.pay()
-    Note over Order: 状态从 PENDING → PAID<br/>注册 OrderPaidEvent
+    Note over Order: 状态从 PENDING → PAID\n注册 OrderPaidEvent
 
     AppService->>OrderRepo: save(order)
     AppService->>Order: pollDomainEvents()

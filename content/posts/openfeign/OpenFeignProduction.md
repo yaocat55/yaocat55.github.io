@@ -467,17 +467,17 @@ public interface UserClient {
 
 ```mermaid
 flowchart TD
-    classDef start fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef decision fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef result fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef start fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef result fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     START([微服务通信选型]) --> Q1{服务拆分初期?}
-    Q1 -- "是——边界还不稳定" --> FEIGN[OpenFeign<br/>零侵入——REST 可调试<br/>边界稳定后再考虑升级]
-    Q1 -- "否——已稳定运行" --> Q2{QPS > 1000<br/>或团队多语言?}
-    Q2 -- "否" --> FEIGN2[OpenFeign<br/>HTTP 性能够用<br/>不要过早优化]
+    Q1 -- "是——边界还不稳定" --> FEIGN[OpenFeign\n零侵入——REST 可调试\n边界稳定后再考虑升级]
+    Q1 -- "否——已稳定运行" --> Q2{QPS > 1000\n或团队多语言?}
+    Q2 -- "否" --> FEIGN2[OpenFeign\nHTTP 性能够用\n不要过早优化]
     Q2 -- "是" --> Q3{团队主要 Java?}
-    Q3 -- "是" --> DUBBO[Dubbo<br/>高性能 RPC<br/>阿里生态默认]
-    Q3 -- "否——多语言" --> GRPC[gRPC<br/>Protobuf 跨语言<br/>Google 标准]
+    Q3 -- "是" --> DUBBO[Dubbo\n高性能 RPC\n阿里生态默认]
+    Q3 -- "否——多语言" --> GRPC[gRPC\nProtobuf 跨语言\nGoogle 标准]
 
     class START,FEIGN,FEIGN2,DUBBO,GRPC result;
     class Q1,Q2,Q3 decision;

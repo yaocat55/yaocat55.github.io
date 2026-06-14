@@ -91,19 +91,19 @@ flowchart TD
   METHOD --> M3["exec&#xa容器内执行命令"]
   METHOD --> M4["gRPC&#xa(v1.24+) gRPC Health Check"]
 
-  classDef probe fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef probe fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class PROBE probe
 
-  classDef three fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef three fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class L,R,S three
 
-  classDef fail fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C
+classDef fail fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
   class L_FAIL,R_FAIL,S_FAIL fail
 
-  classDef ok fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20
+classDef ok fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
   class S_OK ok
 
-  classDef method fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef method fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class METHOD,M1,M2,M3,M4 method
 ```
 
@@ -277,16 +277,16 @@ flowchart TD
   Q2 -->|"是"| BE
   Q2 -->|"否 (requests &lt; limits)"| B
 
-  classDef guaranteed fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef guaranteed fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class G guaranteed
 
-  classDef burstable fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef burstable fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class B burstable
 
-  classDef besteffort fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold
+classDef besteffort fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class BE besteffort
 
-  classDef check fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef check fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class CHECK,Q1,Q2 check
 ```
 
@@ -313,13 +313,13 @@ flowchart TD
   W3 --> W3U["适合: 整个 ConfigMap/Secret 全注入&#a例: 应用通用配置"]
   W4 --> W4U["适合: 配置文件整体替换&#a例: application.yml, nginx.conf"]
 
-  classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class ENV root
 
-  classDef way fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef way fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class W1,W2,W3,W4 way
 
-  classDef use fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121,font-size:11px
+classDef use fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class W1U,W2U,W3U,W4U use
 ```
 
@@ -593,13 +593,13 @@ flowchart TD
   Q3 -->|"有"| EVICT2
   Q3 -->|"没有"| Q4
 
-  classDef start fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold
+classDef start fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class NODE start
 
-  classDef action fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
+classDef action fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
   class KILL,EVICT,EVICT2,Q4 action
 
-  classDef check fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef check fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class Q1,Q2,Q3 check
 ```
 

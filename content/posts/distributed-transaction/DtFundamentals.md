@@ -261,27 +261,32 @@ XA 2PC（两阶段提交）——分布式事务的"教科书答案"
 ### 5.3 选型决策——一张流程图
 
 ```mermaid
-graph TD
+flowchart TD
     Start["我需要分布式事务吗？"] --> Q1{"涉及几个数据库/服务？"}
     
     Q1 -->|"1 个"| NoNeed["不需要——本地 @Transactional 够了"]
-    Q1 -->|"> 1 个"| Q2{"这几个操作必须是<br/>同步的——还是可以异步？"}
+    Q1 -->|"> 1 个"| Q2{"这几个操作必须是\n同步的——还是可以异步？"}
     
-    Q2 -->|"可以异步"| MQ["事务消息 + 本地消息表<br/>最终一致性<br/>RocketMQ 事务消息"]
-    Q2 -->|"必须同步"| Q3{"操作能自动回滚吗？<br/>就是 UPDATE/INSERT/DELETE"}
+    Q2 -->|"可以异步"| MQ["事务消息 + 本地消息表\n最终一致性\nRocketMQ 事务消息"]
+    Q2 -->|"必须同步"| Q3{"操作能自动回滚吗？\n就是 UPDATE/INSERT/DELETE"}
     
-    Q3 -->|"能——都是 DB 操作"| AT["Seata AT<br/>框架自动补偿<br/>代码侵入最小"]
-    Q3 -->|"不能——例如调了第三方 API"| Q4{"流程有多长？<br/>超过 3 步吗？"}
+    Q3 -->|"能——都是 DB 操作"| AT["Seata AT\n框架自动补偿\n代码侵入最小"]
+    Q3 -->|"不能——例如调了第三方 API"| Q4{"流程有多长？\n超过 3 步吗？"}
     
-    Q4 -->|"短——3 步以内"| TCC["TCC<br/>手动 Try/Confirm/Cancel<br/>代码侵入大——但控制力强"]
-    Q4 -->|"长——可能跨天"| Saga["Saga<br/>状态机编排<br/>正向执行 + 逆补偿"]
+    Q4 -->|"短——3 步以内"| TCC["TCC\n手动 Try/Confirm/Cancel\n代码侵入大——但控制力强"]
+    Q4 -->|"长——可能跨天"| Saga["Saga\n状态机编排\n正向执行 + 逆补偿"]
     
-    style NoNeed fill:#4CAF50,color:#fff
-    style AT fill:#2196F3,color:#fff
-    style MQ fill:#FF9800,color:#fff
-    style TCC fill:#F44336,color:#fff
-    style Saga fill:#9C27B0,color:#fff
-```
+
+classDef style_NoNeed fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
+classDef style_AT fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe;
+classDef style_MQ fill:#431407,stroke:#ea580c,stroke-width:2px,color:#fed7aa;
+classDef style_TCC fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca;
+classDef style_Saga fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe;
+class NoNeed style_NoNeed;
+class AT style_AT;
+class MQ style_MQ;
+class TCC style_TCC;
+class Saga style_Saga;```
 
 ## 六、💡 最重要的认知——分布式事务不是技术问题——是业务问题
 

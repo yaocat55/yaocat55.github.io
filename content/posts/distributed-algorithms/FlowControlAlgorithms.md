@@ -91,16 +91,16 @@ class FixedWindowRateLimiter {
 <strong>窗口边界是计数器归零的时刻——如果在归零前压满窗口、归零后又立即压新窗口——两个窗口叠加——实际通过的流量远超限流阈值。</strong>
 
 ```mermaid
-flowchart TD
-    fw["固定窗口计数器<br/>每个窗口独立计数<br/>边界清空"]:::startEnd
+flowchart LR
+    fw["固定窗口计数器\n每个窗口独立计数\n边界清空"]:::startEnd
 
-    fw --> edge["窗口切换瞬间<br/>上一窗口最后 100ms<br/>+ 下一窗口前 100ms<br/>= 200ms 内通过两倍阈值"]:::reject
+    fw --> edge["窗口切换瞬间\n上一窗口最后 100ms\n+ 下一窗口前 100ms\n= 200ms 内通过两倍阈值"]:::reject
 
-    edge --> sw["滑动窗口解决方案：<br/>不是数'这一秒过了多少'<br/>而是数'过去一秒过了多少'<br/>——窗口跟着时间滑动"]:::data
+    edge --> sw["滑动窗口解决方案：\n不是数'这一秒过了多少'\n而是数'过去一秒过了多少'\n——窗口跟着时间滑动"]:::data
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 ```
 
 ---
@@ -129,17 +129,17 @@ Sentinel 的滑动窗口实现<strong>用了一个环形数组（LeapArray）—
 flowchart TD
     time["时间流动——每 500ms"]:::process
 
-    time --> discard["丢弃最旧的 bucket<br/>该 bucket 的计数从<br/>windowSum 中减去"]:::process
-    discard --> create["创建新 bucket<br/>计数从 0 开始"]:::process
-    create --> query["限流判断：<br/>windowSum + 当前 bucket 计数<br/>是否 ≥ 阈值？"]:::condition
+    time --> discard["丢弃最旧的 bucket\n该 bucket 的计数从\nwindowSum 中减去"]:::process
+    discard --> create["创建新 bucket\n计数从 0 开始"]:::process
+    create --> query["限流判断：\nwindowSum + 当前 bucket 计数\n是否 ≥ 阈值？"]:::condition
 
-    query -->|"≥ 阈值"| reject["拒绝请求——<br/>根据流控效果处理<br/>（快速失败 / 排队）"]:::reject
-    query -->|"＜ 阈值"| pass["通过——<br/>当前 bucket 计数 +1"]:::data
+    query -->|"≥ 阈值"| reject["拒绝请求——\n根据流控效果处理\n（快速失败 / 排队）"]:::reject
+    query -->|"＜ 阈值"| pass["通过——\n当前 bucket 计数 +1"]:::data
 
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 ```
 
 > ⚠️ <strong>新手提示</strong>：滑动窗口不是万能的——bucket 数量决定了它的精确度和内存开销。1 个 bucket（= 固定窗口）——精确度最差但内存最小——N 个 bucket——越精确但内存越大。Sentinel 默认 2 个 bucket——500ms 粒度的滑动窗口——工程上够用——但不是数学上精确的滑动窗口。
@@ -164,10 +164,10 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant T as 令牌桶<br/>速率=100/s<br/>容量=200
+    participant T as 令牌桶\n速率=100/s\n容量=200
     participant R as 请求流
 
-    Note over T: 系统空闲了 2 秒<br/>桶里积攒了 200 个令牌
+    Note over T: 系统空闲了 2 秒\n桶里积攒了 200 个令牌
 
     rect rgb(255, 243, 224)
         R->>T: 突发——200 个请求几乎同时到达
@@ -283,16 +283,16 @@ flowchart TD
     ring --> n2["节点 B——hash=500"]:::data
     ring --> n3["节点 C——hash=900"]:::data
 
-    n1 --> m1["请求 hash=50 → 顺时针<br/>第一个节点是 A → 打给 A"]:::process
-    n1 --> m2["请求 hash=200 → 顺时针<br/>第一个节点是 B → 打给 B"]:::process
-    n2 --> m3["请求 hash=600 → 顺时针<br/>第一个节点是 C → 打给 C"]:::process
+    n1 --> m1["请求 hash=50 → 顺时针\n第一个节点是 A → 打给 A"]:::process
+    n1 --> m2["请求 hash=200 → 顺时针\n第一个节点是 B → 打给 B"]:::process
+    n2 --> m3["请求 hash=600 → 顺时针\n第一个节点是 C → 打给 C"]:::process
 
-    ring --> virtual["🍩 虚拟节点——<br/>实际节点数少时——<br/>数据分布不均匀<br/>→ 每个物理节点映射多个虚拟节点<br/>→ 分布在环上各处——消除热点"]:::highlight
+    ring --> virtual["🍩 虚拟节点——\n实际节点数少时——\n数据分布不均匀\n→ 每个物理节点映射多个虚拟节点\n→ 分布在环上各处——消除热点"]:::highlight
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 ```
 
 <strong>一致性哈希最核心的应用场景是缓存类服务——Redis Cluster 的分片——Dubbo 里的粘性路由——网关里按用户 ID 分流——都依赖这个算法。</strong>

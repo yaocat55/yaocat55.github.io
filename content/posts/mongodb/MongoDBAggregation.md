@@ -69,15 +69,15 @@ cover:
 
 ```mermaid
 flowchart LR
-    classDef stage fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef result fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef stage fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef result fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 
-    COLLECTION[(orders<br/>50000 文档)]
-    COLLECTION --> S1[$match<br/>过滤: status=paid]
-    S1 --> S2[$group<br/>分组: 按 userId]
-    S2 --> S3[$sort<br/>排序: 总金额降序]
-    S3 --> S4[$limit<br/>取前 10]
+    COLLECTION[(orders\n50000 文档)]
+    COLLECTION --> S1[$match\n过滤: status=paid]
+    S1 --> S2[$group\n分组: 按 userId]
+    S2 --> S3[$sort\n排序: 总金额降序]
+    S3 --> S4[$limit\n取前 10]
     S4 --> RESULT([10 条聚合结果])
 
     class S1,S2,S3,S4 stage;

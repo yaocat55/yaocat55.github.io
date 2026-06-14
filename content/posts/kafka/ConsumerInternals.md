@@ -61,18 +61,18 @@ Kafka 提供了两种 Offset 提交方式：
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     POLL([poll 拉取消息]) --> PROCESS[处理消息]
     PROCESS --> MODE{提交模式}
-    MODE -- "自动提交" --> AUTO["每隔 auto.commit.interval.ms<br/>自动提交最后一次 poll 的 offset"]
-    MODE -- "手动提交" --> MANUAL["业务处理成功后<br/>显式调用 ack.acknowledge()"]
+    MODE -- "自动提交" --> AUTO["每隔 auto.commit.interval.ms\n自动提交最后一次 poll 的 offset"]
+    MODE -- "手动提交" --> MANUAL["业务处理成功后\n显式调用 ack.acknowledge()"]
 
-    AUTO --> RISK1["风险：消息还没处理完<br/>但 offset 已提交<br/>→ 进程挂了丢消息"]
-    MANUAL --> RISK2["风险：消息已处理完<br/>但 offset 没提交<br/>→ 重启后重复消费"]
+    AUTO --> RISK1["风险：消息还没处理完\n但 offset 已提交\n→ 进程挂了丢消息"]
+    MANUAL --> RISK2["风险：消息已处理完\n但 offset 没提交\n→ 重启后重复消费"]
 
     class POLL startEnd;
     class MODE condition;
@@ -177,17 +177,17 @@ Rebalance 是 Kafka 的 ConsumerGroup 内部协调机制——当组内实例变
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    TRIGGER([触发条件]) --> COORD[Group Coordinator Broker<br/>通知所有消费者 Rebalance]
-    COORD --> REVOKE["① 所有消费者<br/>放弃当前分配的 Partition"]
-    REVOKE --> LEADER["② Group Leader<br/>制定新的分配方案"]
-    LEADER --> ASSIGN["③ 分配方案发回 Coordinator<br/>Coordinator 分发给所有消费者"]
-    ASSIGN --> RESUME[④ 消费者从新的<br/>offset 开始消费]
+    TRIGGER([触发条件]) --> COORD[Group Coordinator Broker\n通知所有消费者 Rebalance]
+    COORD --> REVOKE["① 所有消费者\n放弃当前分配的 Partition"]
+    REVOKE --> LEADER["② Group Leader\n制定新的分配方案"]
+    LEADER --> ASSIGN["③ 分配方案发回 Coordinator\nCoordinator 分发给所有消费者"]
+    ASSIGN --> RESUME[④ 消费者从新的\noffset 开始消费]
 
     class TRIGGER startEnd;
     class COORD,LEADER highlight;

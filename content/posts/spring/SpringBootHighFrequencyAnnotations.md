@@ -46,9 +46,9 @@ cover:
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[Spring注解体系]
 
@@ -1735,49 +1735,49 @@ class UserIntegrationTest {
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    ROOT[SpringBoot<br/>高频注解]
+    ROOT[SpringBoot\n高频注解]
 
     ROOT --> B1[IoC容器]
-    B1 --> L1["@Component @Service<br/>@Repository @Controller<br/>@RestController"]
-    B1 --> L2["@Autowired @Qualifier<br/>@Primary @Resource"]
-    B1 --> L3["@Configuration @Bean<br/>@ComponentScan<br/>@Import @ImportResource"]
-    B1 --> L4["@Scope @Lazy<br/>@PostConstruct<br/>@PreDestroy"]
-    B1 --> L5["@Value @PropertySource<br/>@Profile @DependsOn<br/>@Order"]
+    B1 --> L1["@Component @Service\n@Repository @Controller\n@RestController"]
+    B1 --> L2["@Autowired @Qualifier\n@Primary @Resource"]
+    B1 --> L3["@Configuration @Bean\n@ComponentScan\n@Import @ImportResource"]
+    B1 --> L4["@Scope @Lazy\n@PostConstruct\n@PreDestroy"]
+    B1 --> L5["@Value @PropertySource\n@Profile @DependsOn\n@Order"]
 
     ROOT --> B2[SpringBoot]
-    B2 --> L6["@SpringBootApplication<br/>@EnableAutoConfiguration<br/>@ConfigurationProperties<br/>@EnableConfigurationProperties"]
+    B2 --> L6["@SpringBootApplication\n@EnableAutoConfiguration\n@ConfigurationProperties\n@EnableConfigurationProperties"]
 
     ROOT --> B3[AOP切面]
-    B3 --> L7["@Aspect @Pointcut<br/>@Before @After<br/>@Around<br/>@AfterReturning<br/>@AfterThrowing<br/>@EnableAspectJAutoProxy"]
+    B3 --> L7["@Aspect @Pointcut\n@Before @After\n@Around\n@AfterReturning\n@AfterThrowing\n@EnableAspectJAutoProxy"]
 
     ROOT --> B4[事务&异步&定时]
-    B4 --> L8["@Transactional<br/>@EnableTransactionManagement<br/>@Async @EnableAsync<br/>@Scheduled<br/>@EnableScheduling"]
+    B4 --> L8["@Transactional\n@EnableTransactionManagement\n@Async @EnableAsync\n@Scheduled\n@EnableScheduling"]
 
     ROOT --> B5[缓存]
-    B5 --> L9["@Cacheable @CachePut<br/>@CacheEvict @Caching<br/>@CacheConfig<br/>@EnableCaching"]
+    B5 --> L9["@Cacheable @CachePut\n@CacheEvict @Caching\n@CacheConfig\n@EnableCaching"]
 
     ROOT --> B6[校验]
-    B6 --> L10["@Valid @Validated<br/>@NotNull @NotBlank<br/>@NotEmpty @Size<br/>@Min @Max<br/>@Email @Pattern"]
+    B6 --> L10["@Valid @Validated\n@NotNull @NotBlank\n@NotEmpty @Size\n@Min @Max\n@Email @Pattern"]
 
     ROOT --> B7[JPA]
-    B7 --> L11["@Entity @Table<br/>@Id @GeneratedValue<br/>@Column @Enumerated<br/>@Lob @Transient<br/>@Version<br/>@CreatedDate<br/>@LastModifiedDate<br/>@OneToOne @OneToMany<br/>@ManyToOne @ManyToMany<br/>@JoinColumn @JoinTable<br/>@Query @Modifying<br/>@Param"]
+    B7 --> L11["@Entity @Table\n@Id @GeneratedValue\n@Column @Enumerated\n@Lob @Transient\n@Version\n@CreatedDate\n@LastModifiedDate\n@OneToOne @OneToMany\n@ManyToOne @ManyToMany\n@JoinColumn @JoinTable\n@Query @Modifying\n@Param"]
 
     ROOT --> B8[事件]
-    B8 --> L12["@EventListener<br/>@TransactionalEventListener"]
+    B8 --> L12["@EventListener\n@TransactionalEventListener"]
 
     ROOT --> B9[条件装配]
-    B9 --> L13["@ConditionalOnClass<br/>@ConditionalOnMissingClass<br/>@ConditionalOnBean<br/>@ConditionalOnMissingBean<br/>@ConditionalOnProperty<br/>@ConditionalOnExpression<br/>@ConditionalOnWebApplication"]
+    B9 --> L13["@ConditionalOnClass\n@ConditionalOnMissingClass\n@ConditionalOnBean\n@ConditionalOnMissingBean\n@ConditionalOnProperty\n@ConditionalOnExpression\n@ConditionalOnWebApplication"]
 
     ROOT --> B10[测试]
-    B10 --> L14["@SpringBootTest<br/>@MockBean @SpyBean<br/>@WebMvcTest<br/>@DataJpaTest<br/>@AutoConfigureMockMvc<br/>@TestPropertySource<br/>@ActiveProfiles<br/>@Sql"]
+    B10 --> L14["@SpringBootTest\n@MockBean @SpyBean\n@WebMvcTest\n@DataJpaTest\n@AutoConfigureMockMvc\n@TestPropertySource\n@ActiveProfiles\n@Sql"]
 
     ROOT --> B11[重试]
-    B11 --> L15["@Retryable<br/>@Recover<br/>@EnableRetry"]
+    B11 --> L15["@Retryable\n@Recover\n@EnableRetry"]
 
     class ROOT root;
     class B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11 branch;

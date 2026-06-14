@@ -90,11 +90,11 @@ sequenceDiagram
     Note over C,P2: 阶段一——Prepare 表决
 
     C->>P1: Prepare——准备扣库存
-    P1->>P1: 执行SQL——锁定数据行<br/>但不提交事务
+    P1->>P1: 执行SQL——锁定数据行\n但不提交事务
     P1-->>C: YES——准备好了
 
     C->>P2: Prepare——准备扣余额
-    P2->>P2: 执行SQL——锁定数据行<br/>但不提交事务
+    P2->>P2: 执行SQL——锁定数据行\n但不提交事务
     P2-->>C: YES——准备好了
 
     Note over C,P2: 阶段二——Commit 执行
@@ -143,22 +143,22 @@ sequenceDiagram
 这被称为<strong>阻塞问题（Blocking Problem）</strong>。参与者手里的锁在协调者恢复之前无法释放，可能导致大量其他事务被阻塞。
 
 ```mermaid
-flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+flowchart LR
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    COORD["协调者——已收集所有<br/>参与者的 Prepare 回复<br/>准备发送 Commit"]:::highlight
+    COORD["协调者——已收集所有\n参与者的 Prepare 回复\n准备发送 Commit"]:::highlight
 
-    COORD --> CRASH["⚡ 协调者宕机<br/>Commit 指令未发出"]:::reject
+    COORD --> CRASH["⚡ 协调者宕机\nCommit 指令未发出"]:::reject
 
-    CRASH --> P1["参与者A——数据已锁定<br/>不知道下一步——干等"]:::condition
-    CRASH --> P2["参与者B——数据已锁定<br/>不知道下一步——干等"]:::condition
+    CRASH --> P1["参与者A——数据已锁定\n不知道下一步——干等"]:::condition
+    CRASH --> P2["参与者B——数据已锁定\n不知道下一步——干等"]:::condition
 
-    P1 --> LOCK["🔒 锁一直不释放<br/>其他事务被阻塞<br/>整个系统卡住"]:::reject
+    P1 --> LOCK["🔒 锁一直不释放\n其他事务被阻塞\n整个系统卡住"]:::reject
     P2 --> LOCK
 ```
 
@@ -193,11 +193,11 @@ sequenceDiagram
     Note over TM,S2: Try 阶段——预留资源
 
     TM->>S1: Try——创建订单（状态=PENDING）
-    S1->>S1: INSERT订单——状态=PENDING<br/>不是最终状态
+    S1->>S1: INSERT订单——状态=PENDING\n不是最终状态
     S1-->>TM: OK——订单已预留
 
     TM->>S2: Try——预扣库存（冻结库存数）
-    S2->>S2: UPDATE库存——冻结数+1<br/>可用库存不变——冻结数增加
+    S2->>S2: UPDATE库存——冻结数+1\n可用库存不变——冻结数增加
     S2-->>TM: OK——库存已预留
 
     Note over TM,S2: Confirm 阶段——确认执行
@@ -262,25 +262,25 @@ AT 模式的思路是<strong>对业务代码零侵入</strong>——业务开发
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    BIZ["业务代码——执行业务SQL<br/>UPDATE inventory SET stock=stock-1<br/>（开发者只写这一行）"]:::startEnd
+    BIZ["业务代码——执行业务SQL\nUPDATE inventory SET stock=stock-1\n（开发者只写这一行）"]:::startEnd
 
-    BIZ --> BEFORE["Seata——执行SQL之前<br/>自动生成前置镜像<br/>SELECT stock FROM inventory → before_image<br/>记录修改前的值"]:::process
+    BIZ --> BEFORE["Seata——执行SQL之前\n自动生成前置镜像\nSELECT stock FROM inventory → before_image\n记录修改前的值"]:::process
 
-    BEFORE --> AFTER["业务SQL执行后<br/>自动生成后置镜像<br/>SELECT stock FROM inventory → after_image<br/>记录修改后的值"]:::process
+    BEFORE --> AFTER["业务SQL执行后\n自动生成后置镜像\nSELECT stock FROM inventory → after_image\n记录修改后的值"]:::process
 
-    AFTER --> UNDO["把 undo_log 写入数据库<br/>（和业务数据在同一个事务里）<br/>undo_log={before_image, after_image, table, pk}"]:::data
+    AFTER --> UNDO["把 undo_log 写入数据库\n（和业务数据在同一个事务里）\nundo_log={before_image, after_image, table, pk}"]:::data
 
     UNDO --> PHASE1["阶段一完成——本地事务提交
 
     ✅ 成功了 → 通知 TC——一阶段提交成功
     ❌ 失败了 → 通知 TC——一阶段失败——TC 发回滚"]:::highlight
 
-    PHASE1 --> PHASE2["阶段二——TC 根据全局<br/>所有分支的结果决定:
+    PHASE1 --> PHASE2["阶段二——TC 根据全局\n所有分支的结果决定:
 
     ✅ 全部成功 → 异步删除 undo_log
     ❌ 有失败 → 用 undo_log 生成反向SQL——回滚数据"]:::data
@@ -308,23 +308,23 @@ Cancel:  释放冻结（stock_frozen - 1）
 
 ```mermaid
 flowchart TD
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    Q["分布式事务解决什么"]:::process --> Q1["一笔业务跨多个服务<br/>要么全成功<br/>要么全回滚"]:::process
-    Q --> Q2["单机事务的 ACID<br/>在分布式环境下<br/>需要协调协议来保证"]:::process
+    Q["分布式事务解决什么"]:::process --> Q1["一笔业务跨多个服务\n要么全成功\n要么全回滚"]:::process
+    Q --> Q2["单机事务的 ACID\n在分布式环境下\n需要协调协议来保证"]:::process
 
-    Q1 --> A1["2PC——两阶段提交<br/>Prepare——锁资源——表决<br/>Commit/Rollback——执行"]:::data
-    Q2 --> A2["TCC——Try/Confirm/Cancel<br/>Try——预留资源<br/>Confirm——确认<br/>Cancel——释放"]:::data
+    Q1 --> A1["2PC——两阶段提交\nPrepare——锁资源——表决\nCommit/Rollback——执行"]:::data
+    Q2 --> A2["TCC——Try/Confirm/Cancel\nTry——预留资源\nConfirm——确认\nCancel——释放"]:::data
 
-    A1 --> TRADE1["优势——对业务无侵入<br/>劣势——同步阻塞——性能差"]:::highlight
-    A2 --> TRADE2["优势——高性能——无锁<br/>劣势——侵入业务——幂等难"]:::highlight
+    A1 --> TRADE1["优势——对业务无侵入\n劣势——同步阻塞——性能差"]:::highlight
+    A2 --> TRADE2["优势——高性能——无锁\n劣势——侵入业务——幂等难"]:::highlight
 
-    TRADE1 --> USE["Seata AT 模式 = 自动挡 2PC<br/>——通过undo_log补偿回滚<br/>Seata TCC 模式 = 手动挡 TCC<br/>——需要自己实现三阶段"]:::data
+    TRADE1 --> USE["Seata AT 模式 = 自动挡 2PC\n——通过undo_log补偿回滚\nSeata TCC 模式 = 手动挡 TCC\n——需要自己实现三阶段"]:::data
     TRADE2 --> USE
 
-    USE --> NEXT["分布式事务保证了数据一致<br/>但异步消息怎么保证<br/>一定能投递成功？<br/>→ 下一篇：事务消息与回查"]:::process
+    USE --> NEXT["分布式事务保证了数据一致\n但异步消息怎么保证\n一定能投递成功？\n→ 下一篇：事务消息与回查"]:::process
 ```
 
 <strong>一句话记住 —— 2PC 靠锁保证一致性，笨重但简单；TCC 靠业务补偿保证一致性，灵活但对开发者要求高。</strong>实际选型时，大部分场景用 Seata AT（自动挡）就够了。当遇到高并发扣库存、长事务跨多系统这类 AT 扛不住的场景时，再考虑 TCC。

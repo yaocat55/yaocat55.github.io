@@ -100,11 +100,11 @@ rabbitTemplate.convertAndSend("order.exchange", "order.created", orderMessage);
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph NO_MQ ["没有消息队列"]
         N1[下单请求 5000/s] --> N2[短信服务 100/s]
@@ -162,20 +162,20 @@ Producer → Exchange → [Binding] → Queue → Consumer
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    P([Producer<br/>生产者]) -->|"发送消息<br/>+ RoutingKey"| EX[Exchange<br/>交换机]
+    P([Producer\n生产者]) -->|"发送消息\n+ RoutingKey"| EX[Exchange\n交换机]
 
-    EX -->|"Binding: RoutingKey=order.*"| Q1[Queue: order.sms<br/>短信队列]
-    EX -->|"Binding: RoutingKey=order.*"| Q2[Queue: order.email<br/>邮件队列]
-    EX -->|"Binding: RoutingKey=order.log"| Q3[Queue: order.log<br/>日志队列]
+    EX -->|"Binding: RoutingKey=order.*"| Q1[Queue: order.sms\n短信队列]
+    EX -->|"Binding: RoutingKey=order.*"| Q2[Queue: order.email\n邮件队列]
+    EX -->|"Binding: RoutingKey=order.log"| Q3[Queue: order.log\n日志队列]
 
-    Q1 -->|消费| C1([Consumer<br/>短信服务])
-    Q2 -->|消费| C2([Consumer<br/>邮件服务])
-    Q3 -->|消费| C3([Consumer<br/>日志服务])
+    Q1 -->|消费| C1([Consumer\n短信服务])
+    Q2 -->|消费| C2([Consumer\n邮件服务])
+    Q3 -->|消费| C3([Consumer\n日志服务])
 
     class P startEnd;
     class EX highlight;
@@ -314,24 +314,24 @@ channel.basicPublish(...);                         // 通过通道发消息
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef struct fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#0D47A1,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef struct fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 
     subgraph APP_JVM ["Java 应用 JVM"]
-        T1[线程1<br/>发短信消息]
-        T2[线程2<br/>发邮件消息]
-        T3[线程3<br/>写日志消息]
+        T1[线程1\n发短信消息]
+        T2[线程2\n发邮件消息]
+        T3[线程3\n写日志消息]
     end
 
     subgraph CONN ["Connection 一个TCP连接"]
-        CH1[Channel 1<br/>AMQP 通道ID=1]
-        CH2[Channel 2<br/>AMQP 通道ID=2]
-        CH3[Channel 3<br/>AMQP 通道ID=3]
+        CH1[Channel 1\nAMQP 通道ID=1]
+        CH2[Channel 2\nAMQP 通道ID=2]
+        CH3[Channel 3\nAMQP 通道ID=3]
     end
 
-    RMQ[(RabbitMQ Broker<br/>多路复用<br/>把Channel的消息<br/>分发到对应队列)]
+    RMQ[(RabbitMQ Broker\n多路复用\n把Channel的消息\n分发到对应队列)]
 
     T1 -->|"通过 Channel1"| CH1
     T2 -->|"通过 Channel2"| CH2
@@ -534,33 +534,33 @@ mvn exec:java -Dexec.mainClass="HelloProducer"
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph PRODUCER_SIDE ["生产者端"]
         P1([生产者应用])
-        P2["建立 TCP 连接<br/>Connection"]
-        P3["创建 Channel<br/>channel = connection.createChannel()"]
-        P4["声明队列<br/>channel.queueDeclare('hello.queue', ...)"]
-        P5["发送消息<br/>channel.basicPublish(exchange, routingKey, props, body)"]
+        P2["建立 TCP 连接\nConnection"]
+        P3["创建 Channel\nchannel = connection.createChannel()"]
+        P4["声明队列\nchannel.queueDeclare('hello.queue', ...)"]
+        P5["发送消息\nchannel.basicPublish(exchange, routingKey, props, body)"]
     end
 
     subgraph BROKER_SIDE ["RabbitMQ Broker"]
-        B1["Exchange<br/>根据类型 + RoutingKey<br/>匹配 Binding"]
-        B2["Queue: hello.queue<br/>持久化消息<br/>等待消费者"]
+        B1["Exchange\n根据类型 + RoutingKey\n匹配 Binding"]
+        B2["Queue: hello.queue\n持久化消息\n等待消费者"]
     end
 
     subgraph CONSUMER_SIDE ["消费者端"]
         C1(["消费者应用"])
-        C2["建立 TCP 连接<br/>Connection"]
+        C2["建立 TCP 连接\nConnection"]
         C3["创建 Channel"]
         C4["声明队列（幂等）"]
-        C5["注册回调<br/>channel.basicConsume(queue, autoAck, callback)"]
-        C6["收到消息<br/>deliverCallback 被调用"]
-        C7["手动确认<br/>channel.basicAck(deliveryTag)"]
+        C5["注册回调\nchannel.basicConsume(queue, autoAck, callback)"]
+        C6["收到消息\ndeliverCallback 被调用"]
+        C7["手动确认\nchannel.basicAck(deliveryTag)"]
     end
 
     P1 --> P2

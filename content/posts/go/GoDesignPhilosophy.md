@@ -73,15 +73,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 Go 1.22 只有 <strong>25 个关键字</strong> 。对比一下：Java 17 有 51 个关键字，C++ 有 95 个。
 
 ```mermaid
-flowchart TD
-    Root["🔑 Go 25 关键字"] --> Decl["📦 声明<br/>var const type func<br/>struct interface map<br/>chan package import"]
-    Root --> Flow["🔀 流程控制<br/>if else switch case<br/>default for range<br/>break continue fallthrough<br/>goto"]
-    Root --> Concurrent["⚡ 并发<br/>go select"]
-    Root --> DeferOps["⏱️ 特殊<br/>defer return"]
+flowchart LR
+    Root["🔑 Go 25 关键字"] --> Decl["📦 声明\nvar const type func\nstruct interface map\nchan package import"]
+    Root --> Flow["🔀 流程控制\nif else switch case\ndefault for range\nbreak continue fallthrough\ngoto"]
+    Root --> Concurrent["⚡ 并发\ngo select"]
+    Root --> DeferOps["⏱️ 特殊\ndefer return"]
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     
     class Root root
     class Decl,Flow,Concurrent,DeferOps branch
@@ -168,16 +168,16 @@ func process(r Reader) {
 
 ```mermaid
 flowchart TD
-    Java["☕ Java 显式接口"] --> JImpl["class Dog implements Animal<br/>必须显式声明"]
-    JImpl --> JCheck["✅ 编译期检查<br/>不实现所有方法 → 编译失败"]
+    Java["☕ Java 显式接口"] --> JImpl["class Dog implements Animal\n必须显式声明"]
+    JImpl --> JCheck["✅ 编译期检查\n不实现所有方法 → 编译失败"]
     JImpl --> JCouple["❌ 耦合：必须 import 接口包"]
     
-    Go["🐹 Go 隐式接口"] --> GImpl["type Dog struct { ... }<br/>方法签名匹配 → 自动实现"]
-    GImpl --> GCheck["✅ 编译期检查<br/>方法签名不匹配 → 编译失败"]
+    Go["🐹 Go 隐式接口"] --> GImpl["type Dog struct { ... }\n方法签名匹配 → 自动实现"]
+    GImpl --> GCheck["✅ 编译期检查\n方法签名不匹配 → 编译失败"]
     GImpl --> GCouple["✅ 解耦：不需要 import 接口包"]
     
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     
     class Java,Go root
     class JImpl,JCheck,JCouple,GImpl,GCheck,GCouple leaf
@@ -244,7 +244,7 @@ sequenceDiagram
     JBuild-->>Dev: fat jar (~50MB)
     Dev->>Deploy: 安装 JDK → 配置环境 → java -jar
     
-    Note over GoBuild,Deploy: Go 不依赖外部运行时<br/>Java 依赖 JVM
+    Note over GoBuild,Deploy: Go 不依赖外部运行时\nJava 依赖 JVM
 ```
 
 具体的运行时对比（GC 算法、反射机制、内存布局）会在本系列第 6 篇详细展开。

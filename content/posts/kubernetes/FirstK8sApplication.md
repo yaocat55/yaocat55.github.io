@@ -117,19 +117,19 @@ flowchart TD
   SVC -->|"selector: app=my-app"| POD1
   SVC -->|"selector: app=my-app"| POD2
 
-  classDef deploy fill:#FCE4EC,stroke:#C62828,stroke-width:2px,color:#212121,font-weight:bold
+classDef deploy fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
   class DEP deploy
 
-  classDef rs fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#212121
+classDef rs fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe;
   class RS rs
 
-  classDef pod fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef pod fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class POD1,POD2 pod
 
-  classDef svc fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#212121,font-weight:bold
+classDef svc fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class SVC svc
 
-  classDef config fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef config fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class CM,SEC config
 ```
 
@@ -400,19 +400,19 @@ flowchart TD
   READINESS -->|"健康"| READY
   READINESS -->|"失败"| NOT_READY
 
-  classDef start fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef start fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class START,INIT start
 
-  classDef ok fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20,font-weight:bold
+classDef ok fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
   class READY ok
 
-  classDef bad fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C,font-weight:bold
+classDef bad fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
   class DEAD bad
 
-  classDef warn fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold
+classDef warn fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
   class NOT_READY warn
 
-  classDef probe fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121
+classDef probe fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe;
   class LIVENESS,READINESS probe
 ```
 
@@ -612,13 +612,13 @@ flowchart TD
   LESS --> G
   MORE --> G
 
-  classDef watch fill:#BBDEFB,stroke:#1976D2,stroke-width:2px,color:#212121,font-weight:bold
+classDef watch fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
   class W watch
 
-  classDef get fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
+classDef get fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
   class G,C get
 
-  classDef action fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20
+classDef action fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
   class EQ,LESS,MORE action
 ```
 

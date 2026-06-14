@@ -45,9 +45,9 @@ flowchart LR
     root1["🌳 二叉树 ⚡20层 IO 100万数据"] --> root2["🌲 多路查找树 ⚡3 ~ 4层 IO 100万数据"]
     root2 --> leaf["叶子链表 范围扫描"]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef leaf fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef leaf fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class root1,root2 startEnd
     class leaf leaf
@@ -221,10 +221,10 @@ flowchart TD
     D --> E["用 id=42 去主键B+树查找完整行"]
     E --> F["返回完整行数据"]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class A startEnd
     class B,C process
@@ -284,46 +284,46 @@ SELECT name, id FROM users WHERE name = '张三';
 ```mermaid
 flowchart TD
     subgraph SELECT_PATH ["🔍 SELECT 查询路径"]
-        S1["WHERE 条件"] --> S2{"有匹配的<br/>二级索引?"}
-        S2 -->|"有"| S3["查二级索引B+树<br/>拿到主键"]
-        S3 --> S4["回表查主键B+树<br/>拿完整行"]
-        S2 -->|"无"| S5["全表扫描<br/>沿主键B+树叶子链表"]
+        S1["WHERE 条件"] --> S2{"有匹配的\n二级索引?"}
+        S2 -->|"有"| S3["查二级索引B+树\n拿到主键"]
+        S3 --> S4["回表查主键B+树\n拿完整行"]
+        S2 -->|"无"| S5["全表扫描\n沿主键B+树叶子链表"]
         S4 --> S6["返回结果"]
         S5 --> S6
     end
 
     subgraph INSERT_PATH ["✏️ INSERT 插入路径"]
-        I1["拿到自增主键值"] --> I2["二分查找主键B+树<br/>定位插入叶子页"]
-        I2 --> I3{"叶子页<br/>有空闲?"}
-        I3 -->|"有"| I4["写入记录<br/>更新槽/next_record"]
-        I3 -->|"满了"| I5["页分裂<br/>分配新页+数据对半分"]
-        I5 --> I6{"父节点<br/>有空闲?"}
+        I1["拿到自增主键值"] --> I2["二分查找主键B+树\n定位插入叶子页"]
+        I2 --> I3{"叶子页\n有空闲?"}
+        I3 -->|"有"| I4["写入记录\n更新槽/next_record"]
+        I3 -->|"满了"| I5["页分裂\n分配新页+数据对半分"]
+        I5 --> I6{"父节点\n有空闲?"}
         I6 -->|"有"| I7["父节点新增键+指针"]
-        I6 -->|"满了"| I8["父节点也分裂<br/>递归向上"]
+        I6 -->|"满了"| I8["父节点也分裂\n递归向上"]
     end
 
     subgraph DELETE_PATH ["🗑️ DELETE 删除路径"]
         D1["定位目标叶子页"] --> D2["标记 delete_flag=1"]
         D2 --> D3["不物理删除"]
-        D3 --> D4{"页内空间使用率<br/>< 50%?"}
+        D3 --> D4{"页内空间使用率\n< 50%?"}
         D4 -->|"是"| D5["Purge线程物理删除"]
-        D5 --> D6{"进一步<br/>< 合并阈值?"}
+        D5 --> D6{"进一步\n< 合并阈值?"}
         D6 -->|"是"| D7["页合并"]
     end
 
     subgraph UPDATE_PATH ["🔄 UPDATE 更新路径"]
-        U1{"更新了<br/>主键?"}
-        U1 -->|"否(原地)"| U2{"新值长度<br/><=旧值?"}
+        U1{"更新了\n主键?"}
+        U1 -->|"否(原地)"| U2{"新值长度\n<=旧值?"}
         U2 -->|"是"| U3["同页就地更新"]
         U2 -->|"否"| U4["先删旧记录+插入新记录"]
-        U1 -->|"是"| U5["先删旧主键行<br/>再插新主键行"]
+        U1 -->|"是"| U5["先删旧主键行\n再插新主键行"]
     end
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef reject fill:#FFCDD2,stroke:#C62828,stroke-width:1.5px,color:#B71C1C,font-weight:bold
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class S6,F,B6,FEEDBACK data
     class S2,I3,I6,D4,D6,U1,U2 condition

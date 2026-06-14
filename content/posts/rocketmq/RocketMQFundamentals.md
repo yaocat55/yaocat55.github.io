@@ -57,35 +57,35 @@ RocketMQ 的架构比 RabbitMQ 更"分布式原生"。RabbitMQ 是 Erlang 节点
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph REGISTRY ["注册中心层"]
-        NS1[NameServer<br/>路由注册表<br/>无状态、可集群]
+        NS1[NameServer\n路由注册表\n无状态、可集群]
     end
 
     subgraph COMPUTE ["计算层 Broker"]
-        B1[Broker-Master<br/>消息存储 + 分发]
-        B2[Broker-Slave<br/>主从备份]
+        B1[Broker-Master\n消息存储 + 分发]
+        B2[Broker-Slave\n主从备份]
     end
 
     subgraph CLIENT ["客户端层"]
-        P([Producer Group<br/>生产者组])
-        C([Consumer Group<br/>消费者组])
+        P([Producer Group\n生产者组])
+        C([Consumer Group\n消费者组])
     end
 
-    P -.->|"1. 发消息前先从 NameServer<br/>查 Topic 对应的 Broker 地址"| NS1
-    C -.->|"1. 消费前先从 NameServer<br/>查 Topic 对应的 Broker 地址"| NS1
+    P -.->|"1. 发消息前先从 NameServer\n查 Topic 对应的 Broker 地址"| NS1
+    C -.->|"1. 消费前先从 NameServer\n查 Topic 对应的 Broker 地址"| NS1
 
-    P -->|"2. 直接连 Broker 发送消息<br/>（不经过 NameServer）"| B1
-    C -->|"2. 从 Broker 拉取消息<br/>（不经过 NameServer）"| B1
+    P -->|"2. 直接连 Broker 发送消息\n（不经过 NameServer）"| B1
+    C -->|"2. 从 Broker 拉取消息\n（不经过 NameServer）"| B1
 
-    B1 -.->|"3. Broker 向 NameServer<br/>注册心跳（30s 间隔）"| NS1
-    B2 -.->|"Broker 启动时<br/>向所有 NameServer 注册"| NS1
+    B1 -.->|"3. Broker 向 NameServer\n注册心跳（30s 间隔）"| NS1
+    B2 -.->|"Broker 启动时\n向所有 NameServer 注册"| NS1
 
-    B1 <-->|"主从同步<br/>CommitLog 复制"| B2
+    B1 <-->|"主从同步\nCommitLog 复制"| B2
 
     class P,C startEnd;
     class NS1 highlight;
@@ -160,23 +160,23 @@ stock/QueueId=2:  [1024, ...]
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     subgraph WRITE ["写入路径（Producer → CommitLog）"]
-        P([Producer]) -->|"发送消息<br/>Topic=order, QueueId=0"| COMMIT[CommitLog<br/>顺序追加写入<br/>物理日志文件]
+        P([Producer]) -->|"发送消息\nTopic=order, QueueId=0"| COMMIT[CommitLog\n顺序追加写入\n物理日志文件]
     end
 
     subgraph INDEX ["索引构建（异步）"]
-        COMMIT -.->|"ReputService 线程<br/>异步构建消费队列"| CQ[ConsumeQueue<br/>order/QueueId=0<br/>[offset0, offset2048, ...]]
-        COMMIT -.->|"构建索引"| IDX[IndexFile<br/>key→offset 哈希索引]
+        COMMIT -.->|"ReputService 线程\n异步构建消费队列"| CQ[ConsumeQueue\norder/QueueId=0\n[offset0, offset2048, ...]]
+        COMMIT -.->|"构建索引"| IDX[IndexFile\nkey→offset 哈希索引]
     end
 
     subgraph READ ["消费路径（Consumer ← ConsumeQueue → CommitLog）"]
-        C([Consumer]) -->|"根据 ConsumeQueue<br/>获取 offset 列表"| CQ
-        CQ -->|"定位到 CommitLog<br/>精确偏移量"| COMMIT
+        C([Consumer]) -->|"根据 ConsumeQueue\n获取 offset 列表"| CQ
+        CQ -->|"定位到 CommitLog\n精确偏移量"| COMMIT
         COMMIT -->|"返回消息体"| C
     end
 
@@ -193,20 +193,20 @@ RocketMQ 用<strong>三级分类</strong>组织消息，比 RabbitMQ 的 Exchang
 
 ```mermaid
 flowchart LR
-    classDef root fill:#1E88E5,stroke:#0D47A1,stroke-width:2px,color:#FFFFFF,font-weight:bold;
-    classDef branch fill:#FFE082,stroke:#FFB300,stroke-width:2px,color:#5D4037,font-weight:bold;
-    classDef leaf fill:#F5F5F5,stroke:#BDBDBD,stroke-width:1.5px,color:#212121;
+classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
+classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
+classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[消息分类体系]
-    ROOT --> TPC[Topic<br/>业务主题<br/>如: order]
-    TPC --> Q0[Queue-0<br/>物理分区<br/>消息物理存放单元]
+    ROOT --> TPC[Topic\n业务主题\n如: order]
+    TPC --> Q0[Queue-0\n物理分区\n消息物理存放单元]
     TPC --> Q1[Queue-1]
     TPC --> Q2[Queue-2]
     TPC --> Q3[Queue-3]
-    Q0 --> TG["Tag: order.created<br/>Tag: order.paid<br/>Tag: order.cancelled<br/>（同一队列内，消息可带不同 Tag）"]
-    Q1 --> TG1["Tag: order.created<br/>Tag: order.paid<br/>..."]
-    Q2 --> TG2["Tag: order.created<br/>..."]
-    Q3 --> TG3["Tag: order.paid<br/>..."]
+    Q0 --> TG["Tag: order.created\nTag: order.paid\nTag: order.cancelled\n（同一队列内，消息可带不同 Tag）"]
+    Q1 --> TG1["Tag: order.created\nTag: order.paid\n..."]
+    Q2 --> TG2["Tag: order.created\n..."]
+    Q3 --> TG3["Tag: order.paid\n..."]
 
     class ROOT root;
     class TPC branch;

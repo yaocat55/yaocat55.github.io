@@ -209,18 +209,18 @@ public class OrderService {
 
 ```mermaid
 flowchart TD
-    classDef pass fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef block fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef fallback fill:#FFF9C4,stroke:#F9A825,stroke-width:1.5px,color:#F57F17,font-weight:bold;
+classDef pass fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef block fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef fallback fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
 
     REQ[请求进来] --> FLOW{流控检查}
     FLOW -- "未超过阈值" --> DEGRADE{熔断检查}
-    FLOW -- "超过阈值" --> BH1[blockHandler<br/>FlowException]
+    FLOW -- "超过阈值" --> BH1[blockHandler\nFlowException]
     DEGRADE -- "熔断器关闭" --> EXEC[执行业务方法]
-    DEGRADE -- "熔断器打开" --> BH2[blockHandler<br/>DegradeException]
+    DEGRADE -- "熔断器打开" --> BH2[blockHandler\nDegradeException]
     EXEC --> SUCCESS{执行成功?}
     SUCCESS -- "是" --> RETURN[返回结果]
-    SUCCESS -- "否——抛异常" --> FB[fallback<br/>业务异常处理]
+    SUCCESS -- "否——抛异常" --> FB[fallback\n业务异常处理]
 
     class FLOW,DEGRADE pass;
     class BH1,BH2 block;

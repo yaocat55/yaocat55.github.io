@@ -269,19 +269,19 @@ ALTER TABLE mall_product DROP COLUMN IF EXISTS `is_hot_sale`;
 
 ```mermaid
 flowchart TD
-    Dev[开发人员提交<br/>V13__add_column.sql] --> Git[Git 仓库<br/>db/migration/]
+    Dev[开发人员提交\nV13__add_column.sql] --> Git[Git 仓库\ndb/migration/]
     Git --> Deploy[部署到目标环境]
 
-    Deploy --> Check{Flyway 检查<br/>flyway_schema_history}
-    Check -->|"版本已存在"| Skip["⏭️ 跳过 V13<br/>日志：already applied"]
+    Deploy --> Check{Flyway 检查\nflyway_schema_history}
+    Check -->|"版本已存在"| Skip["⏭️ 跳过 V13\n日志：already applied"]
     Check -->|"版本不存在"| Execute[执行 V13 迁移脚本]
-    Execute --> Record["✅ 记录到 schema_history<br/>version=13 | checksum | 执行时间"]
+    Execute --> Record["✅ 记录到 schema_history\nversion=13 | checksum | 执行时间"]
     Record --> App[应用启动完成]
 
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     class Dev,Git process
     class Deploy process
@@ -376,7 +376,7 @@ sequenceDiagram
     Git->>Flyway: 3. 应用启动，Flyway 初始化
     Flyway->>DB: 4. SELECT version FROM schema_history
     DB-->>Flyway: 5. 返回已执行版本：[V1,V2,V3,V4]
-    Flyway->>Flyway: 6. 比对：classpath 有 V5<br/>已执行列表没有 V5
+    Flyway->>Flyway: 6. 比对：classpath 有 V5\n已执行列表没有 V5
     Flyway->>DB: 7. 执行 V5__add_column.sql
     Flyway->>DB: 8. INSERT INTO schema_history (V5, checksum, ...)
     DB-->>Flyway: 9. ✅ 迁移完成

@@ -106,18 +106,18 @@ private OrderService orderService;
 
 ```mermaid
 flowchart TD
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef condition fill:#E1BEE7,stroke:#7B1FA2,stroke-width:1.5px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
-    classDef reject fill:#FFCDD2,stroke:#D32F2F,stroke-width:1.5px;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
+classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px;,color:#fecaca;
 
     CALL([Consumer 发起 RPC]) --> Q{操作是否幂等？}
-    Q -- "读取/查询" --> FAILOVER[Failover<br/>失败重试 2 次<br/>换 Provider 重试]
-    Q -- "创建/扣减" --> FAILFAST[Failfast<br/>失败立即报错<br/>retries=0]
-    Q -- "日志/通知" --> FAILSAFE[Failsafe<br/>失败吞异常<br/>返回 null 或忽略]
-    Q -- "最终一致性" --> FAILBACK[Failback<br/>失败记日志<br/>后台定时补发]
-    Q -- "全实例通知" --> BROADCAST[Broadcast<br/>逐个调所有实例<br/>全成功才返回]
+    Q -- "读取/查询" --> FAILOVER[Failover\n失败重试 2 次\n换 Provider 重试]
+    Q -- "创建/扣减" --> FAILFAST[Failfast\n失败立即报错\nretries=0]
+    Q -- "日志/通知" --> FAILSAFE[Failsafe\n失败吞异常\n返回 null 或忽略]
+    Q -- "最终一致性" --> FAILBACK[Failback\n失败记日志\n后台定时补发]
+    Q -- "全实例通知" --> BROADCAST[Broadcast\n逐个调所有实例\n全成功才返回]
 
     class CALL startEnd;
     class Q condition;
@@ -286,14 +286,14 @@ private OrderService orderService;
 
 ```mermaid
 flowchart LR
-    classDef startEnd fill:#F48FB1,stroke:#C2185B,stroke-width:2px,color:#212121,font-weight:bold;
-    classDef process fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1.5px,color:#212121;
-    classDef data fill:#C8E6C9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20,font-weight:bold;
-    classDef highlight fill:#FFCCBC,stroke:#E64A19,stroke-width:1.5px,color:#D84315,font-weight:bold;
+classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
+classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
+classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
+classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
-    CONS1([Consumer<br/>90% 流量<br/>version=1.0.0]) -->|"call"| V1["Provider V1<br/>稳定版本"]
-    CONS2([Consumer<br/>10% 灰度<br/>version=2.0.0]) -->|"call"| V2["Provider V2<br/>新版本"]
-    V2 -.->|"观察无问题后<br/>Consumer 全量切 V2<br/>Provider V1 下线"| V1
+    CONS1([Consumer\n90% 流量\nversion=1.0.0]) -->|"call"| V1["Provider V1\n稳定版本"]
+    CONS2([Consumer\n10% 灰度\nversion=2.0.0]) -->|"call"| V2["Provider V2\n新版本"]
+    V2 -.->|"观察无问题后\nConsumer 全量切 V2\nProvider V1 下线"| V1
 
     class CONS1,CONS2 startEnd;
     class V1,V2 data;
