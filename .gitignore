@@ -14,3 +14,6 @@ Thumbs.db
 
 # 设计文档
 docs/
+
+# 脚本工具（含 node_modules，体积巨大）
+scripts/
