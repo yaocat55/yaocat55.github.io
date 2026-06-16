@@ -69,73 +69,26 @@ func queryWithTimeout() {
 
 在深入 goroutine 之前，先理清"线程""协程""有栈协程"这三个概念——它们是理解 goroutine 为什么"轻量"的基础。
 
-<div style="max-width:700px;font-family:sans-serif;font-size:14px;line-height:1.6">
-
-<div style="margin-bottom:24px">
-<div style="background:#1E88E5;color:#FFFFFF;padding:10px 16px;font-weight:bold;font-size:16px">🐹 三种并发执行体的关系</div>
-<div style="border:2px solid #1E88E5;padding:16px">
-
-<div style="margin-bottom:16px">
-<div style="background:#FFE082;color:#5D4037;padding:8px 12px;font-weight:bold;border-left:4px solid #FFB300">操作系统线程（OS Thread）</div>
-<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
-<strong>调度者</strong>：操作系统内核<br/>
-<strong>栈大小</strong>：固定 ~1MB（Linux 默认 8MB 虚拟空间）<br/>
-<strong>切换成本</strong>：用户态 ↔ 内核态上下文切换，约 1 ~ 10μs<br/>
-<strong>创建数量</strong>：几百到几千（受内存和调度开销限制）<br/>
-<strong>代表</strong>：Java 的 <code>java.lang.Thread</code>，映射到 OS 线程（1:1）
-</div>
-</div>
-
-<div style="margin-bottom:16px">
-<div style="background:#E1BEE7;color:#4A148C;padding:8px 12px;font-weight:bold;border-left:4px solid #7B1FA2">无栈协程（Stackless Coroutine）</div>
-<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
-<strong>调度者</strong>：编译器/状态机（用户态）<br/>
-<strong>栈大小</strong>：无独立栈，局部变量存储在堆上的状态对象中<br/>
-<strong>切换成本</strong>：函数返回+状态机跳转，约几十 ns<br/>
-<strong>限制</strong>：不能在嵌套函数调用中挂起（只能平层 await）<br/>
-<strong>代表</strong>：JavaScript async/await、Kotlin suspend、Rust async
-</div>
-</div>
-
-<div style="margin-bottom:16px">
-<div style="background:#C8E6C9;color:#1B5E20;padding:8px 12px;font-weight:bold;border-left:4px solid #388E3C">有栈协程（Stackful Coroutine）<strong>（← Goroutine 在此）</strong></div>
-<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
-<strong>调度者</strong>：Go 运行时（用户态 GMP 调度器）<br/>
-<strong>栈大小</strong>：初始 ~2KB，动态扩缩容（最大可达 1GB）<br/>
-<strong>切换成本</strong>：用户态寄存器保存/恢复，约 200ns<br/>
-<strong>创建数量</strong>：轻松几十万到百万<br/>
-<strong>关键能力</strong>：可在嵌套函数调用深处挂起和恢复（有自己的栈）<br/>
-<strong>代表</strong>：Go goroutine、Java Virtual Thread（Project Loom）
-</div>
-</div>
-
-<div style="margin-bottom:16px">
-<div style="background:#FFCCBC;color:#BF360C;padding:8px 12px;font-weight:bold;border-left:4px solid #E64A19">Java 虚拟线程（Virtual Thread，Java 21+）</div>
-<div style="padding:8px 12px;background:#F5F5F5;color:#1e2a16;border:1px solid #BDBDBD;border-top:0">
-<strong>调度者</strong>：JVM（用户态 ForkJoinPool 调度）<br/>
-<strong>栈大小</strong>：初始 ~200 字节（堆上存储，按需分配）<br/>
-<strong>切换成本</strong>：用户态，约 200ns ~ 1μs<br/>
-<strong>与 goroutine 本质区别</strong>：Virtual Thread 绑在 OS 线程上执行，遇到阻塞操作时才 unmount；goroutine 在 GMP 模型中由 Go 运行时主动抢占调度
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
+| 特性 | 操作系统线程 | 无栈协程 | 有栈协程（Goroutine） | Java 虚拟线程 |
+|------|-------------|---------|---------------------|--------------|
+| 调度者 | 操作系统内核 | 编译器/状态机（用户态） | Go 运行时（用户态 GMP 调度器） | JVM（用户态 ForkJoinPool 调度） |
+| 栈大小 | 固定 ~1MB（Linux 默认 8MB 虚拟空间） | 无独立栈，局部变量存储在堆上的状态对象中 | 初始 ~2KB，动态扩缩容（最大可达 1GB） | 初始 ~200 字节（堆上存储，按需分配） |
+| 切换成本 | 用户态 ↔ 内核态上下文切换，约 1 ~ 10μs | 函数返回+状态机跳转，约几十 ns | 用户态寄存器保存/恢复，约 200ns | 用户态，约 200ns ~ 1μs |
+| 创建数量/限制/关键能力 | 几百到几千（受内存和调度开销限制） | 不能在嵌套函数调用中挂起（只能平层 await） | 轻松几十万到百万；可在嵌套函数调用深处挂起和恢复（有自己的栈） | 绑在 OS 线程上执行，遇到阻塞操作时才 unmount；goroutine 在 GMP 模型中由 Go 运行时主动抢占调度 |
+| 代表 | Java 的 `java.lang.Thread`，映射到 OS 线程（1:1） | JavaScript async/await、Kotlin suspend、Rust async | Go goroutine、Java Virtual Thread（Project Loom） | — |
 
 关键结论：<strong>goroutine 和 Java 21 的 Virtual Thread 本质上都是"有栈协程"——M:N 调度（M 个协程映射到 N 个 OS 线程），用户态切换，初始内存极小</strong> 。但它们的调度模型有本质区别：
 
 ```mermaid
 flowchart TD
     subgraph JavaPlatform["☕ Java 平台线程 vs 虚拟线程"]
-        JT["平台线程 Platform Thread\n1:1 映射 OS 线程\n栈：~1MB\n切换：内核态"]
-        JVT["虚拟线程 Virtual Thread\nM:N 映射 OS 线程\n栈：堆上动态分配\n切换：用户态（unmount/remount）"]
+        JT(["平台线程 Platform Thread\n1:1 映射 OS 线程\n栈：~1MB\n切换：内核态"])
+        JVT(["虚拟线程 Virtual Thread\nM:N 映射 OS 线程\n栈：堆上动态分配\n切换：用户态（unmount/remount）"])
         JVT2["阻塞时自动 unmount\n释放 OS 线程给其他 Virtual Thread\n由 ForkJoinPool 承载"]
     end
     
     subgraph GoPlatform["🐹 Go goroutine"]
-        GG["goroutine\nM:N 映射 OS 线程\n栈：~2KB 起始，动态扩缩\n切换：用户态 GMP 调度"]
+        GG(["goroutine\nM:N 映射 OS 线程\n栈：~2KB 起始，动态扩缩\n切换：用户态 GMP 调度"])
         GG2["GMP 模型：\nG = goroutine\nM = OS 线程\nP = 逻辑处理器"]
         GG3["Go 1.14+ 异步抢占\nCPU 密集型不会饿死其他协程"]
     end
@@ -203,28 +156,12 @@ close(ch)
 
 ### 无缓冲 vs 有缓冲
 
-<div style="max-width:700px">
-<div style="display:flex;gap:16px">
-<div style="flex:1;border:2px solid #E64A19;border-radius:8px;overflow:hidden">
-<div style="background:#E64A19;color:#FFFFFF;padding:8px 12px;font-weight:bold">无缓冲（同步）</div>
-<div style="padding:12px;background:#FFF3E0;color:#1e2a16">
-<code>ch := make(chan int)</code><br/><br/>
-<strong>发送方</strong> 阻塞直到 <strong>接收方</strong> 就绪<br/>
-<strong>接收方</strong> 阻塞直到 <strong>发送方</strong> 发送<br/><br/>
-<span style="color:#388E3C">✅ 保证同步，不需要额外通知</span>
-</div>
-</div>
-<div style="flex:1;border:2px solid #388E3C;border-radius:8px;overflow:hidden">
-<div style="background:#388E3C;color:#FFFFFF;padding:8px 12px;font-weight:bold">有缓冲（异步）</div>
-<div style="padding:12px;background:#E8F5E9;color:#1e2a16">
-<code>ch := make(chan int, 10)</code><br/><br/>
-<strong>发送方</strong> 缓冲未满时不阻塞<br/>
-<strong>接收方</strong> 缓冲为空时阻塞<br/><br/>
-<span style="color:#E64A19">⚠️ 类似 Java BlockingQueue（10）= LinkedBlockingQueue（10）</span>
-</div>
-</div>
-</div>
-</div>
+| | 无缓冲（同步） | 有缓冲（异步） |
+|---|--------------|--------------|
+| 声明 | `ch := make(chan int)` | `ch := make(chan int, 10)` |
+| 发送方 | 阻塞直到接收方就绪 | 缓冲未满时不阻塞 |
+| 接收方 | 阻塞直到发送方发送 | 缓冲为空时阻塞 |
+| 特性 | ✅ 保证同步，不需要额外通知 | ⚠️ 类似 Java BlockingQueue（10）= LinkedBlockingQueue（10） |
 
 ### 常见 Channel 模式
 

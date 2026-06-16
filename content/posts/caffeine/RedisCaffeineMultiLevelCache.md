@@ -212,7 +212,7 @@ classDef decision fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,f
     R[Controller.searchDictDetail] --> L1{Caffeine\ndict_data::DictService_order_status\n命中?}
     L1 -- 命中 --> RET1([返回\n0.001ms])
     L1 -- 未命中 --> BEAN[执行 @Cacheable 方法体]
-    BEAN --> L2{Redis Hash\ndictData[order_status]\n有数据?}
+    BEAN --> L2{"Redis Hash\ndictData[order_status]\n有数据?"}
     L2 -- 有 --> SORT[排序]
     SORT --> FILL_L1[回填 L1 Caffeine\nSpring 自动处理]
     FILL_L1 --> RET2([返回\n0.5-2ms])

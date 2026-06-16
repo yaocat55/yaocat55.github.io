@@ -74,10 +74,10 @@ Go 1.22 只有 <strong>25 个关键字</strong> 。对比一下：Java 17 有 51
 
 ```mermaid
 flowchart LR
-    Root["🔑 Go 25 关键字"] --> Decl["📦 声明\nvar const type func\nstruct interface map\nchan package import"]
-    Root --> Flow["🔀 流程控制\nif else switch case\ndefault for range\nbreak continue fallthrough\ngoto"]
-    Root --> Concurrent["⚡ 并发\ngo select"]
-    Root --> DeferOps["⏱️ 特殊\ndefer return"]
+    Root(["🔑 Go 25 关键字"]) --> Decl[["📦 声明\nvar const type func\nstruct interface map\nchan package import"]]
+    Root --> Flow[["🔀 流程控制\nif else switch case\ndefault for range\nbreak continue fallthrough\ngoto"]]
+    Root --> Concurrent[["⚡ 并发\ngo select"]]
+    Root --> DeferOps[["⏱️ 特殊\ndefer return"]]
     
 classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;

@@ -244,7 +244,7 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
     SERIAL -->|BigDecimal| PLAIN[WRITE_BIGDECIMAL_AS_PLAIN\n输出纯数值]
     SERIAL -->|其他类型| DEF[默认序列化器]
 
-    STR --> JSON[{"orderId":"1857353925587607552"}]
+    STR --> JSON["{#quot;orderId#quot;:#quot;1857353925587607552#quot;}"]
     PLAIN --> JSON
     DEF --> JSON
 

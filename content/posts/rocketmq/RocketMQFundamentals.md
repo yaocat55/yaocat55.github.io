@@ -170,7 +170,7 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
     end
 
     subgraph INDEX ["索引构建（异步）"]
-        COMMIT -.->|"ReputService 线程\n异步构建消费队列"| CQ[ConsumeQueue\norder/QueueId=0\n[offset0, offset2048, ...]]
+        COMMIT -.->|"ReputService 线程\n异步构建消费队列"| CQ["ConsumeQueue\norder/QueueId=0\n[offset0, offset2048, ...]"]
         COMMIT -.->|"构建索引"| IDX[IndexFile\nkey→offset 哈希索引]
     end
 

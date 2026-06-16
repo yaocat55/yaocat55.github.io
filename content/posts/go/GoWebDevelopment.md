@@ -61,9 +61,9 @@ Java 的 Web 框架生态是 Spring Boot 一家独大。Go 则完全不同——
 
 ```mermaid
 flowchart TD
-    Root["🐹 Go Web 框架生态"] --> Stdlib["📦 net/http\n标准库"]
-    Root --> Micro["🏗️ HTTP 框架"]
-    Root --> FullStack["🏢 微服务全家桶"]
+    Root(["🐹 Go Web 框架生态"]) --> Stdlib[["📦 net/http\n标准库"]]
+    Root --> Micro[["🏗️ HTTP 框架"]]
+    Root --> FullStack[["🏢 微服务全家桶"]]
 
     Stdlib --> StdDesc["ServeMux + Handler\nGo 1.22 RESTful 路由\n自带连接池 + HTTP/2"]
 
@@ -350,7 +350,7 @@ user-api/
 
 ```mermaid
 flowchart TD
-    APIFile[".api 接口定义文件"] --> Goctl["goctl 代码生成"]
+    APIFile([".api 接口定义文件"]) --> Goctl(["goctl 代码生成"])
     Goctl --> Handler["Handler 层\n参数解析 + 响应序列化"]
     Goctl --> Logic["Logic 层\n业务逻辑（手写）"]
     Goctl --> Types["Types 层\n请求/响应结构体"]
@@ -371,44 +371,14 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
     class Model process
 ```
 
-<strong>分层对应关系</strong>：
+**分层对应关系**：
 
-```html
-<div style="max-width:700px;overflow-x:auto;">
-<table style="border-collapse:collapse;width:100%;text-align:center;">
-<tr style="background:#1E88E5;color:#FFFFFF;">
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">层次</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Spring Boot</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">go-zero</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Gin（手动）</th>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">入口</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Controller</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Handler（生成）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Handler（手写）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">业务</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Service</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Logic</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Service（手动）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">数据</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Repository / Mapper</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Model（生成）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Repository（手动）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">依赖</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">@Autowired</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">ServiceContext</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">main 函数手动组装</td>
-</tr>
-</table>
-</div>
-```
+| 层次 | Spring Boot | go-zero | Gin（手动） |
+|------|-------------|---------|------------|
+| 入口 | Controller | Handler（生成） | Handler（手写） |
+| 业务 | Service | Logic | Service（手动） |
+| 数据 | Repository / Mapper | Model（生成） | Repository（手动） |
+| 依赖 | @Autowired | ServiceContext | main 函数手动组装 |
 
 ## 依赖注入：没有 @Autowired 的日子
 
@@ -467,9 +437,9 @@ func InitializeApp() (*App, error) {
 
 ```mermaid
 flowchart TD
-    Manual["手动注入\n在 main() 中 new 所有依赖"] --> Pros1["✅ 编译期安全\n✅ 零运行时开销\n✅ 依赖关系显式\n❌ 大项目样板多"]
-    Wire["wire（Google）\n编译时生成注入代码"] --> Pros2["✅ 编译期安全\n✅ 零运行时开销\n✅ 自动生成代码\n❌ 需要写 Provider"]
-    Dig["dig（Uber）\n运行时反射注入"] --> Pros3["✅ 灵活装配\n✅ API 简洁\n❌ 运行时开销\n❌ 错误在运行时暴露"]
+    Manual(["手动注入\n在 main() 中 new 所有依赖"]) --> Pros1["✅ 编译期安全\n✅ 零运行时开销\n✅ 依赖关系显式\n❌ 大项目样板多"]
+    Wire(["wire（Google）\n编译时生成注入代码"]) --> Pros2["✅ 编译期安全\n✅ 零运行时开销\n✅ 自动生成代码\n❌ 需要写 Provider"]
+    Dig(["dig（Uber）\n运行时反射注入"]) --> Pros3["✅ 灵活装配\n✅ API 简洁\n❌ 运行时开销\n❌ 错误在运行时暴露"]
 
 classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
@@ -632,82 +602,21 @@ db.Select(&users, "SELECT * FROM users WHERE name LIKE ?", "%张%")
 
 ## 技术栈对照总表
 
-```html
-<div style="max-width:700px;overflow-x:auto;">
-<table style="border-collapse:collapse;width:100%;text-align:left;">
-<tr style="background:#1E88E5;color:#FFFFFF;">
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">能力层</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Java 选型</th>
-    <th style="padding:10px 16px;border:1px solid #0D47A1;">Go 选型</th>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">语言版本</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Java 17/21 LTS</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Go 1.22+</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">HTTP 框架</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Spring Boot Web</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Gin / Echo</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">微服务框架</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Spring Cloud Alibaba</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">go-zero / Kratos</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">RPC 调用</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">OpenFeign（HTTP + JSON）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">gRPC（protobuf）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">注册中心</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Nacos</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">etcd / Consul</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">配置中心</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Nacos Config</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Viper + etcd</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">API 网关</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Spring Cloud Gateway</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">go-zero Gateway</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">限流熔断</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Sentinel</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">go-zero 内置 / Sentinel Go</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">ORM</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">MyBatis / JPA</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">GORM / sqlx</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">依赖注入</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">@Autowired（IoC 容器）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">手动 / wire（代码生成）</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">中间件</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Filter + Interceptor</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Middleware 函数</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">构建</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">Maven / Gradle</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">go mod</td>
-</tr>
-<tr style="background:#F5F5F5;">
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">部署产物</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">JAR（需要 JVM）</td>
-    <td style="padding:10px 16px;border:1px solid #BDBDBD;">静态二进制（~15MB）</td>
-</tr>
-</table>
-</div>
-```
+| 能力层 | Java 选型 | Go 选型 |
+|--------|-----------|---------|
+| 语言版本 | Java 17/21 LTS | Go 1.22+ |
+| HTTP 框架 | Spring Boot Web | Gin / Echo |
+| 微服务框架 | Spring Cloud Alibaba | go-zero / Kratos |
+| RPC 调用 | OpenFeign（HTTP + JSON） | gRPC（protobuf） |
+| 注册中心 | Nacos | etcd / Consul |
+| 配置中心 | Nacos Config | Viper + etcd |
+| API 网关 | Spring Cloud Gateway | go-zero Gateway |
+| 限流熔断 | Sentinel | go-zero 内置 / Sentinel Go |
+| ORM | MyBatis / JPA | GORM / sqlx |
+| 依赖注入 | @Autowired（IoC 容器） | 手动 / wire（代码生成） |
+| 中间件 | Filter + Interceptor | Middleware 函数 |
+| 构建 | Maven / Gradle | go mod |
+| 部署产物 | JAR（需要 JVM） | 静态二进制（~15MB） |
 
 ## 总结
 

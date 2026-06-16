@@ -92,9 +92,9 @@ func main() {
 
 ```mermaid
 flowchart TD
-    IOApp["📡 应用发起 IO 操作"] --> BIO["🔒 阻塞 IO（BIO）"]
-    IOApp --> NIO["🔄 非阻塞 IO（NIO）"]
-    IOApp --> Multiplexing["📡 IO 多路复用"]
+    IOApp(["📡 应用发起 IO 操作"]) --> BIO(["🔒 阻塞 IO（BIO）"])
+    IOApp --> NIO(["🔄 非阻塞 IO（NIO）"])
+    IOApp --> Multiplexing(["📡 IO 多路复用"])
     
     BIO --> BIODesc["线程调用 read（）→ 阻塞等待\n数据就绪 → 内核拷贝到用户空间 → 返回\n\n代表：Java BIO / ServerSocket\n特点：一个连接一个线程\n缺点：线程数 = 连接数\nC10K 问题直接爆炸"]
     
@@ -128,7 +128,7 @@ Go 没有像 Netty 那样让开发者显式使用 epoll/kqueue。Go 在运行时
 
 ```mermaid
 flowchart TD
-    G["goroutine\n执行 conn.Read()"] --> NetPoller["🔧 Go netpoller\n（epoll/kqueue/IOCP）"]
+    G(["goroutine\n执行 conn.Read()"]) --> NetPoller[["🔧 Go netpoller\n（epoll/kqueue/IOCP）"]]
     G2["goroutine 被挂起到\nnetpoller 等待队列\nOS 线程不阻塞，去干别的"]
     
     NetPoller --> Block["fd 未就绪"]
@@ -162,19 +162,19 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
 ```mermaid
 flowchart TD
     subgraph NettyModel["☕ Netty Reactor 模型"]
-        BossGroup["Boss EventLoopGroup\n（1 个线程）"] --> Accept["处理 Accept 事件"]
-        Accept --> WorkerGroup["Worker EventLoopGroup\n（N 个线程）"]
+        BossGroup(["Boss EventLoopGroup\n（1 个线程）"]) --> Accept["处理 Accept 事件"]
+        Accept --> WorkerGroup(["Worker EventLoopGroup\n（N 个线程）"])
         WorkerGroup --> Pipeline1["Channel 1 Pipeline\nHandler1→Handler2→Handler3"]
         WorkerGroup --> Pipeline2["Channel 2 Pipeline\nHandler1→Handler2→Handler3"]
     end
     
     subgraph GoModel["🐹 Go netpoller 模型"]
-        ListenerG["goroutine\nAccept 循环"] --> ConnG1["goroutine\n处理连接 1\n同步代码"]
+        ListenerG(["goroutine\nAccept 循环"]) --> ConnG1["goroutine\n处理连接 1\n同步代码"]
         ListenerG --> ConnG2["goroutine\n处理连接 2\n同步代码"]
-        NetPoller2["netpoller\n管理所有 fd"]
+        NetPoller2(["netpoller\n管理所有 fd"])
     end
     
-    Note["核心差异"] --> DiffText["Netty：显式 EventLoop + Pipeline\nGo：goroutine 替代 EventLoop\n同步代码替代 Pipeline"]
+    Note[["核心差异"]] --> DiffText[["Netty：显式 EventLoop + Pipeline\nGo：goroutine 替代 EventLoop\n同步代码替代 Pipeline"]]
     
 classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
 classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;

@@ -85,7 +85,7 @@ classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-
     MSG([Producer.send\ntopic, key, value]) --> Q1{key == null ?}
     Q1 -- "是" --> STICKY[Sticky 分区\n粘在同一个 Partition 直到 Batch 满]
     Q1 -- "否" --> HASH["murmur2(key) % N\n哈希取模"]
-    STICKY --> PART_N[{Partition-N}]
+    STICKY --> PART_N["{Partition-N}"]
     HASH --> PART_N
 
     class MSG startEnd;

@@ -115,7 +115,7 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
 
     CTRL([Controller\nreturn order]) -->|"返回 Java 对象"| MC["MappingJackson2HttpMessageConverter\nSpring 的 HTTP 消息转换器"]
     MC -->|"调用"| MAPPER["ObjectMapper\nJackson 的核心类"]
-    MAPPER -->|"writeValueAsString"| JSON["{\n  \"orderId\": 10001,\n  \"productName\": \"iPhone 15\"\n}"]
+    MAPPER -->|"writeValueAsString"| JSON["{\n  #quot;orderId#quot;: 10001,\n  #quot;productName#quot;: #quot;iPhone 15#quot;\n}"]
     JSON -->|"写入 HTTP Response Body"| BROWSER([浏览器收到 JSON])
 
     class CTRL,BROWSER startEnd;

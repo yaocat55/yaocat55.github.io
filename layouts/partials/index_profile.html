@@ -160,177 +160,157 @@
         }
 
         // ==========================================
-        // 技术快讯：混合国内+国外优质信源
+        // 技术快讯：混合模式（GitHub Trending + 技术博客 RSS）
         // ==========================================
         let cachedStories = [];
         let currentUrl = "";
+        let currentMode = 'trending';
 
-        // 国内外优质技术 RSS 源（国内+国际混合）
+        // ===== 技术博客 RSS 源（深度好文） =====
         const TECH_RSS_FEEDS = [
-            // 国内源（优先）
-            { name: "36氪", url: "https://www.36kr.com/feed", icon: "🇨🇳", region: "cn" },
-            { name: "爱范儿", url: "https://www.ifanr.com/feed", icon: "📱", region: "cn" },
-            { name: "极客公园", url: "https://www.geekpark.net/rss", icon: "💡", region: "cn" },
-            { name: "雷锋网", url: "https://www.leiphone.com/feed/", icon: "🤖", region: "cn" },
-            { name: "机器之心", url: "https://www.jiqizhixin.com/feed", icon: "🧠", region: "cn" },
-            // 国际源（补充）
-            { name: "GitHub Blog", url: "https://github.blog/feed/", icon: "🐙", region: "global" },
-            { name: "InfoQ", url: "https://www.infoq.com/feed/", icon: "🎯", region: "global" },
-            { name: "Dev.to", url: "https://dev.to/feed", icon: "👨‍💻", region: "global" }
+            { name: "阮一峰的网络日志", url: "https://www.ruanyifeng.com/blog/atom.xml", icon: "📝", region: "cn" },
+            { name: "酷壳 CoolShell", url: "https://coolshell.cn/feed", icon: "⚙️", region: "cn" },
+            { name: "湾区日报", url: "https://wanqu.co/feed", icon: "🌉", region: "cn" },
+            { name: "ThoughtWorks 洞见", url: "https://insights.thoughtworks.cn/feed/", icon: "🎯", region: "cn" },
+            { name: "阿里技术", url: "https://developer.aliyun.com/feed", icon: "☁️", region: "cn" },
+            { name: "美团技术团队", url: "https://tech.meituan.com/feed/", icon: "🍜", region: "cn" },
+            { name: "Hacker News", url: "https://hnrss.org/frontpage", icon: "🚀", region: "global" },
+            { name: "Martin Fowler", url: "https://martinfowler.com/feed.atom", icon: "📐", region: "global" },
+            { name: "The Pragmatic Engineer", url: "https://blog.pragmaticengineer.com/rss/", icon: "🔧", region: "global" },
+            { name: "Go Blog", url: "https://go.dev/blog/feed.atom", icon: "🐹", region: "global" },
+            { name: "Rust Blog", url: "https://blog.rust-lang.org/feed.xml", icon: "🦀", region: "global" },
         ];
 
-        // 权重配置：国内源权重更高
-        function getWeightedRandomFeed() {
-            const weightedFeeds = [];
-            TECH_RSS_FEEDS.forEach(feed => {
-                const weight = feed.region === "cn" ? 3 : 1;
-                for (let i = 0; i < weight; i++) {
-                    weightedFeeds.push(feed);
-                }
-            });
-            const randomIndex = Math.floor(Math.random() * weightedFeeds.length);
-            return weightedFeeds[randomIndex];
-        }
-
-        // 获取技术新闻（带智能重试）
-        async function fetchTechNewsWithRetry(retryCount = 0, usedFeeds = []) {
+        // ===== 模式1: 获取 GitHub Trending（默认） =====
+        async function fetchGitHubTrending() {
             const newsText = document.getElementById("random-quote");
             if (!newsText) return;
 
             newsText.style.opacity = 0.3;
-            newsText.innerText = "正在调取全球技术快讯...";
+            newsText.innerText = "🔥 正在爬取 GitHub 热榜...";
+            currentMode = 'trending';
 
-            if (cachedStories.length > 0 && retryCount === 0) {
-                setTimeout(() => renderSingleNews(cachedStories), 80);
-                refreshCacheInBackground();
-                return;
-            }
+            try {
+                const date = new Date();
+                date.setDate(date.getDate() - 30);
+                const dateStr = date.toISOString().split('T')[0];
+                const url = `https://api.github.com/search/repositories?q=created:>${dateStr}&sort=stars&order=desc&per_page=30`;
 
-            const availableFeeds = TECH_RSS_FEEDS.filter(feed => !usedFeeds.includes(feed.name));
-            if (availableFeeds.length === 0) {
-                if (cachedStories.length > 0) {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    const topItems = data.items.slice(0, 15).map(item => ({
+                        title: `⭐ ${item.full_name}`,
+                        description: item.description || '🔥 热门项目',
+                        url: item.html_url,
+                        source: `⭐ ${(item.stargazers_count / 1000).toFixed(1)}k stars`,
+                        icon: "🔥",
+                        region: "global",
+                        isTrending: true
+                    }));
+                    cachedStories = topItems;
                     renderSingleNews(cachedStories);
                 } else {
-                    useFallbackNews();
+                    useFallbackTrending();
                 }
+            } catch (error) {
+                console.warn("GitHub Trending 获取失败:", error);
+                useFallbackTrending();
+            }
+        }
+
+        function useFallbackTrending() {
+            const fallback = [
+                { title: "⭐ vuejs/vue", description: "渐进式 JavaScript 框架", url: "https://github.com/vuejs/vue", icon: "🔥", source: "⭐ 207k stars", region: "global", isTrending: true },
+                { title: "⭐ facebook/react", description: "用于构建用户界面的库", url: "https://github.com/facebook/react", icon: "🔥", source: "⭐ 226k stars", region: "global", isTrending: true },
+                { title: "⭐ golang/go", description: "Go 编程语言", url: "https://github.com/golang/go", icon: "🔥", source: "⭐ 122k stars", region: "global", isTrending: true },
+                { title: "⭐ rust-lang/rust", description: "安全且高效的系统编程语言", url: "https://github.com/rust-lang/rust", icon: "🔥", source: "⭐ 96k stars", region: "global", isTrending: true },
+                { title: "⭐ kubernetes/kubernetes", description: "生产级容器编排系统", url: "https://github.com/kubernetes/kubernetes", icon: "🔥", source: "⭐ 109k stars", region: "global", isTrending: true },
+            ];
+            cachedStories = fallback;
+            renderSingleNews(cachedStories);
+        }
+
+        // ===== 模式2: 获取技术博客深度文章 =====
+        let blogStoryCache = [];
+        let lastBlogFetchTime = 0;
+        const BLOG_CACHE_DURATION = 10 * 60 * 1000;
+
+        async function fetchTechBlogs() {
+            const newsText = document.getElementById("random-quote");
+            if (!newsText) return;
+
+            newsText.style.opacity = 0.3;
+            newsText.innerText = "📖 正在检索技术好文...";
+            currentMode = 'blog';
+
+            const now = Date.now();
+            if (blogStoryCache.length > 0 && (now - lastBlogFetchTime) < BLOG_CACHE_DURATION) {
+                cachedStories = blogStoryCache;
+                renderSingleNews(cachedStories);
                 return;
             }
 
-            const rssSource = availableFeeds[Math.floor(Math.random() * availableFeeds.length)];
-            // 使用 https://api.rss2json.com 代理（支持 HTTP，但推荐 HTTPS）
-            const proxyUrl = 'https://api.rss2json.com/v1/api.json';
-            const apiUrl = `${proxyUrl}?rss_url=${encodeURIComponent(rssSource.url)}`;
+            const shuffled = [...TECH_RSS_FEEDS].sort(() => Math.random() - 0.5);
+            const selectedFeeds = shuffled.slice(0, 3);
+            let allStories = [];
 
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+            for (const feed of selectedFeeds) {
+                try {
+                    const proxyUrl = 'https://api.rss2json.com/v1/api.json';
+                    const apiUrl = `${proxyUrl}?rss_url=${encodeURIComponent(feed.url)}`;
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                const response = await fetch(apiUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
+                    const response = await fetch(apiUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    const data = await response.json();
 
-                const data = await response.json();
-
-                if (data && data.status === "ok" && data.items && data.items.length > 0) {
-                    const newStories = data.items.slice(0, 20).map(item => ({
-                        title: cleanHtmlTitle(item.title),
-                        url: item.link,
-                        source: rssSource.name,
-                        icon: rssSource.icon,
-                        region: rssSource.region,
-                        pubDate: item.pubDate
-                    })).filter(story => story.title && story.title.length > 5);
-
-                    if (newStories.length > 0) {
-                        const mergedStories = [...newStories, ...cachedStories];
-                        const uniqueStories = [];
-                        const titleSet = new Set();
-                        for (const story of mergedStories) {
-                            const key = story.title.substring(0, 40);
-                            if (!titleSet.has(key)) {
-                                titleSet.add(key);
-                                uniqueStories.push(story);
-                            }
-                        }
-                        cachedStories = uniqueStories.slice(0, 30);
-                        renderSingleNews(cachedStories);
-                        return;
-                    } else {
-                        throw new Error("No valid stories");
+                    if (data?.status === "ok" && data.items?.length > 0) {
+                        const stories = data.items.slice(0, 8).map(item => ({
+                            title: cleanHtmlTitle(item.title),
+                            url: item.link,
+                            source: feed.name,
+                            icon: feed.icon,
+                            region: feed.region,
+                            isTrending: false
+                        })).filter(s => s.title && s.title.length > 5);
+                        allStories = [...allStories, ...stories];
                     }
-                } else {
-                    throw new Error("Invalid response");
+                } catch (e) {
+                    console.debug(`从 ${feed.name} 获取失败:`, e.message);
                 }
-            } catch (error) {
-                console.warn(`从 ${rssSource.name} 获取失败:`, error.message);
-                fetchTechNewsWithRetry(retryCount + 1, [...usedFeeds, rssSource.name]);
             }
-        }
 
-        let isRefreshingCache = false;
-        let lastRefreshTime = 0;
-        const CACHE_REFRESH_INTERVAL = 5 * 60 * 1000;
-
-        async function refreshCacheInBackground() {
-            const now = Date.now();
-            if (isRefreshingCache || (now - lastRefreshTime) < CACHE_REFRESH_INTERVAL) return;
-
-            isRefreshingCache = true;
-            lastRefreshTime = now;
-
-            const rssSource = TECH_RSS_FEEDS[Math.floor(Math.random() * TECH_RSS_FEEDS.length)];
-            const proxyUrl = 'https://api.rss2json.com/v1/api.json';
-
-            try {
-                const response = await fetch(`${proxyUrl}?rss_url=${encodeURIComponent(rssSource.url)}`);
-                const data = await response.json();
-                if (data?.items?.length) {
-                    const newStories = data.items.slice(0, 15).map(item => ({
-                        title: cleanHtmlTitle(item.title),
-                        url: item.link,
-                        source: rssSource.name,
-                        icon: rssSource.icon,
-                        region: rssSource.region
-                    })).filter(story => story.title && story.title.length > 5);
-
-                    if (newStories.length > 0) {
-                        const merged = [...newStories, ...cachedStories];
-                        const unique = [];
-                        const titleSet = new Set();
-                        for (const story of merged) {
-                            const key = story.title.substring(0, 40);
-                            if (!titleSet.has(key)) {
-                                titleSet.add(key);
-                                unique.push(story);
-                            }
-                        }
-                        cachedStories = unique.slice(0, 30);
+            if (allStories.length > 0) {
+                const unique = [];
+                const titleSet = new Set();
+                for (const story of allStories) {
+                    const key = story.title.substring(0, 30);
+                    if (!titleSet.has(key)) {
+                        titleSet.add(key);
+                        unique.push(story);
                     }
                 }
-            } catch (e) {
-                console.debug("Background cache refresh failed:", e);
-            } finally {
-                isRefreshingCache = false;
+                blogStoryCache = unique.slice(0, 25);
+                lastBlogFetchTime = Date.now();
+                cachedStories = blogStoryCache;
+                renderSingleNews(cachedStories);
+            } else {
+                console.warn("博客获取失败，切回 Trending 模式");
+                fetchGitHubTrending();
             }
         }
 
-        function cleanHtmlTitle(rawTitle) {
-            if (!rawTitle || typeof rawTitle !== "string") return "技术快讯";
-            let cleaned = rawTitle.replace(/<[^>]*>/g, "");
-            cleaned = cleaned.replace(/<!\[CDATA\[|\]\]>/g, "");
-            cleaned = cleaned.replace(/\s+/g, " ").trim();
-            cleaned = cleaned.replace(/^(新闻|快讯|热点|资讯|Tech|News):\s*/i, "");
-            if (cleaned.length > 68) {
-                cleaned = cleaned.substring(0, 65) + "...";
-            }
-            return cleaned || "技术快讯";
-        }
-
+        // ===== 通用渲染函数 =====
         function renderSingleNews(stories) {
             const newsText = document.getElementById("random-quote");
             if (!newsText) return;
 
             if (!stories || stories.length === 0) {
-                useFallbackNews();
+                newsText.innerText = "📡 暂无内容，点击刷新重试";
+                newsText.style.opacity = 1;
                 return;
             }
 
@@ -338,46 +318,63 @@
             const story = stories[randomIdx];
             if (story && story.url) currentUrl = story.url;
 
-            let cleanTitle = story.title;
-            if (!cleanTitle || cleanTitle.length === 0) {
-                cleanTitle = "技术快讯加载中...";
+            let displayTitle = story.title || "技术快讯";
+            if (displayTitle.length > 60) displayTitle = displayTitle.substring(0, 58) + "...";
+
+            let suffix = '';
+            if (story.isTrending) {
+                suffix = ` ${story.source || ''}`;
+            } else {
+                suffix = ` [${story.source || '技术博客'}]`;
             }
-            if (cleanTitle.length > 62) cleanTitle = cleanTitle.substring(0, 60) + "...";
 
-            const prefixIcon = story.icon || (story.region === "cn" ? "🇨🇳" : "🌍");
-            const sourceTag = story.source ? ` [${story.source}]` : "";
+            const prefixIcon = story.icon || (story.region === 'cn' ? '🇨🇳' : '🌍');
+            const modeTag = currentMode === 'trending' ? '🔥 ' : '📖 ';
 
-            newsText.innerText = `${prefixIcon} ${cleanTitle}${sourceTag}`;
+            newsText.innerText = `${modeTag}${prefixIcon} ${displayTitle}${suffix}`;
             newsText.style.opacity = 1;
         }
 
-        function useFallbackNews() {
-            const fallbackStories = [
-                { title: "DeepSeek-V3 发布，国产大模型再创佳绩", url: "https://www.36kr.com", icon: "🇨🇳", source: "36氪", region: "cn" },
-                { title: "GitHub Copilot 免费版全面推出，开发者效率提升", url: "https://github.blog", icon: "🐙", source: "GitHub", region: "global" },
-                { title: "华为鸿蒙生态设备突破 8 亿台", url: "https://www.ifanr.com", icon: "📱", source: "爱范儿", region: "cn" },
-                { title: "React 19 新特性前瞻：编译器优化", url: "https://dev.to", icon: "👨‍💻", source: "Dev.to", region: "global" },
-                { title: "阿里云推出通义千问 2.0，性能大幅升级", url: "https://www.aliyun.com", icon: "☁️", source: "阿里技术", region: "cn" }
-            ];
-            cachedStories = fallbackStories;
-            renderSingleNews(cachedStories);
+        function cleanHtmlTitle(rawTitle) {
+            if (!rawTitle || typeof rawTitle !== "string") return "技术文章";
+            let cleaned = rawTitle.replace(/<[^>]*>/g, "");
+            cleaned = cleaned.replace(/<!\[CDATA\[|\]\]>/g, "");
+            cleaned = cleaned.replace(/\s+/g, " ").trim();
+            cleaned = cleaned.replace(/^(新闻|快讯|热点|资讯|Tech|News):\s*/i, "");
+            return cleaned || "技术文章";
         }
+
+        // ===== 智能刷新：轮换模式 =====
+        let refreshCounter = 0;
 
         function refreshTechNews() {
             const newsText = document.getElementById("random-quote");
-            if (newsText) {
-                newsText.style.opacity = 0.3;
-                newsText.innerText = "正在刷新技术快讯...";
+            if (!newsText) return;
+
+            refreshCounter++;
+
+            if (refreshCounter % 3 === 0) {
+                fetchTechBlogs();
+            } else if (currentMode === 'blog') {
+                fetchGitHubTrending();
+            } else {
+                fetchGitHubTrending();
             }
-            fetchTechNewsWithRetry(0, []);
         }
 
-        fetchTechNewsWithRetry(0, []);
-
+        // ===== 后台定时切换 =====
         setInterval(() => {
-            refreshCacheInBackground();
-        }, 10 * 60 * 1000);
+            if (currentMode === 'trending') {
+                fetchTechBlogs();
+            } else {
+                fetchGitHubTrending();
+            }
+        }, 15 * 60 * 1000);
 
+        // ===== 初始化：默认显示 Trending =====
+        fetchGitHubTrending();
+
+        // ===== 绑定刷新按钮 =====
         const refreshQuoteBtn = document.getElementById("refresh-quote-btn");
         if (refreshQuoteBtn) {
             refreshQuoteBtn.addEventListener("click", function (e) {
@@ -386,6 +383,7 @@
             });
         }
 
+        // ===== 点击跳转原文 =====
         const newsZone = document.getElementById("tech-news-click-zone");
         if (newsZone) {
             newsZone.addEventListener("click", function () {
@@ -396,33 +394,30 @@
         }
 
         // ==========================================
-        // GitHub 全球星标 Top 5（保持原样，不做任何修改）
+        // GitHub 全球星标 Top 5
         // ==========================================
         fetch(`https://api.github.com/search/repositories?q=stars:>10000&sort=stars&order=desc&per_page=5`)
             .then(res => res.json()).then(data => {
                 document.getElementById("github-top-repos").innerHTML = data.items.map((repo, idx) => `
-                    <li>
-                        <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">
-                            <span class="repo-title"><span class="repo-rank-gold">#${idx + 1}</span><b>${repo.owner.login}</b>/${repo.name}</span>
-                            <span class="repo-star-gold">⭐ ${(repo.stargazers_count / 1000).toFixed(1)}k</span>
-                        </a>
-                    </li>`).join('');
+                <li>
+                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer">
+                        <span class="repo-title"><span class="repo-rank-gold">#${idx + 1}</span><b>${repo.owner.login}</b>/${repo.name}</span>
+                        <span class="repo-star-gold">⭐ ${(repo.stargazers_count / 1000).toFixed(1)}k</span>
+                    </a>
+                </li>`).join('');
             }).catch(() => { document.getElementById("github-top-repos").innerHTML = `<p class="widget-error">加载失败</p>`; });
 
         // ==========================================
-        // 天气模块：IP 定位 + Open-Meteo 天气（完全兼容 HTTP）
-        // 方案：ip-api.com + Open-Meteo
+        // 天气模块：IP 定位 + Open-Meteo 天气
         // ==========================================
         let weatherCache = null;
         let weatherCacheTime = 0;
-        const WEATHER_CACHE_DURATION = 15 * 60 * 1000; // 15分钟缓存
+        const WEATHER_CACHE_DURATION = 15 * 60 * 1000;
 
-        // 获取天气的主函数（通过 IP 定位）
         async function fetchWeatherByIP() {
             const weatherPanel = document.getElementById("clean-weather-panel");
             if (!weatherPanel) return;
 
-            // 检查缓存
             const now = Date.now();
             if (weatherCache && (now - weatherCacheTime) < WEATHER_CACHE_DURATION) {
                 weatherPanel.innerHTML = weatherCache;
@@ -432,7 +427,6 @@
             weatherPanel.innerHTML = `<p class="widget-loading">📍 正在定位您的位置...</p>`;
 
             try {
-                // 步骤1: 通过 IP 获取地理位置（ip-api.com 支持 HTTP）
                 const ipResponse = await fetch('http://ip-api.com/json/?fields=status,city,regionName,countryCode,lat,lon,query', {
                     mode: 'cors'
                 });
@@ -448,7 +442,6 @@
 
                     weatherPanel.innerHTML = `<p class="widget-loading">🌤️ 正在获取 ${city} 天气...</p>`;
 
-                    // 步骤2: 使用 Open-Meteo 获取天气
                     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,windspeed_10m&timezone=Asia/Shanghai`;
 
                     const weatherResponse = await fetch(weatherUrl);
@@ -460,45 +453,29 @@
                         const windspeed = current.windspeed;
                         const weatherCode = current.weathercode;
 
-                        // 天气代码转文字和图标
                         let weatherText = '';
                         let weatherEmoji = '';
 
-                        if (weatherCode === 0) {
-                            weatherText = '晴';
-                            weatherEmoji = '☀️';
-                        } else if (weatherCode === 1) {
-                            weatherText = '多云';
-                            weatherEmoji = '🌤️';
-                        } else if (weatherCode === 2 || weatherCode === 3) {
-                            weatherText = '阴';
-                            weatherEmoji = '☁️';
-                        } else if (weatherCode === 45 || weatherCode === 48) {
-                            weatherText = '雾';
-                            weatherEmoji = '🌫️';
-                        } else if ((weatherCode >= 51 && weatherCode <= 55) || (weatherCode >= 61 && weatherCode <= 65) || (weatherCode >= 80 && weatherCode <= 82)) {
-                            weatherText = '雨';
-                            weatherEmoji = '🌧️';
-                        } else if (weatherCode >= 71 && weatherCode <= 75) {
-                            weatherText = '雪';
-                            weatherEmoji = '❄️';
-                        } else {
-                            weatherText = '未知';
-                            weatherEmoji = '🌡️';
-                        }
+                        if (weatherCode === 0) { weatherText = '晴'; weatherEmoji = '☀️'; }
+                        else if (weatherCode === 1) { weatherText = '多云'; weatherEmoji = '🌤️'; }
+                        else if (weatherCode === 2 || weatherCode === 3) { weatherText = '阴'; weatherEmoji = '☁️'; }
+                        else if (weatherCode === 45 || weatherCode === 48) { weatherText = '雾'; weatherEmoji = '🌫️'; }
+                        else if ((weatherCode >= 51 && weatherCode <= 55) || (weatherCode >= 61 && weatherCode <= 65) || (weatherCode >= 80 && weatherCode <= 82)) { weatherText = '雨'; weatherEmoji = '🌧️'; }
+                        else if (weatherCode >= 71 && weatherCode <= 75) { weatherText = '雪'; weatherEmoji = '❄️'; }
+                        else { weatherText = '未知'; weatherEmoji = '🌡️'; }
 
                         const weatherHtml = `
-                            <div class="weather-display">
-                                <div class="weather-temp-block">
-                                    <span class="weather-large-temp">${temperature}°C</span>
-                                    <span class="weather-condition">${weatherEmoji} ${weatherText}</span>
-                                </div>
-                                <div class="weather-details">
-                                    <p>💨 风速: ${windspeed} km/h</p>
-                                    <p class="weather-loc">📍 ${city}${region ? ' · ' + region : ''}${country ? ' · ' + country : ''}</p>
-                                    <p class="weather-ip-note" style="font-size: 11px; color: #888; margin-top: 6px;">🔍 IP: ${ipAddress}</p>
-                                </div>
-                            </div>`;
+                        <div class="weather-display">
+                            <div class="weather-temp-block">
+                                <span class="weather-large-temp">${temperature}°C</span>
+                                <span class="weather-condition">${weatherEmoji} ${weatherText}</span>
+                            </div>
+                            <div class="weather-details">
+                                <p>💨 风速: ${windspeed} km/h</p>
+                                <p class="weather-loc">📍 ${city}${region ? ' · ' + region : ''}${country ? ' · ' + country : ''}</p>
+                                <p class="weather-ip-note" style="font-size: 11px; color: #888; margin-top: 6px;">🔍 IP: ${ipAddress}</p>
+                            </div>
+                        </div>`;
                         weatherPanel.innerHTML = weatherHtml;
                         weatherCache = weatherHtml;
                         weatherCacheTime = Date.now();
@@ -511,19 +488,16 @@
                 }
             } catch (error) {
                 console.warn("IP天气获取失败:", error);
-                // 降级方案：使用默认城市天气
                 fetchFallbackWeather();
             }
         }
 
-        // 降级方案：使用默认城市（北京）获取天气
         function fetchFallbackWeather() {
             const weatherPanel = document.getElementById("clean-weather-panel");
             if (!weatherPanel) return;
 
             weatherPanel.innerHTML = `<p class="widget-loading">🌍 使用默认城市获取天气...</p>`;
 
-            // 使用 Open-Meteo 查询北京天气（经纬度：39.9042, 116.4074）
             fetch('https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current_weather=true&timezone=Asia/Shanghai')
                 .then(res => res.json())
                 .then(data => {
@@ -536,34 +510,23 @@
                         let weatherText = '';
                         let weatherEmoji = '';
 
-                        if (weatherCode === 0) {
-                            weatherText = '晴';
-                            weatherEmoji = '☀️';
-                        } else if (weatherCode === 1) {
-                            weatherText = '多云';
-                            weatherEmoji = '🌤️';
-                        } else if (weatherCode === 2 || weatherCode === 3) {
-                            weatherText = '阴';
-                            weatherEmoji = '☁️';
-                        } else if (weatherCode >= 71 && weatherCode <= 75) {
-                            weatherText = '雪';
-                            weatherEmoji = '❄️';
-                        } else {
-                            weatherText = '雨';
-                            weatherEmoji = '🌧️';
-                        }
+                        if (weatherCode === 0) { weatherText = '晴'; weatherEmoji = '☀️'; }
+                        else if (weatherCode === 1) { weatherText = '多云'; weatherEmoji = '🌤️'; }
+                        else if (weatherCode === 2 || weatherCode === 3) { weatherText = '阴'; weatherEmoji = '☁️'; }
+                        else if (weatherCode >= 71 && weatherCode <= 75) { weatherText = '雪'; weatherEmoji = '❄️'; }
+                        else { weatherText = '雨'; weatherEmoji = '🌧️'; }
 
                         const weatherHtml = `
-                            <div class="weather-display">
-                                <div class="weather-temp-block">
-                                    <span class="weather-large-temp">${temperature}°C</span>
-                                    <span class="weather-condition">${weatherEmoji} ${weatherText}</span>
-                                </div>
-                                <div class="weather-details">
-                                    <p>💨 风速: ${windspeed} km/h</p>
-                                    <p class="weather-loc">📍 北京（定位失败时使用）</p>
-                                </div>
-                            </div>`;
+                        <div class="weather-display">
+                            <div class="weather-temp-block">
+                                <span class="weather-large-temp">${temperature}°C</span>
+                                <span class="weather-condition">${weatherEmoji} ${weatherText}</span>
+                            </div>
+                            <div class="weather-details">
+                                <p>💨 风速: ${windspeed} km/h</p>
+                                <p class="weather-loc">📍 北京（定位失败时使用）</p>
+                            </div>
+                        </div>`;
                         weatherPanel.innerHTML = weatherHtml;
                     } else {
                         throw new Error();
@@ -571,25 +534,22 @@
                 })
                 .catch(() => {
                     weatherPanel.innerHTML = `
-                        <div class="weather-display">
-                            <p style="text-align: center; color: #888;">⚠️ 天气服务暂时不可用</p>
-                            <p style="font-size: 12px; text-align: center; margin-top: 8px;">
-                                <button onclick="location.reload()" style="background: none; border: 1px solid #ccc; border-radius: 4px; padding: 4px 12px; cursor: pointer;">🔄 重试</button>
-                            </p>
-                        </div>`;
+                    <div class="weather-display">
+                        <p style="text-align: center; color: #888;">⚠️ 天气服务暂时不可用</p>
+                        <p style="font-size: 12px; text-align: center; margin-top: 8px;">
+                            <button onclick="location.reload()" style="background: none; border: 1px solid #ccc; border-radius: 4px; padding: 4px 12px; cursor: pointer;">🔄 重试</button>
+                        </p>
+                    </div>`;
                 });
         }
 
-        // 手动刷新天气
         function refreshWeather() {
             weatherCache = null;
             fetchWeatherByIP();
         }
 
-        // 初始化天气
         fetchWeatherByIP();
 
-        // 绑定刷新天气按钮
         const refreshGeoBtn = document.getElementById("refresh-geo-btn");
         if (refreshGeoBtn) {
             refreshGeoBtn.addEventListener("click", function (e) {

@@ -103,13 +103,13 @@ func main() {
 
 ```mermaid
 flowchart TD
-    JavaVar["☕ Java 变量声明"] --> J1["显式类型：String s = \"hello\""]
-    JavaVar --> J2["类型推断：var s = \"hello\"（Java 10+）"]
-    JavaVar --> J3["常量：final String S = \"hello\""]
+    JavaVar(["☕ Java 变量声明"]) --> J1["显式类型：String s = #quot;hello#quot;"]
+    JavaVar --> J2["类型推断：var s = #quot;hello#quot;（Java 10+）"]
+    JavaVar --> J3["常量：final String S = #quot;hello#quot;"]
     
-    GoVar["🐹 Go 变量声明"] --> G1["完整声明：var s string = \"hello\""]
-    GoVar --> G2["短声明：s := \"hello\"（仅函数内）"]
-    GoVar --> G3["常量：const S = \"hello\""]
+    GoVar(["🐹 Go 变量声明"]) --> G1["完整声明：var s string = #quot;hello#quot;"]
+    GoVar --> G2["短声明：s := #quot;hello#quot;（仅函数内）"]
+    GoVar --> G3["常量：const S = #quot;hello#quot;"]
     GoVar --> G4["多变量：a, b := 1, 2"]
     
 classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
@@ -347,11 +347,11 @@ func processDB() error {
 
 ```mermaid
 flowchart TD
-    JavaClean["☕ Java 资源清理"] --> JTR["try-with-resources\n（Java 7+，自动 close）"]
+    JavaClean(["☕ Java 资源清理"]) --> JTR["try-with-resources\n（Java 7+，自动 close）"]
     JavaClean --> JTF["try-finally\n（手动关闭，嵌套多）"]
     JTF --> JTFN["嵌套3层 try-finally\n释放和申请离得很远"]
     
-    GoClean["🐹 Go defer"] --> GD["申请+释放写在一起\ndefer f.Close（）"]
+    GoClean(["🐹 Go defer"]) --> GD["申请+释放写在一起\ndefer f.Close（）"]
     GD --> GLIFO["多个 defer：后进先出\ndefer A → defer B → defer C\n执行：C → B → A"]
     
 classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
@@ -409,32 +409,31 @@ type error interface {
 
 下面是 Java 异常调用栈和 Go error 向上传播的对比：
 
-<div style="display:flex;gap:20px;max-width:700px">
-<div style="flex:1;border:2px solid #E64A19;border-radius:8px;padding:16px;background:#FFF3E0;color:#1e2a16">
-<div style="background:#1E88E5;color:#FFFFFF;padding:8px 12px;border-radius:4px 4px 0 0;font-weight:bold;text-align:center">☕ Java 异常链路</div>
-<div style="padding:8px">
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#1e2a16">Controller → Service</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#1e2a16;border-left:3px solid #E64A19">throws → ControllerAdvice</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#C8E6C9;color:#1e2a16">Service → Repository</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#C8E6C9;color:#1e2a16;border-left:3px solid #E64A19">throw new Exception ↻</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#C8E6C9;color:#1e2a16;border-left:3px solid #E64A19">catch + log.error（）</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#1e2a16">Repository → DB</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#C62828;font-weight:bold">❌ SQLException</div>
-</div>
-</div>
-<div style="flex:1;border:2px solid #388E3C;border-radius:8px;padding:16px;background:#E8F5E9;color:#1e2a16">
-<div style="background:#1E88E5;color:#FFFFFF;padding:8px 12px;border-radius:4px 4px 0 0;font-weight:bold;text-align:center">🐹 Go Error 链路</div>
-<div style="padding:8px">
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#1e2a16">Handler → Service</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#1e2a16;border-left:3px solid #388E3C">if err != nil { return }</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#C8E6C9;color:#1e2a16">Service → Repository</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#C8E6C9;color:#1e2a16;border-left:3px solid #388E3C">if err != nil { return }</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#C8E6C9;color:#1e2a16;border-left:3px solid #388E3C">fmt.Errorf("...: %w", err)</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#1e2a16">Repository → DB</div>
-<div style="border:1px solid #BDBDBD;padding:8px;margin:4px 0;background:#F5F5F5;color:#C62828;font-weight:bold">❌ sql.ErrNoRows</div>
-</div>
-</div>
-</div>
+```mermaid
+flowchart LR
+    subgraph Java["☕ Java 异常链路"]
+        direction TB
+        J1(["Controller → Service"])
+        J2["throws → ControllerAdvice"]
+        J3["Service → Repository"]
+        J4["throw new Exception ↻"]
+        J5["catch + log.error()"]
+        J6["Repository → DB"]
+        J7(["❌ SQLException"])
+        J1 --> J2 --> J3 --> J4 --> J5 --> J6 --> J7
+    end
+    subgraph Go["🐹 Go Error 链路"]
+        direction TB
+        G1(["Handler → Service"])
+        G2["if err != nil { return }"]
+        G3["Service → Repository"]
+        G4["if err != nil { return }"]
+        G5["fmt.Errorf('...: %w', err)"]
+        G6["Repository → DB"]
+        G7(["❌ sql.ErrNoRows"])
+        G1 --> G2 --> G3 --> G4 --> G5 --> G6 --> G7
+    end
+```
 
 关键差异：
 
@@ -586,11 +585,11 @@ Go 没有中央仓库的概念——依赖直接从 Git 仓库拉。 `github.com
 
 ```mermaid
 flowchart TD
-    Maven["☕ Maven 依赖流"] --> MC["1. 编辑 pom.xml\n添加 groupId/artifactId/version"]
+    Maven(["☕ Maven 依赖流"]) --> MC["1. 编辑 pom.xml\n添加 groupId/artifactId/version"]
     MC --> MC2["2. mvn install\n从 Maven Central 下载 jar"]
     MC2 --> MC3["3. ~/.m2/repository\n本地缓存"]
     
-    GoMod["🐹 Go Modules"] --> GM1["1. go get github.com/xx/yy@v1.0"]
+    GoMod(["🐹 Go Modules"]) --> GM1["1. go get github.com/xx/yy@v1.0"]
     GM1 --> GM2["2. 直接从 Git 仓库拉代码"]
     GM2 --> GM3["3. $GOPATH/pkg/mod\n本地缓存"]
     GM2 --> GM4["4. go.sum 锁定 SHA-256"]
