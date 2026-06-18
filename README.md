@@ -44,7 +44,10 @@
 | 布局 | 自定义首页 Profile 模板 | `layouts/partials/index_profile.html` |
 | 布局 | B 站视频短代码（封面预览/分P/弹幕/BV复制） | `layouts/shortcodes/bilibili.html` |
 | 布局 | Mermaid 代码块渲染钩子 | `layouts/_default/_markup/render-codeblock-mermaid.html` |
-| 样式 | 完整主题配色 + 智能代码高亮 + Mermaid 白底 | `assets/css/extended/custom.css` |
+| 样式 | 完整主题配色 + 智能代码高亮 + 毛玻璃全站联动 + 背景图像层 | `assets/css/extended/custom.css` |
+| 布局 | 列表/归档/搜索/标签/分类页面模板覆盖 | `layouts/_default/list.html` |
+| 布局 | 导航栏模板覆盖（全透明） | `layouts/partials/header.html` |
+| 资源 | 深浅模式背景图 | `static/images/bg-light.webp`, `static/images/bg-dark.webp` |
 | 功能 | Mermaid（白底适配）/ KaTeX / 图片缩放 / D2 SVG 灯箱 / 字体 | `layouts/partials/extend_head.html` |
 | 功能 | Live2D 看板娘 / 猫爪特效 / Cat Radio | `layouts/partials/extend_footer.html`, `layouts/partials/music-player.html` |
 | 工具 | D2 图表编译脚本 + Markdown AST 校验 | `scripts/render-d2.mjs`, `scripts/validate-markdown.mjs` |
@@ -132,11 +135,39 @@
 
 每种语言覆盖了 Chroma 高亮的所有 token 类型（注释、关键字、字符串、数字、函数名、类名、操作符等）。
 
-### 2.5 其他样式模块
+### 2.5 背景图像系统
+
+- `body::before` 伪元素承载背景图，与 body 处于同一层叠上下文
+- 浅色模式：`bg-light.webp`，opacity 0.10
+- 深色模式：`bg-dark.webp`，opacity 0.13
+- 主题切换时 0.6s 平滑过渡
+- body 保持 MD3 纯色底色，`body::before` 叠加纹理
+
+### 2.6 毛玻璃联动体系
+
+利用 `backdrop-filter: blur()` 穿透透明容器捕获 `body::before` 背景图层：
+
+| 组件 | 透明度 | blur | 说明 |
+|------|--------|------|------|
+| `.header` 导航栏 | 全透明 | — | 背景图直接透出 |
+| `.post-entry` / `.first-entry` 列表卡片 | 90% | 20px | hover 88% |
+| `.widget-box` 首页卡片 | 55% | 20px | 天气/快讯/GitHub |
+| `.archive-entry` 归档条目 | 全透明 | — | hover 50% 浮出 |
+| `.searchbox` 搜索框 | 全透明 | — | 无边框 |
+| `.toc` 目录 | 50% | 8px | 半透明毛玻璃 |
+| `blockquote` 引用块 | 50% | 8px | 半透明毛玻璃 |
+| 移动端 (≤768px) | 纯色 | 关闭 | 省电防卡顿 |
+
+### 2.7 深浅模式字体渲染统一
+
+- 浅色模式：`-webkit-font-smoothing: antialiased`（文字显细）
+- 深色模式：`-webkit-font-smoothing: auto`（亚像素渲染，避免暗底亮字变宽导致换行）
+
+### 2.8 其他样式模块
 
 | 模块 | 主要修改 |
 |------|----------|
-| 文章卡片 | 圆角 16px、阴影、hover 上浮 2px |
+| 文章卡片 | 圆角 16px、阴影、hover 上浮 2px（单篇文章保持纯色保护阅读） |
 | 标题系统 | h1-h4 独立配色（浅色/深色各不同）、h2 底部边框、h3 hover 平移 |
 | 代码块 | 圆角 12px、自定义滚动条、hover 阴影、按语言 IDE 主题适配 |
 | 行内代码 | 浅色绿底/深色半透明白底 |
@@ -146,7 +177,7 @@
 | 图片 | 居中圆角阴影、hover 放大 1.01x |
 | 目录 (TOC) | 三断点响应式（大屏固定侧边栏 / 中屏 / 移动端折叠）、半透明毛玻璃 |
 | 标签云 | 胶囊形状、hover 上浮变色 |
-| 搜索框 | 半透明毛玻璃、圆角 28px |
+| 搜索框 | 全透明无边框、圆角 16px |
 | 代码复制按钮 | hover 显示、主题适配 |
 | 个人头像 | 圆形 150px、hover 放大 1.03x |
 | 脚注 | 渐变色顶部分隔线、代码字体编号 |
@@ -250,19 +281,21 @@ yaocat55.github.io/
 ├── assets/
 │   └── css/
 │       └── extended/
-│           └── custom.css          # 核心：深度定制样式 + Mermaid 白底
+│           └── custom.css          # 核心：深度定制样式 + 毛玻璃 + 背景图
 ├── content/
 │   ├── diagrams/                   # D2 图表源文件（.gitignore）
 │   └── posts/                      # Markdown 博客文章
 ├── layouts/
 │   ├── _default/
 │   │   ├── baseof.html             # 基础 HTML 骨架
+│   │   ├── list.html               # 列表/标签/分类页（PaperMod 覆盖）
 │   │   ├── single.html             # 文章页 + Mermaid 支持
 │   │   └── _markup/
 │   │       └── render-codeblock-mermaid.html  # Mermaid 渲染钩子
 │   ├── partials/
 │   │   ├── extend_head.html        # Mermaid/KaTeX/字体/灯箱缩放/D2 SVG
 │   │   ├── extend_footer.html      # Live2D/猫爪特效
+│   │   ├── header.html             # 导航栏（PaperMod 覆盖，全透明）
 │   │   ├── index_profile.html      # 首页 Profile 模板
 │   │   └── music-player.html       # Cat Radio 音乐播放器
 │   └── shortcodes/
@@ -275,6 +308,8 @@ yaocat55.github.io/
 │   └── d2.exe                      # D2 CLI 二进制
 ├── static/
 │   ├── images/
+│   │   ├── bg-light.webp           # 浅色模式背景图
+│   │   ├── bg-dark.webp            # 深色模式背景图
 │   │   └── d2/                     # D2 编译产出的 SVG 图表（提交 git）
 │   └── music/                      # Cat Radio 音乐文件
 ├── hugo.toml                       # 站点配置

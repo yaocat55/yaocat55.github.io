@@ -56,14 +56,60 @@ html[data-theme="dark"] {
 
 
 
+/* ============================================
+   背景图像系统 — MD3 毛玻璃生态联动
+   ============================================ */
+
+/* html 垫底纯色：图片加载前/失败时的保底 */
+html {
+    background: var(--body-bg);
+}
+
+/* 背景图像层：位于 body 内部，body 背景色之上、内容区之下
+   毛玻璃卡片（TOC/搜索/引用块/列表卡片）的 backdrop-filter
+   处于同一层叠上下文，可直接捕获此层的柔光纹理 */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: opacity 0.6s cubic-bezier(0.2, 0, 0, 1);
+}
+
+html:not([data-theme="dark"]) body::before {
+    background-image: url('/images/bg-light.webp');
+    opacity: 0.10;
+}
+
+html[data-theme="dark"] body::before {
+    background-image: url('/images/bg-dark.webp');
+    opacity: 0.13;
+}
+
+
+
 /* 基础样式 */
 body {
     font-family: var(--font-base);
     background-color: var(--body-bg);
     color: var(--content);
-    -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     transition: background-color var(--duration-normal), color var(--duration-normal);
+    position: relative;
+}
+
+/* 浅色模式：亚像素抗锯齿，文字显细 */
+html:not([data-theme="dark"]) body {
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 暗色模式：浏览器默认渲染，避免亮底暗字与暗底亮字的宽度差异导致换行 */
+html[data-theme="dark"] body {
+    -webkit-font-smoothing: auto;
 }
 
 code,
@@ -80,6 +126,19 @@ samp {
 
 html[data-theme="dark"] ::selection {
     background: rgba(230, 195, 74, 0.45);
+}
+
+/* 导航栏 - 全透明，背景图直接透出 */
+.header {
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+}
+
+/* 移动端导航栏回退纯色 */
+@media (max-width: 768px) {
+    .header {
+        background: var(--entry);
+    }
 }
 
 /* 动画 */
@@ -113,7 +172,9 @@ html[data-theme="dark"] .main .post {
 }
 
 .post-entry {
-    background: var(--entry);
+    background: color-mix(in srgb, var(--entry) 90%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     border: none;
     transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
@@ -128,13 +189,29 @@ html[data-theme="dark"] .main .post {
 .post-entry:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-    background: var(--card-bg);
+    background: color-mix(in srgb, var(--card-bg) 88%, transparent);
 }
 
 /* 可选：添加一个高亮边框效果（更 MD3） */
 .post-entry:active {
     transform: translateY(0);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 移动端：关闭毛玻璃效果，省电防卡顿 */
+@media (max-width: 768px) {
+    .post-entry,
+    .list .post-entry,
+    .first-entry {
+        background: var(--entry);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    .post-entry:hover,
+    .list .post-entry:hover,
+    .first-entry:hover {
+        background: var(--card-bg);
+    }
 }
 
 
@@ -1393,10 +1470,12 @@ html[data-theme="dark"] .search-wrapper .search input::placeholder {
     color: color-mix(in srgb, var(--content) 50%, transparent);
 }
 
-/* 列表项 - MD3 卡片风格 */
+/* 列表项 - MD3 卡片 + 毛玻璃 */
 html[data-theme="dark"] .list .post-entry,
 html[data-theme="dark"] .first-entry {
-    background: var(--card-bg);
+    background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: none;
     border-radius: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -1407,6 +1486,7 @@ html[data-theme="dark"] .list .post-entry:hover,
 html[data-theme="dark"] .first-entry:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transform: translateY(-2px);
+    background: color-mix(in srgb, var(--card-bg) 82%, transparent);
 }
 
 /* 分页 - MD3 风格 */
@@ -1442,10 +1522,12 @@ html[data-theme="dark"] .post-meta time {
     letter-spacing: 0.3px;
 }
 
-/* 浅色模式补充 - 保持一致性 */
+/* 浅色模式补充 - 毛玻璃一致 */
 html:not([data-theme="dark"]) .list .post-entry,
 html:not([data-theme="dark"]) .first-entry {
-    background: var(--card-bg);
+    background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: none;
     border-radius: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -1456,6 +1538,7 @@ html:not([data-theme="dark"]) .list .post-entry:hover,
 html:not([data-theme="dark"]) .first-entry:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
+    background: color-mix(in srgb, var(--card-bg) 84%, transparent);
 }
 
 html:not([data-theme="dark"]) .pagination a {
@@ -1473,6 +1556,64 @@ html:not([data-theme="dark"]) .pagination a:hover {
     color: white;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(154, 109, 62, 0.25);
+}
+
+/* ============================================
+   归档 & 搜索 — 毛玻璃卡片
+   ============================================ */
+
+/* 归档条目 */
+.archive-entry {
+    background: transparent;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    border: 1px solid transparent;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 归档页文字渲染统一，避免深浅切换导致换行 */
+.archive-entry,
+.archive-entry-title,
+.archive-meta {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.archive-entry-title {
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: normal;
+    word-spacing: normal;
+}
+
+.archive-entry:hover {
+    background: color-mix(in srgb, var(--card-bg) 50%, transparent);
+    border-color: var(--border);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 搜索框容器 */
+.searchbox {
+    background: transparent;
+    border-radius: 16px;
+    padding: 18px;
+    border: none;
+}
+
+/* 移动端回退纯色 */
+@media (max-width: 768px) {
+    .archive-entry {
+        background: var(--entry);
+    }
+    .archive-entry:hover {
+        background: var(--card-bg);
+    }
+    .searchbox {
+        background: var(--entry);
+    }
 }
 
 /* 打印样式 */
@@ -1636,7 +1777,9 @@ html[data-theme="dark"] .terms-tags a:hover {
 }
 
 .widget-box {
-    background: var(--entry);
+    background: color-mix(in srgb, var(--entry) 55%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 22px;
@@ -2093,3 +2236,5 @@ html[data-theme="dark"] .terms-tags a:hover {
 	.mermaid svg {
 	    background: #ffffff !important;
 	}
+
+
