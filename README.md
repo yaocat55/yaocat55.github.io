@@ -44,9 +44,10 @@
 | 布局 | 自定义首页 Profile 模板 | `layouts/partials/index_profile.html` |
 | 布局 | B 站视频短代码（封面预览/分P/弹幕/BV复制） | `layouts/shortcodes/bilibili.html` |
 | 布局 | Mermaid 代码块渲染钩子 | `layouts/_default/_markup/render-codeblock-mermaid.html` |
-| 样式 | 完整主题配色 + 智能代码高亮 | `assets/css/extended/custom.css` |
-| 功能 | Mermaid / KaTeX / 图片缩放 / 字体 | `layouts/partials/extend_head.html` |
+| 样式 | 完整主题配色 + 智能代码高亮 + Mermaid 白底 | `assets/css/extended/custom.css` |
+| 功能 | Mermaid（白底适配）/ KaTeX / 图片缩放 / D2 SVG 灯箱 / 字体 | `layouts/partials/extend_head.html` |
 | 功能 | Live2D 看板娘 / 猫爪特效 / Cat Radio | `layouts/partials/extend_footer.html`, `layouts/partials/music-player.html` |
+| 工具 | D2 图表编译脚本 + Markdown AST 校验 | `scripts/render-d2.mjs`, `scripts/validate-markdown.mjs` |
 
 ---
 
@@ -161,16 +162,17 @@
 ### 3.1 Mermaid 图表
 
 - CDN 加载 Mermaid（jsdelivr）
-- 通过 `getComputedStyle` 读取当前主题 CSS 变量作为 Mermaid 配色
-- 通过一次性初始化守卫防止重复加载
+- **统一白色背景**——`.mermaid` 和 `.lightbox-content` 固定 `#ffffff`，深浅模式通用
+- `theme: 'default'`，不再维护双主题 `themeVariables`
+- 自动将 Hugo 生成的 `.language-mermaid` 代码块转换为 Mermaid 能识别的 `.mermaid` 容器
 
-### 3.2 图片 & Mermaid 缩放
+### 3.2 图片 & Mermaid & D2 SVG 灯箱缩放
 
-- 点击文章内图片/Mermaid 图表展开至 92vw 全屏遮罩
-- 按 `Esc` 或点击遮罩外区域关闭
-- 自动排除头像（`.profile` 内）和导航/页脚中的图片
-- 展开时显示水平滚动条（超宽 SVG 自动适配）
-- 展开面板自动居中，内容较少时居中、较多时左对齐滚动
+- 点击文章内图片 / Mermaid 图表 / D2 SVG 展开全屏灯箱
+- **inline SVG（Mermaid）**：使用 `viewBox` 计算初始缩放，改 `width`/`height` 实现缩放
+- **`<img>` 元素（D2 SVG）**：使用 `naturalWidth`/`naturalHeight` 计算初始缩放，容器自适应撑开
+- 滚轮缩放 + 移动端双指捏合，缩放范围 0.3x ~ 6.0x
+- 按 `Esc` 或点击灯箱空白区域关闭
 
 ### 3.3 KaTeX 数学公式
 
@@ -244,30 +246,40 @@ GitHub → 邮件 → RSS 三个社交图标。
 ## 目录结构（自定义部分）
 
 ```
-quickstart/
+yaocat55.github.io/
 ├── assets/
 │   └── css/
 │       └── extended/
-│           └── custom.css          # 核心：1600 行深度定制样式
+│           └── custom.css          # 核心：深度定制样式 + Mermaid 白底
+├── content/
+│   ├── diagrams/                   # D2 图表源文件（.gitignore）
+│   └── posts/                      # Markdown 博客文章
 ├── layouts/
 │   ├── _default/
-│   │   ├── baseof.html             # 基础 HTML 骨架（加载 music-player 等全局组件）
+│   │   ├── baseof.html             # 基础 HTML 骨架
 │   │   ├── single.html             # 文章页 + Mermaid 支持
 │   │   └── _markup/
 │   │       └── render-codeblock-mermaid.html  # Mermaid 渲染钩子
 │   ├── partials/
-│   │   ├── extend_head.html        # 头部注入（Mermaid/KaTeX/字体/图片缩放/TOC定位）
-│   │   ├── extend_footer.html      # 页脚注入（Live2D/猫爪特效）
-│   │   ├── index_profile.html      # 首页 Profile 模板（支持 mp4 头像）
+│   │   ├── extend_head.html        # Mermaid/KaTeX/字体/灯箱缩放/D2 SVG
+│   │   ├── extend_footer.html      # Live2D/猫爪特效
+│   │   ├── index_profile.html      # 首页 Profile 模板
 │   │   └── music-player.html       # Cat Radio 音乐播放器
 │   └── shortcodes/
-│       └── bilibili.html           # B 站视频短代码（封面预览/分P/弹幕/BV复制）
+│       └── bilibili.html           # B 站视频短代码
+├── scripts/
+│   ├── check-format.sh             # Markdown 格式检查
+│   ├── validate-mermaid.mjs        # Mermaid 语法校验
+│   ├── validate-markdown.mjs       # Markdown AST 校验（markdown-it）
+│   ├── render-d2.mjs               # D2 .d2 → SVG 编译（+ SVGO 压缩）
+│   └── d2.exe                      # D2 CLI 二进制
 ├── static/
-│   ├── images/                     # 博客图片 & SVG 图表
-│   └── music/                      # Cat Radio 音乐文件（8 首 mp3）
+│   ├── images/
+│   │   └── d2/                     # D2 编译产出的 SVG 图表（提交 git）
+│   └── music/                      # Cat Radio 音乐文件
 ├── hugo.toml                       # 站点配置
 └── themes/
-    └── PaperMod/                   # 上游主题（Git Submodule，未修改）
+    └── PaperMod/                   # 上游主题（Git Submodule）
 ```
 
 ---

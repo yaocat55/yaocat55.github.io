@@ -17,3 +17,7 @@ docs/
 
 # 脚本工具（含 node_modules，体积巨大）
 scripts/
+
+# D2 源文件（只提交产出 SVG）
+content/diagrams/
+static/images/d2/*.hash

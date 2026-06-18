@@ -2083,40 +2083,13 @@ html[data-theme="dark"] .terms-tags a:hover {
 }
 
 /* ============================================
-	   Mermaid 箭头/文字颜色补丁（var() 自适应主题）
+	   Mermaid：统一白色背景，深浅模式通用
 	   ============================================ */
-	/* 箭头颜色：var(--content) 深浅模式自动切换 */
-	.mermaid svg g.edgePath path,
-	.mermaid svg .edgePath .path,
-	.mermaid svg .flowchart-link,
-	.mermaid svg path.edge-pattern {
-	    stroke: var(--content) !important;
-	    stroke-width: 3px !important;
+	.mermaid {
+	    background: #ffffff !important;
+	    border-radius: 12px;
+	    padding: 16px;
 	}
-	.mermaid svg marker path,
-	.mermaid svg marker polygon {
-	    fill: var(--content) !important;
-	    stroke: var(--content) !important;
-	    stroke-width: 1px !important;
-	}
-	/* 灯箱放大模式：箭头跟随主题变量 */
-	.lightbox-overlay .lightbox-isolated-wrapper svg g.edgePath path,
-	.lightbox-overlay .lightbox-isolated-wrapper svg .edgePath .path,
-	.lightbox-overlay .lightbox-isolated-wrapper svg .flowchart-link,
-	.lightbox-overlay .lightbox-isolated-wrapper svg path.edge-pattern {
-	    stroke: var(--content) !important;
-	    stroke-width: 3px !important;
-	}
-	.lightbox-overlay .lightbox-isolated-wrapper svg marker path,
-	.lightbox-overlay .lightbox-isolated-wrapper svg marker polygon {
-	    fill: var(--content) !important;
-	    stroke: var(--content) !important;
-	    stroke-width: 1px !important;
-	}
-	/* 文字兜底：深色模式 !important（theme:base 文字变量不生效），浅色无 */
-	html:not([data-theme="dark"]) .mermaid svg text {
-	    fill: var(--content);
-	}
-	html[data-theme="dark"] .mermaid svg text {
-	    fill: var(--content) !important;
+	.mermaid svg {
+	    background: #ffffff !important;
 	}
