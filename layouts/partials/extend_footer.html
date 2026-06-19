@@ -15,6 +15,15 @@
         right: 20px !important;
         left: auto !important;
     }
+
+    /* 移动端隐藏看板娘（JS 保底失效时的 CSS 防线） */
+    @media (max-width: 768px) {
+        body .waifu,
+        body .waifu-tips,
+        body .waifu * {
+            display: none !important;
+        }
+    }
 </style>
 
 <!-- ========== Live2D Widget 初始化脚本 ========== -->

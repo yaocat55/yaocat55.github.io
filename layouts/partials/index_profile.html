@@ -1,3 +1,5 @@
+<!-- 桌面端：完整自定义布局（含天气/GitHub/快讯/历史） -->
+<div class="profile-desktop-only">
 <div class="custom-profile-layout">
 
     <div class="profile-left-zone">
@@ -6,7 +8,6 @@
             <div class="profile">
                 {{- with site.Params.profileMode }}
                 <div class="profile_inner_compact">
-                    <!-- 头像区域 - 增加底部装饰线 -->
                     <div class="profile-avatar-wrapper">
                         {{- if .imageUrl -}}
                         {{- $url := .imageUrl -}}
@@ -22,18 +23,15 @@
                         {{- end }}
                     </div>
 
-                    <!-- 标题与简介 - 紧凑排列 -->
                     <div class="profile-text-wrapper">
                         <h1 class="profile-title-compact">{{ .title | default site.Title | markdownify }}</h1>
                         <span class="profile-sub-compact">{{ .subtitle | markdownify }}</span>
                     </div>
 
-                    <!-- 社交图标 - 增加视觉占比 -->
                     <div class="social-icons-compact">
                         {{- partial "social_icons.html" -}}
                     </div>
 
-                    <!-- 按钮组 - 横向铺开 -->
                     <div class="buttons-compact">
                         {{- range .buttons }}
                         <a class="button" href="{{ trim .url " " }}" rel="noopener" title="{{ .name }}">
@@ -87,6 +85,42 @@
             </ul>
         </div>
     </div>
+</div>
+</div>
+
+<!-- 移动端：PaperMod 原版简洁个人档 -->
+<div class="profile-mobile-only">
+<div class="profile">
+    {{- with site.Params.profileMode }}
+    <div class="profile_inner">
+        {{- if .imageUrl -}}
+        {{- $url := .imageUrl -}}
+        {{- $isMp4 := hasSuffix $url ".mp4" -}}
+        {{- if $isMp4 }}
+        <video autoplay loop muted playsinline style="width:100px;height:100px;border-radius:50%;object-fit:cover;">
+            <source src="{{ $url | absURL }}" type="video/mp4">
+        </video>
+        {{- else }}
+        <img draggable="false" src="{{ .imageUrl | absURL }}" alt="头像"
+             style="width:100px;height:100px;border-radius:50%;object-fit:cover;" />
+        {{- end }}
+        {{- end }}
+        <h1>{{ .title | default site.Title | markdownify }}</h1>
+        <span>{{ .subtitle | markdownify }}</span>
+        {{- partial "social_icons.html" -}}
+
+        {{- with .buttons }}
+        <div class="buttons">
+            {{- range . }}
+            <a class="button" href="{{ trim .url " " }}" rel="noopener" title="{{ .name }}">
+                <span class="button-inner">{{ .name }}</span>
+            </a>
+            {{- end }}
+        </div>
+        {{- end }}
+    </div>
+    {{- end}}
+</div>
 </div>
 
 <script>

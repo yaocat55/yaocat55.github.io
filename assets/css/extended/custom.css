@@ -2235,8 +2235,23 @@ html[data-theme="dark"] .terms-tags a:hover {
    📱 移动端全面优化
    ============================================ */
 
-/* 平板及以下：首页转单列 */
+/* 桌面版首页布局（含天气/GitHub/快讯/历史） */
+.profile-desktop-only {
+    display: block;
+}
+.profile-mobile-only {
+    display: none;
+}
+
+/* 平板及以下：首页转单列，隐藏复杂组件，显示原版简洁档 */
 @media (max-width: 820px) {
+    .profile-desktop-only {
+        display: none;
+    }
+    .profile-mobile-only {
+        display: block;
+    }
+
     .custom-profile-layout {
         grid-template-columns: 1fr;
         gap: 18px;
