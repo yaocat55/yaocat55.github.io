@@ -138,8 +138,8 @@
 ### 2.5 背景图像系统
 
 - `body::before` 伪元素承载背景图，与 body 处于同一层叠上下文
-- 浅色模式：`bg-light.webp`，opacity 0.10
-- 深色模式：`bg-dark.webp`，opacity 0.13
+- 浅色模式：`bg-light.webp`，opacity 0.30
+- 深色模式：`bg-dark.webp`，opacity 0.30
 - 主题切换时 0.6s 平滑过渡
 - body 保持 MD3 纯色底色，`body::before` 叠加纹理
 
@@ -149,14 +149,15 @@
 
 | 组件 | 透明度 | blur | 说明 |
 |------|--------|------|------|
-| `.header` 导航栏 | 全透明 | — | 背景图直接透出 |
-| `.post-entry` / `.first-entry` 列表卡片 | 90% | 20px | hover 88% |
+| `.header` 导航栏 | 30% + blur | 12px | 半透明毛玻璃，无边框 |
+| `.post-entry` / `.first-entry` 列表卡片 | 50% | 20px | hover 50% 加深阴影 |
 | `.widget-box` 首页卡片 | 55% | 20px | 天气/快讯/GitHub |
 | `.archive-entry` 归档条目 | 全透明 | — | hover 50% 浮出 |
 | `.searchbox` 搜索框 | 全透明 | — | 无边框 |
+| `.highlight` 代码块 | 50% | — | 统一半透明，含语言特定配色 |
 | `.toc` 目录 | 50% | 8px | 半透明毛玻璃 |
 | `blockquote` 引用块 | 50% | 8px | 半透明毛玻璃 |
-| 移动端 (≤768px) | 纯色 | 关闭 | 省电防卡顿 |
+| 移动端 (≤768px) | 纯色(卡片) | 关闭 | 省电防卡顿；main 透明化，背景图无缝贯穿 |
 
 ### 2.7 深浅模式字体渲染统一
 
