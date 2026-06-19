@@ -1,168 +1,17 @@
 <audio id="cat-player" preload="metadata"></audio>
+<link href="https://fonts.loli.net/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <div id="cat-radio">
-    <div id="cat-btn">🐱</div>
-    <div id="cat-info">Cat Radio</div>
-<button id="cat-loop" aria-label="循环模式">🔁</button>
-    <button id="cat-next" aria-label="下一首">⏭</button>
+    <button id="cat-btn" aria-label="播放/暂停">
+        <span class="material-symbols-rounded">play_arrow</span>
+    </button>
+    <span id="cat-info">Cat Radio</span>
+    <button id="cat-loop" aria-label="循环模式">
+        <span class="material-symbols-rounded">repeat</span>
+    </button>
+    <button id="cat-next" aria-label="下一首">
+        <span class="material-symbols-rounded">skip_next</span>
+    </button>
 </div>
-
-<style>
-    #cat-radio {
-        position: fixed;
-        right: 90px;
-        bottom: 20px;
-        z-index: 99999;
-        display: flex;
-        align-items: center;
-        gap: 0;
-        background: rgba(255, 255, 255, 0.5);
-        backdrop-filter: blur(20px);
-        border-radius: 60px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        padding: 4px;
-        padding-right: 16px;
-        touch-action: pan-x; /* 允许横向触摸操作 */
-        user-select: none;
-        -webkit-user-select: none;
-    }
-
-    #cat-btn {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #5d9e5a, #3d6b35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border: none;
-        transition: all .3s ease;
-        color: white;
-        margin: 0;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    #cat-btn:hover {
-        transform: scale(1.05) rotate(8deg);
-        background: linear-gradient(135deg, #4a8a47, #2a5522);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    #cat-info {
-        max-width: 220px;
-        padding: 0 8px 0 12px;
-        border-radius: 0;
-        background: transparent;
-        backdrop-filter: none;
-        font-size: 14px;
-        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', monospace;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        box-shadow: none;
-        border: none;
-        transition: all 0.2s ease;
-        color: #2c3e2a;
-        letter-spacing: 0.5px;
-    }
-
-    #cat-loop,
-    #cat-next {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border: none;
-        border-radius: 50%;
-        background: transparent;
-        color: #8a9a88;
-        font-size: 14px;
-        cursor: pointer;
-        padding: 0;
-        margin-left: 2px;
-        opacity: 0.5;
-        transition: all 0.2s ease;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    #cat-loop:hover,
-    #cat-next:hover {
-        opacity: 1;
-        background: rgba(0, 0, 0, 0.06);
-    }
-
-    #cat-loop.active {
-        opacity: 1;
-        color: #5d9e5a;
-    }
-
-    html[data-theme="dark"] #cat-loop.active {
-        color: #e6b860;
-    }
-
-    /* 深色模式 */
-    html[data-theme="dark"] #cat-radio {
-        background: rgba(30, 33, 35, 0.5);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    html[data-theme="dark"] #cat-btn {
-        background: linear-gradient(135deg, #e6b860, #d4a652);
-        color: #1e2123;
-    }
-
-    html[data-theme="dark"] #cat-btn:hover {
-        background: linear-gradient(135deg, #d4a652, #c49a48);
-    }
-
-    html[data-theme="dark"] #cat-info {
-        color: #e8dcc8;
-    }
-
-    html[data-theme="dark"] #cat-loop,
-    html[data-theme="dark"] #cat-next {
-        color: #e8dcc8;
-    }
-
-    html[data-theme="dark"] #cat-loop:hover,
-    html[data-theme="dark"] #cat-next:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    @media (max-width: 768px) {
-        #cat-radio {
-            right: 20px;
-            bottom: 20px;
-            padding: 4px;
-            padding-right: 4px;
-        }
-
-        #cat-info {
-            display: none;
-        }
-
-        #cat-btn {
-            width: 48px;
-            height: 48px;
-            font-size: 22px;
-        }
-
-        #cat-loop,
-        #cat-next {
-            width: 44px;
-            height: 44px;
-            font-size: 18px;
-            opacity: 0.8;
-        }
-    }
-</style>
 
 <script>
     (function () {
@@ -180,151 +29,126 @@
             { name: "tek it", file: "/music/tek it.mp3" }
         ];
 
-        const loopIcons = ["🔁", "🔁", "🔂"];
-        const loopLabels = ["不循环", "列表循环", "单曲循环"];
-
-        function updateLoopUI() {
-            loopBtn.textContent = loopIcons[loopMode];
-            loopBtn.title = loopLabels[loopMode];
-            loopBtn.classList.toggle("active", loopMode > 0);
-            if (loopMode === 2) {
-                loopBtn.style.fontSize = window.innerWidth <= 768 ? "18px" : "15px";
-            } else {
-                loopBtn.style.fontSize = "";
-            }
-        }
-
         const audio = document.getElementById("cat-player");
         const btn = document.getElementById("cat-btn");
+        const playIcon = btn.querySelector(".material-symbols-rounded");
         const info = document.getElementById("cat-info");
         const loopBtn = document.getElementById("cat-loop");
         const nextBtn = document.getElementById("cat-next");
+
         let current = parseInt(localStorage.getItem("cat-radio-index") || "0");
         let loopMode = parseInt(localStorage.getItem("cat-radio-loop") || "1"); // 0=off, 1=all, 2=one
+
+        function updateLoopUI() {
+            const icon = loopBtn.querySelector(".material-symbols-rounded");
+            icon.textContent = loopMode === 2 ? "repeat_one" : "repeat";
+            loopBtn.classList.toggle("active", loopMode > 0);
+        }
 
         function load(index) {
             current = index;
             audio.src = playlist[index].file;
-            info.innerHTML = "🎵 " + playlist[index].name;
+            info.textContent = playlist[index].name;
             localStorage.setItem("cat-radio-index", index);
         }
 
         function nextSong() {
             let next = current + 1;
-            if (next >= playlist.length) {
-                next = 0;
-            }
+            if (next >= playlist.length) next = 0;
             load(next);
             audio.play();
-            btn.innerHTML = "🎵";
+            playIcon.textContent = "pause";
         }
 
+        // 断点续播
         setInterval(() => {
             if (!audio.paused && !isNaN(audio.currentTime)) {
-                localStorage.setItem('cat-radio-time', audio.currentTime);
-                localStorage.setItem('cat-radio-playing', 'true');
+                localStorage.setItem("cat-radio-time", audio.currentTime);
+                localStorage.setItem("cat-radio-playing", "true");
             }
         }, 3000);
 
-        const savedTime = localStorage.getItem('cat-radio-time');
-        const wasPlaying = localStorage.getItem('cat-radio-playing') === 'true';
+        const savedTime = localStorage.getItem("cat-radio-time");
+        const wasPlaying = localStorage.getItem("cat-radio-playing") === "true";
 
         load(current);
+        playIcon.textContent = "play_arrow";
 
         if (savedTime && !isNaN(parseFloat(savedTime))) {
             audio.currentTime = parseFloat(savedTime);
         }
 
         if (wasPlaying) {
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    btn.innerHTML = "🎵";
-                }).catch(() => {
-                    btn.innerHTML = "🐱";
-                    console.log('自动播放被阻止，需要用户点击页面');
-                });
+            const p = audio.play();
+            if (p !== undefined) {
+                p.then(() => { playIcon.textContent = "pause"; })
+                 .catch(() => { console.log("自动播放被阻止"); });
             }
         }
 
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener("visibilitychange", () => {
             if (!document.hidden && wasPlaying && audio.paused) {
-                audio.play().catch(() => { });
+                audio.play().catch(() => {});
             }
         });
 
-        // 点击暂停/播放
         btn.addEventListener("click", (e) => {
             e.stopPropagation();
             if (audio.paused) {
                 audio.play();
-                btn.innerHTML = "🎵";
+                playIcon.textContent = "pause";
             } else {
                 audio.pause();
-                btn.innerHTML = "🐱";
+                playIcon.textContent = "play_arrow";
             }
         });
 
-        // PC端右键切歌
         btn.addEventListener("contextmenu", (e) => {
             e.preventDefault();
             nextSong();
         });
 
-        // 平板/触摸设备：点击下一首按钮
         nextBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             nextSong();
         });
 
-        // 触摸滑动切歌（适用于平板）
-        let touchStartX = 0;
-        let touchStartY = 0;
+        // 触摸滑动切歌
         const radio = document.getElementById("cat-radio");
-
+        let touchStartX = 0, touchStartY = 0;
         radio.addEventListener("touchstart", (e) => {
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
         radio.addEventListener("touchend", (e) => {
-            const diffX = e.changedTouches[0].screenX - touchStartX;
-            const diffY = e.changedTouches[0].screenY - touchStartY;
-            // 水平滑动距离 > 30px 且 水平 > 垂直（防止误触）
-            if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY) * 2) {
-                if (diffX < 0) {
-                    // 左滑 = 切歌
-                    nextSong();
-                }
+            const dx = e.changedTouches[0].screenX - touchStartX;
+            const dy = e.changedTouches[0].screenY - touchStartY;
+            if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 2 && dx < 0) {
+                nextSong();
             }
         }, { passive: true });
 
         audio.addEventListener("ended", () => {
             if (loopMode === 2) {
-                // 单曲循环
                 audio.currentTime = 0;
                 audio.play();
             } else if (loopMode === 1 || current < playlist.length - 1) {
-                // 列表循环 或 还没播完
                 nextSong();
             }
-            // loopMode === 0 且是最后一首：停在这，不播放
-        });
-        audio.addEventListener("error", () => {
-            console.warn("音频加载失败，尝试下一首");
-            nextSong();
         });
 
-        window.addEventListener('beforeunload', () => {
+        audio.addEventListener("error", () => nextSong());
+
+        window.addEventListener("beforeunload", () => {
             if (!audio.paused && !isNaN(audio.currentTime)) {
-                localStorage.setItem('cat-radio-time', audio.currentTime);
-                localStorage.setItem('cat-radio-playing', 'true');
+                localStorage.setItem("cat-radio-time", audio.currentTime);
+                localStorage.setItem("cat-radio-playing", "true");
             } else {
-                localStorage.setItem('cat-radio-playing', 'false');
+                localStorage.setItem("cat-radio-playing", "false");
             }
         });
 
-        // 循环模式切换
         updateLoopUI();
         loopBtn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -333,6 +157,6 @@
             updateLoopUI();
         });
 
-        console.log("🎵 Cat Radio 已启动（断点续播）");
+        console.log("🎵 Cat Radio 已启动");
     })();
 </script>

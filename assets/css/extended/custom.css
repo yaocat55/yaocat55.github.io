@@ -2450,3 +2450,160 @@ html[data-theme="dark"] .terms-tags a:hover {
 	}
 
 
+
+/* ============================================
+   Cat Radio 音乐播放器 — MD3 毛玻璃风格
+   ============================================ */
+
+/* Material Symbols 基础样式 */
+.material-symbols-rounded {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+#cat-radio {
+    position: fixed;
+    right: 90px;
+    bottom: 20px;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    background: color-mix(in srgb, var(--entry) 55%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 60px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 4px 16px 4px 4px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+#cat-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    margin: 0;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    color: #fff;
+}
+
+html[data-theme="dark"] #cat-btn {
+    color: #1a1c19;
+}
+
+#cat-btn:hover {
+    transform: scale(1.05);
+    background: var(--primary-dark);
+}
+
+#cat-btn .material-symbols-rounded {
+    font-size: 28px;
+    font-variation-settings: 'FILL' 1, 'wght' 400;
+    color: inherit;
+}
+
+#cat-info {
+    max-width: 220px;
+    padding: 0 8px 0 12px;
+    font-family: var(--font-base);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--content);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.5px;
+}
+
+#cat-loop,
+#cat-next {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+    color: var(--secondary);
+    opacity: 0.6;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#cat-loop:hover,
+#cat-next:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+#cat-loop .material-symbols-rounded,
+#cat-next .material-symbols-rounded {
+    font-size: 20px;
+    font-variation-settings: 'FILL' 0, 'wght' 400;
+}
+
+#cat-loop.active {
+    opacity: 1;
+    color: var(--primary);
+}
+
+#cat-loop.active .material-symbols-rounded {
+    font-variation-settings: 'FILL' 1, 'wght' 400;
+}
+
+/* 移动端 */
+@media (max-width: 768px) {
+    #cat-radio {
+        right: 20px;
+        bottom: 20px;
+        padding: 4px 6px 4px 4px;
+    }
+
+    #cat-info {
+        display: none;
+    }
+
+    #cat-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    #cat-btn .material-symbols-rounded {
+        font-size: 24px;
+    }
+
+    #cat-loop,
+    #cat-next {
+        width: 34px;
+        height: 34px;
+    }
+
+    #cat-loop .material-symbols-rounded,
+    #cat-next .material-symbols-rounded {
+        font-size: 18px;
+    }
+}
