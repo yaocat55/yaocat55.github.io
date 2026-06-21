@@ -1,9 +1,9 @@
-<!-- ==================== 看板娘强制右下角样式 ==================== -->
+<!-- ==================== 看板娘强制左下角样式 ==================== -->
 <style>
-    /* 强制覆盖，确保看板娘在右下角 */
+    /* 强制覆盖，确保看板娘在左下角 */
     body .waifu {
-        left: auto !important;
-        right: 0 !important;
+        left: 0 !important;
+        right: auto !important;
         bottom: 0 !important;
         top: auto !important;
         transform: none !important;
@@ -12,8 +12,8 @@
     /* 强制覆盖对话框位置 */
     body .waifu-tips {
         bottom: 80px !important;
-        right: 20px !important;
-        left: auto !important;
+        left: 20px !important;
+        right: auto !important;
     }
 
     /* 移动端隐藏看板娘（JS 保底失效时的 CSS 防线） */
@@ -48,7 +48,7 @@
         }
 
         const libCdnPath = 'https://cdn.jsdelivr.net/gh/letere-gzj/live2d-widget-v3@main';
-        const myModelCdnPath = 'https://cdn.jsdelivr.net/gh/yaocat55/Resources@v1.1.4/';
+        const myModelCdnPath = 'https://cdn.jsdelivr.net/gh/yaocat55/Resources@v1.0.7/';
 
         const config = {
             path: {
