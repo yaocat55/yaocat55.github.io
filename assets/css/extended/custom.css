@@ -33,6 +33,10 @@ html:not([data-theme="dark"]) {
     --link-hover: #a86a38;
     --hljs-bg: #efe4d6;
     --hljs-color: #3d3429;
+    --heat-1: rgba(193, 127, 74, 0.08);
+    --heat-2: rgba(193, 127, 74, 0.18);
+    --heat-3: rgba(193, 127, 74, 0.35);
+    --heat-4: rgba(193, 127, 74, 0.55);
 }
 /* 深色模式变量 - Material 3 Expressive */
 html[data-theme="dark"] {
@@ -52,6 +56,10 @@ html[data-theme="dark"] {
     --link-hover: #5db873;
     --hljs-bg: #16221a;
     --hljs-color: #d4e8d8;
+    --heat-1: rgba(125, 206, 148, 0.08);
+    --heat-2: rgba(125, 206, 148, 0.18);
+    --heat-3: rgba(125, 206, 148, 0.35);
+    --heat-4: rgba(125, 206, 148, 0.55);
 }
 
 
@@ -2013,73 +2021,110 @@ html[data-theme="dark"] .terms-tags a:hover {
 
 
 /* ==========================================
-   独立组件：左侧历史上的今天大卡片
+   写作热力图 — 发文月份密集度
    ========================================== */
-.history-standalone-card {
+
+.heatmap-card {
     display: flex;
     flex-direction: column;
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
-    /* 保护历史卡片绝对不被压缩 */
 }
 
-.history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2px;
-}
-
-.history-header h3 {
+.heatmap-header h3 {
     margin: 0 !important;
     font-size: 0.95rem !important;
     font-weight: 700;
     color: var(--content);
 }
 
-#refresh-history-btn {
-    background: transparent;
-    border: none;
-    color: var(--secondary);
-    font-size: 0.9rem;
-    cursor: pointer;
-    padding: 2px 6px;
-    opacity: 0.6;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-#refresh-history-btn:hover {
-    opacity: 1;
-    color: var(--primary);
-    transform: rotate(45deg);
-}
-
-.metric-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 10px 0;
+.heatmap-content {
     width: 100%;
+    overflow-x: auto;
+    padding: 4px 0;
 }
 
-.history-content-zone {
-    min-height: 48px;
+.heatmap-table {
+    border-collapse: separate;
+    border-spacing: 3px;
+    width: 100%;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+}
+
+.heatmap-table th,
+.heatmap-table td {
+    border: none;
+    padding: 0;
+    background: none;
+}
+
+.heatmap-mlabel {
+    font-size: 9px;
+    color: var(--secondary);
+    text-align: center;
+    width: 14px;
+    line-height: 1;
+    vertical-align: bottom;
+    padding-bottom: 2px !important;
+}
+
+.heatmap-ylabel {
+    font-size: 10px;
+    color: var(--secondary);
+    text-align: right;
+    padding-right: 4px !important;
+    white-space: nowrap;
+    vertical-align: middle;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.heatmap-cell {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    cursor: help;
+    transition: opacity 0.15s ease;
+}
+
+.heatmap-cell:hover {
+    opacity: 0.7;
+}
+
+/* 强度色阶 — 深浅模式独立定义在变量区 */
+.heatmap-cell.lv-0,
+.heatmap-legend-cell.lv-0 { background: transparent; }
+.heatmap-cell.lv-1,
+.heatmap-legend-cell.lv-1 { background: var(--heat-1); }
+.heatmap-cell.lv-2,
+.heatmap-legend-cell.lv-2 { background: var(--heat-2); }
+.heatmap-cell.lv-3,
+.heatmap-legend-cell.lv-3 { background: var(--heat-3); }
+.heatmap-cell.lv-4,
+.heatmap-legend-cell.lv-4 { background: var(--heat-4); }
+
+/* 图例 */
+.heatmap-footer {
     display: flex;
     align-items: center;
-    width: 100%;
+    justify-content: flex-end;
+    gap: 3px;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--secondary);
 }
 
-#history-event-text {
-    margin: 0;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: var(--content);
-    text-align: left;
-    transition: opacity 0.15s ease-in-out;
+.heatmap-legend-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
 }
 
-/* ==========================================
-   📡 技术快讯专属布局与悬浮动效
+
+📡 技术快讯专属布局与悬浮动效
    ========================================== */
 .quote-header {
     display: flex;
@@ -2441,7 +2486,7 @@ html[data-theme="dark"] .terms-tags a:hover {
     .weather-header h3,
     .github-box h3,
     .quote-header h3,
-    .history-header h3 {
+    
         font-size: 0.85rem !important;
     }
 
@@ -2491,8 +2536,6 @@ html[data-theme="dark"] .terms-tags a:hover {
         padding: 8px 2px !important;
         font-size: 0.76rem !important;
     }
-
-    #history-event-text,
     #random-quote {
         font-size: 0.76rem;
     }

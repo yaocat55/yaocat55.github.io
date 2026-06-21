@@ -44,14 +44,19 @@
             </div>
         </div>
 
-        <div class="widget-box history-standalone-card">
-            <div class="history-header">
-                <h3>📜 历史上的今天</h3>
-                <button id="refresh-history-btn" title="点击切换下一条史实">🔄</button>
+        <div class="widget-box heatmap-card">
+            <div class="heatmap-header">
+                <h3>📊 写作热力图</h3>
             </div>
-            <div class="metric-divider"></div>
-            <div class="history-content-zone">
-                <p id="history-event-text">正在翻阅历史档案...</p>
+            <div class="heatmap-content" id="heatmap-content"></div>
+            <div class="heatmap-footer">
+                <span>少</span>
+                <span class="heatmap-legend-cell lv-0"></span>
+                <span class="heatmap-legend-cell lv-1"></span>
+                <span class="heatmap-legend-cell lv-2"></span>
+                <span class="heatmap-legend-cell lv-3"></span>
+                <span class="heatmap-legend-cell lv-4"></span>
+                <span>多</span>
             </div>
         </div>
 
@@ -123,75 +128,74 @@
 </div>
 </div>
 
+{{- $posts := where .Site.RegularPages "Type" "in" site.Params.mainSections -}}
+{{- $dates := slice -}}
+{{- range $posts -}}
+  {{- $dates = $dates | append (.Date.Format "2006-01") -}}
+{{- end -}}
+<script id="heatmap-data" type="application/json">{{ $dates | jsonify | safeJS }}</script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // ==========================================
-        // 检测当前协议
+        // 写作热力图
         // ==========================================
-        const isHttps = location.protocol === 'https:';
 
-        // ==========================================
-        // 历史上的今天：数据抓取与截断
-        // ==========================================
-        let cachedEvents = [];
+        function renderHeatmap() {
+            const container = document.getElementById("heatmap-content");
+            if (!container) return;
 
-        function fetchHistoryToday() {
-            const historyText = document.getElementById("history-event-text");
-            if (!historyText) return;
-            historyText.style.opacity = 0.3;
+            const raw = document.getElementById("heatmap-data");
+            if (!raw) return;
+            const months = JSON.parse(raw.textContent);
+            if (!months || months.length === 0) return;
 
-            if (cachedEvents.length > 0) {
-                setTimeout(() => { renderRandomEvent(cachedEvents); }, 120);
-                return;
+            // 按月统计发文数
+            const byMonth = {};
+            months.forEach(m => { byMonth[m] = (byMonth[m] || 0) + 1; });
+
+            // 按年份分组
+            const byYear = {};
+            Object.keys(byMonth).forEach(key => {
+                const [y, m] = key.split("-");
+                if (!byYear[y]) byYear[y] = {};
+                byYear[y][parseInt(m)] = byMonth[key];
+            });
+
+            // 强度分级
+            const values = Object.values(byMonth);
+            const max = Math.max(...values);
+            const levels = [0, Math.ceil(max * 0.2), Math.ceil(max * 0.4), Math.ceil(max * 0.6), Math.ceil(max * 0.8)];
+
+            function getLevel(v) {
+                if (v === 0) return 0;
+                if (v <= levels[1]) return 1;
+                if (v <= levels[2]) return 2;
+                if (v <= levels[3]) return 3;
+                return 4;
             }
 
-            fetch('https://baike.baidu.com/cms/home/eventsOnHistory/06.json')
-                .then(res => res.json())
-                .then(data => {
-                    const now = new Date();
-                    const monthKey = String(now.getMonth() + 1).padStart(2, '0');
-                    const dayKey = String(now.getDate()).padStart(2, '0');
-                    const todayData = data[monthKey]?.[monthKey + dayKey];
-
-                    if (todayData && todayData.length > 0) {
-                        cachedEvents = todayData.map(item => ({
-                            year: item.year,
-                            title: item.title.replace(/<\/?[^>]+(>|$)/g, "")
-                        }));
-                        renderRandomEvent(cachedEvents);
-                    } else { throw new Error(); }
-                })
-                .catch(() => {
-                    cachedEvents = [
-                        { year: "1995", title: "Java 语言正式由 Sun Microsystems 向全球公测" },
-                        { year: "1991", title: "Linus Torvalds 发布消息，Linux 内核初版诞生" },
-                        { year: "2013", title: "Docker 项目正式发布，颠覆全球云计算生态" }
-                    ];
-                    renderRandomEvent(cachedEvents);
-                });
-        }
-
-        function renderRandomEvent(events) {
-            const historyText = document.getElementById("history-event-text");
-            if (!historyText || events.length === 0) return;
-            const randomIdx = Math.floor(Math.random() * events.length);
-            const event = events[randomIdx];
-
-            let text = `[${event.year}年] ${event.title}`;
-            if (text.length > 50) text = text.substring(0, 47) + "...";
-
-            historyText.innerText = text;
-            historyText.style.opacity = 1;
-        }
-
-        fetchHistoryToday();
-        const refreshHistoryBtn = document.getElementById("refresh-history-btn");
-        if (refreshHistoryBtn) {
-            refreshHistoryBtn.addEventListener("click", function (e) {
-                e.stopPropagation();
-                fetchHistoryToday();
+            // 生成表格
+            const years = Object.keys(byYear).sort();
+            let html = "<table class='heatmap-table'><tr><th></th>";
+            const mLabels = ["","一","二","三","四","五","六","七","八","九","十","十一","十二"];
+            for (let m = 1; m <= 12; m++) {
+                html += `<th class='heatmap-mlabel'>${mLabels[m]}</th>`;
+            }
+            html += "</tr>";
+            years.forEach(y => {
+                html += `<tr><td class='heatmap-ylabel'>${y}</td>`;
+                for (let m = 1; m <= 12; m++) {
+                    const v = byYear[y]?.[m] || 0;
+                    const lv = getLevel(v);
+                    html += `<td class='heatmap-cell lv-${lv}' title='${y}年${m}月：${v}篇'></td>`;
+                }
+                html += "</tr>";
             });
+            html += "</table>";
+            container.innerHTML = html;
         }
+
+        renderHeatmap();
 
         // ==========================================
         // 技术快讯：混合模式（GitHub Trending + 技术博客 RSS）

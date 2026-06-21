@@ -131,9 +131,9 @@
 
   /* ========== 断点续播 ========== */
   function saveState() {
-    if (!audio.paused && !isNaN(audio.currentTime)) {
+    if (!isNaN(audio.currentTime)) {
       localStorage.setItem("cat-radio-time", audio.currentTime);
-      localStorage.setItem("cat-radio-playing", "true");
+      localStorage.setItem("cat-radio-playing", audio.paused ? "false" : "true");
     }
   }
 
