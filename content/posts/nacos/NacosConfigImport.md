@@ -263,6 +263,55 @@ flowchart TD
 
 四层明确的职责划分避免了"配置到底该放哪里"的模糊地带——每层只做自己该做的事，不越界。
 
+## 附：Nacos 认证配置的坑
+
+Nacos 默认**不开认证**，这意味着任何人知道你的 Nacos 地址就能直接拉取所有配置。开认证有几个常见的坑：
+
+**踩坑 1：Docker 部署时认证环境变量没加全**
+
+```yaml
+# docker-compose.yml 里必须加这 4 个
+environment:
+  - NACOS_AUTH_ENABLE=true
+  - NACOS_AUTH_TOKEN=SecretKey01234567...    # 长随机字符串
+  - NACOS_AUTH_IDENTITY_KEY=nacos            # 服务端内部鉴权用
+  - NACOS_AUTH_IDENTITY_VALUE=nacos
+```
+
+**踩坑 2：开了认证但 MySQL 里没有 `nacos` 用户**
+
+Nacos 开启认证后会去数据库查用户，但初始 MySQL 的 `users` 表是空的（除非 Nacos 第一次启动时就开着认证）。需要在 MySQL 中手动插入用户：
+
+```sql
+USE nacos_config;
+INSERT INTO users (username, password, enabled) 
+VALUES ('nacos', '$2a$10$yfAVPh5HDNQETw2zkdFKE.dwDVwaQ5GZ03v0oduzGxZcTc1LTBrjW', 1);
+INSERT INTO roles (role, username) 
+VALUES ('ROLE_ADMIN', 'nacos');
+```
+
+密码必须是 **BCrypt** 加密格式，需要用 Python 或 `htpasswd` 生成：
+
+```bash
+python -c "
+import bcrypt
+hashed = bcrypt.hashpw(b'nacos', bcrypt.gensalt(rounds=10)).decode()
+# Spring Security 要求用 \$2a\$ 格式
+hashed = hashed.replace('\$2b\$', '\$2a\$')
+print(hashed)
+"
+```
+
+**踩坑 3：密码对的但 Spring Boot 客户端连不上**
+
+9 个服务的 `application.yml` 里的 `username` 和 `password` 填对了也不行？换个思路——**先删掉 `username` 和 `password` 字段，看看能不能跑通**。如果不行，检查 Nacos Docker 日志：
+
+```bash
+docker logs nacos-server | grep -i error
+```
+
+常见情况：Nacos 的 `SPRING_DATASOURCE_PLATFORM=mysql` 环境变量没生效，导致 Nacos 用了内嵌 Derby 数据库而不是连你的 MySQL。你配置在 MySQL 里但 Nacos 读的是 Derby。解决办法：确认 MySQL 库里有 `config_info` 表且有数据，再看看 Nacos 启动日志里有没有报 MySQL 连接错误。如果日志里压根没出现 MySQL 相关的字眼，说明 Nacos 没连上你的 MySQL。
+
 ## 总结
 
 从 9 个微服务配置管理的混乱中梳理出这套标准化方案，核心原则其实只有三条：
