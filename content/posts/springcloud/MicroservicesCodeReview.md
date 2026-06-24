@@ -342,7 +342,6 @@ public class SwaggerConfig {
 | API 文档 | springdoc-openapi (Swagger 3) | mobile/admin 分组 |
 | 支付 | 支付宝沙箱 + ZXing | 沙箱支付 + 二维码 |
 | 短信 | 阿里云 SMS | 验证码发送 |
-| AI | Ollama (deepseek-r1:8b) | 智能对话 |
 
 一共搭了 **17 个技术组件、9 个独立部署服务、17 个 Maven 模块**，这个规模对于一个个人开发者来说已经是很高的完成度。
 
