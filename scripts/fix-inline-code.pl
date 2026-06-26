@@ -1,12 +1,15 @@
-#!/usr/bin/env perl
-use strict;
-use warnings;
-use open qw(:std :encoding(UTF-8));
-
+#!/usr/bin/perl
+# Fix inline code spacing without breaking ``` fences
+# Only adds spaces between inline code and adjacent CJK/word chars
 while (<>) {
-    # Add space after closing backtick before fullwidth punctuation and dashes
-    s/`([^`\n]+)`(\x{FF0C}|\x{3002}|\x{FF1A}|\x{FF1B}|\x{FF01}|\x{FF1F}|\x{3001}|\x{FF08}|\x{FF09}|\x{2014}|\x{2013}|\x{2015})/`$1` $2/g;
-    # Add space before opening backtick after fullwidth punctuation and dashes
-    s/(\x{FF0C}|\x{3002}|\x{FF1A}|\x{FF1B}|\x{FF01}|\x{FF1F}|\x{3001}|\x{FF08}|\x{FF09}|\x{2014}|\x{2013}|\x{2015})`([^`\n]+)`/$1 `$2`/g;
+    # Skip code fence lines
+    if (/^```/) {
+        print;
+        next;
+    }
+    # Add space before opening backtick when preceded by word char
+    s/(\w)(`)(\S)/$1 $2$3/g;
+    # Add space after closing backtick when followed by word char
+    s/(\S)(`)(\w)/$1 $2 $3/g;
     print;
 }

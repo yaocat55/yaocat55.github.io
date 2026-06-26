@@ -31,7 +31,7 @@ cover:
 
 封装了一个 Redis 工具类的 Spring Boot Starter，里面有个组件叫 `WorkIdAllocator `，它在 `@PostConstruct` 中做了这么一件事：
 
-`` `java
+```java
 @PostConstruct
 public void init() {
     setNextSnowFlaskWorkerId();  // 连接 Redis，分配一个雪花算法 WorkerId
@@ -44,7 +44,7 @@ public void init() {
 
 修复方式也很简单——加个 `@Lazy `：
 
-`` `java
+```java
 @Lazy
 @Component
 public class WorkIdAllocator {
@@ -60,7 +60,7 @@ public class WorkIdAllocator {
 
 一个 Bean 从定义到销毁，经历了完整的九道工序：
 
-`` `mermaid
+```mermaid
 flowchart TD
     A(["Bean 定义加载"]) --> B["实例化 Instantiation"]
     B --> C["属性填充 Populate"]
@@ -92,7 +92,7 @@ flowchart TD
 
 Spring 在什么时候决定要创建一个 Bean？在 `AbstractBeanFactory.doGetBean()` 中：
 
-`` `java
+```java
 // AbstractBeanFactory.java (Spring 6.x)
 protected <T> T doGetBean(String name, Class<T> requiredType, Object[] args, boolean typeCheckOnly) {
     // 1. 检查单例缓存
@@ -117,7 +117,7 @@ protected <T> T doGetBean(String name, Class<T> requiredType, Object[] args, boo
 
 ## 第二步：属性填充——@Autowired 在这里生效
 
-`` `java
+```java
 // AbstractAutowireCapableBeanFactory.java
 protected void populateBean(String beanName, RootBeanDefinition mbd, BeanWrapper bw) {
     // 处理 @Autowired、@Value、@Resource
@@ -133,7 +133,7 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, BeanWrapper
 
 ## 第三步：Aware 回调——Bean 知道自己叫什么名字
 
-`` `java
+```java
 // AbstractAutowireCapableBeanFactory.java
 private void invokeAwareMethods(String beanName, Object bean) {
     if (bean instanceof Aware) {
@@ -152,7 +152,7 @@ private void invokeAwareMethods(String beanName, Object bean) {
 
 ## 第四步：初始化前的 BeanPostProcessor
 
-`` `java
+```java
 // AbstractAutowireCapableBeanFactory.java
 protected Object initializeBean(String beanName, Object bean, RootBeanDefinition mbd) {
     // 1. Aware 回调（BeanNameAware 等）
@@ -175,7 +175,7 @@ protected Object initializeBean(String beanName, Object bean, RootBeanDefinition
 
 跟进去看源码：
 
-`` `java
+```java
 // InitDestroyAnnotationBeanPostProcessor.java
 public Object postProcessBeforeInitialization(Object bean, String beanName) {
     // 查找当前 Bean 中标注了 @PostConstruct 的方法
@@ -187,7 +187,7 @@ public Object postProcessBeforeInitialization(Object bean, String beanName) {
 
 ## 第五步：初始化方法——三种写法
 
-`` `java
+```java
 // AbstractAutowireCapableBeanFactory.java
 protected void invokeInitMethods(String beanName, Object bean, RootBeanDefinition mbd) {
     // 方式一：InitializingBean 接口
@@ -214,7 +214,7 @@ protected void invokeInitMethods(String beanName, Object bean, RootBeanDefinitio
 
 ## 第六步：初始化后的 BeanPostProcessor
 
-`` `java
+```java
 // AbstractAutowireCapableBeanFactory.java
 public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) {
     for (BeanPostProcessor processor : getBeanPostProcessors()) {
@@ -230,7 +230,7 @@ AOP 代理就是在这里生成的。 `AbstractAutoProxyCreator` 的 `postProces
 
 用一个实验类来验证：
 
-`` `java
+```java
 @Component
 @Slf4j
 public class LifecycleBean implements BeanNameAware, InitializingBean {
@@ -282,7 +282,7 @@ public class LifecycleBean implements BeanNameAware, InitializingBean {
 
 回到开头的问题——`@Lazy` 是如何阻止 `@PostConstruct` 的？
 
-`` `java
+```java
 @Lazy
 @Component
 public class WorkIdAllocator {
@@ -297,7 +297,7 @@ public class WorkIdAllocator {
 
 关键源码在 `AbstractBeanFactory` 中：
 
-`` `java
+```java
 // AbstractBeanFactory.java
 protected <T> T doGetBean(...) {
     // 如果是懒加载的单例，或者非单例，直接创建
@@ -312,7 +312,7 @@ protected <T> T doGetBean(...) {
 
 而 `FactoryBeanRegistrySupport` 中有一段关键逻辑——当 `@Lazy` 的 Bean 被注入到其他非懒加载 Bean 时，Spring 会注入一个 `SmartFactoryBean` 或 JDK 动态代理，代理对象会在第一次调用时触发真实的 Bean 创建：
 
-`` `java
+```java
 // ContextAnnotationAutowireCandidateResolver.java
 protected Object buildLazyResolutionProxy(...) {
     ProxyFactory pf = new ProxyFactory();
@@ -322,7 +322,7 @@ protected Object buildLazyResolutionProxy(...) {
 }
 ```
 
-`` `mermaid
+```mermaid
 flowchart TD
     subgraph EAGER["非懒加载 Bean"]
         A["容器启动"] --> B["实例化 + 初始化\n@PostConstruct 立即执行"]
@@ -364,7 +364,7 @@ flowchart TD
 
 这是另一个常见误区，用一张图说明：
 
-`` `mermaid
+```mermaid
 flowchart LR
     subgraph BFP["BeanFactoryPostProcessor\n容器启动早期"]
         B1["读取配置"] --> B2["修改 BeanDefinition"]
