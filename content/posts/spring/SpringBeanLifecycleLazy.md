@@ -181,7 +181,7 @@ public interface BeanPostProcessor {
 }
 ```
 
-Spring 内部有一大堆 `BeanPostProcessor`，日常开发的很多功能都是靠它实现的：
+Spring 内部有一大堆 `BeanPostProcessor` ，日常开发的很多功能都是靠它实现的：
 
 | Spring 内部实现 | 作用 |
 |----------------|------|
