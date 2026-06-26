@@ -131,57 +131,76 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, BeanWrapper
 
 到这里，Bean 的各种依赖已经被注入完毕了。但**初始化方法还没执行**。
 
-## 第三步：Aware 回调——Bean 知道自己叫什么名字
+## 第三步：Aware 回调——让 Bean 拿到 Spring 的"户口本"
+
+`Aware` 翻译过来是"感知"。实现某个 `XxxAware` 接口，就是告诉 Spring："这个 Bean 想知道 Xxx 是什么"。Spring 会在初始化之前把这些信息告诉 Bean。
+
+常见的 Aware 接口：
+
+| 接口 | 注入什么 | 有什么用 |
+|------|---------|---------|
+| `BeanNameAware` | Bean 在容器中的名字 | 记录当前 Bean 的 id |
+| `BeanFactoryAware` | 当前 BeanFactory 容器 | 手动获取其他 Bean |
+| `ApplicationContextAware` | ApplicationContext | 发布事件、获取 Bean、访问资源文件 |
+| `EnvironmentAware` | Environment 对象 | 读取配置属性 |
+
+实际例子：
 
 ```java
-// AbstractAutowireCapableBeanFactory.java
-private void invokeAwareMethods(String beanName, Object bean) {
-    if (bean instanceof Aware) {
-        if (bean instanceof BeanNameAware) {
-            ((BeanNameAware) bean).setBeanName(beanName);
-        }
-        if (bean instanceof BeanClassLoaderAware) { ... }
-        if (bean instanceof BeanFactoryAware) {
-            ((BeanFactoryAware) bean).setBeanFactory(beanFactory);
-        }
+@Component
+public class MyBean implements ApplicationContextAware {
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext ctx) {
+        this.applicationContext = ctx;
+    }
+
+    public void doSomething() {
+        // 通过 ApplicationContext 手动获取其他 Bean
+        OtherBean other = applicationContext.getBean(OtherBean.class);
+        // 或者发布自定义事件
+        applicationContext.publishEvent(new MyEvent(this));
     }
 }
 ```
 
-这个阶段只处理 Spring 内部的 `Aware` 接口。 `ApplicationContextAware` 不在这一层处理，而是在后续的 `ApplicationContextAwareProcessor `（一个 `BeanPostProcessor `）中执行。
+> 📌 `ApplicationContextAware` 不是在 `invokeAwareMethods()` 中处理的——它在后面的 `ApplicationContextAwareProcessor`（一个 `BeanPostProcessor`）中执行。但效果一样：都在 `@PostConstruct` 之前完成。
 
-## 第四步：初始化前的 BeanPostProcessor
+## 第四步：BeanPostProcessor——Spring 的"插件系统"
+
+`BeanPostProcessor` 是 Spring 最强大的扩展点。它像一个插件，让你在**每个 Bean 创建过程的前后**插入自定义逻辑。
 
 ```java
-// AbstractAutowireCapableBeanFactory.java
-protected Object initializeBean(String beanName, Object bean, RootBeanDefinition mbd) {
-    // 1. Aware 回调（BeanNameAware 等）
-    invokeAwareMethods(beanName, bean);
-
-    // 2. BeanPostProcessor before 初始化
-    Object wrappedBean = bean;
-    wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
-
-    // 3. 执行初始化方法
-    invokeInitMethods(beanName, wrappedBean, mbd);
-
-    // 4. BeanPostProcessor after 初始化
-    wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
-    return wrappedBean;
+// 只要实现这个接口，Spring 会在每个 Bean 初始化前后调用你
+public interface BeanPostProcessor {
+    // 在 @PostConstruct 之前执行
+    default Object postProcessBeforeInitialization(Object bean, String beanName) { return bean; }
+    // 在 @PostConstruct + init-method 之后执行
+    default Object postProcessAfterInitialization(Object bean, String beanName) { return bean; }
 }
 ```
 
-所有 `BeanPostProcessor` 的 `postProcessBeforeInitialization` 在这里被执行。开发者熟悉的 `@PostConstruct` 就是在这一步被触发的——它由 `InitDestroyAnnotationBeanPostProcessor` 处理。
+Spring 内部有一大堆 `BeanPostProcessor`，日常开发的很多功能都是靠它实现的：
 
-跟进去看源码：
+| Spring 内部实现 | 作用 |
+|----------------|------|
+| `AutowiredAnnotationBeanPostProcessor` | 处理 `@Autowired` 和 `@Value` |
+| `InitDestroyAnnotationBeanPostProcessor` | 处理 `@PostConstruct` 和 `@PreDestroy` |
+| `ApplicationContextAwareProcessor` | 处理所有的 `XxxAware` 接口 |
+| `AbstractAutoProxyCreator` | 为标注了 `@Transactional` 、 `@Aspect` 的 Bean 创建 AOP 代理 |
+
+整个初始化阶段的核心流程：
 
 ```java
-// InitDestroyAnnotationBeanPostProcessor.java
-public Object postProcessBeforeInitialization(Object bean, String beanName) {
-    // 查找当前 Bean 中标注了 @PostConstruct 的方法
-    LifecycleMetadata metadata = findLifecycleMetadata(bean.getClass());
-    metadata.invokeInitMethods(bean, beanName);  // 这里调用了 @PostConstruct 方法
-    return bean;
+protected Object initializeBean(String beanName, Object bean, RootBeanDefinition mbd) {
+    invokeAwareMethods(beanName, bean);  // BeanNameAware、BeanFactoryAware
+    // 相当于：@PostConstruct + 所有 BeanPostProcessor.before 逻辑
+    wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+    invokeInitMethods(beanName, wrappedBean, mbd);  // InitializingBean + init-method
+    // 相当于：AOP 代理生成等 after 逻辑
+    wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+    return wrappedBean;
 }
 ```
 
@@ -360,24 +379,142 @@ flowchart TD
 
 懒加载 Bean 在创建代理对象时，代理对象本身不经过 `postProcessBeforeInitialization `，只有第一次真正实例化时才会走完整的初始化流程——那时候 `@PostConstruct` 自然也会执行。所以 `@Lazy` 推迟的不是 `@PostConstruct `，而是整个完整生命周期。
 
-## 补充：BeanPostProcessor 和 BeanFactoryPostProcessor 的区别
+## 日常开发中怎么利用这张生命周期图？
 
-这是另一个常见误区，用一张图说明：
+源码读完容易忘，关键是转化成用得上的套路。下面是几个基于生命周期设计的常见模式：
+
+### 模式一：资源初始化——用 @PostConstruct 做启动加载
+
+```java
+@Component
+public class DictCache {
+    private Map<String, String> dictMap;
+
+    @Autowired
+    private DictMapper dictMapper;
+
+    @PostConstruct
+    public void init() {
+        dictMap = dictMapper.selectAll()
+            .stream().collect(Collectors.toMap(Dict::getCode, Dict::getName));
+    }
+}
+```
+
+适用场景：启动时加载不依赖外部连接的本地数据。
+
+### 模式二：资源清理——用 @PreDestroy 做优雅关闭
+
+```java
+@Component
+@Slf4j
+public class WorkerManager {
+    private ExecutorService executor = Executors.newFixedThreadPool(10);
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("优雅关闭线程池...");
+        executor.shutdown();
+        try { executor.awaitTermination(5, TimeUnit.SECONDS); }
+        catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+}
+```
+
+### 模式三：远程资源懒加载——@Lazy + @PostConstruct 配合
+
+```java
+@Component
+@Lazy
+public class RemoteConfigFetcher {
+    @Autowired
+    private Environment environment;
+    private String configValue;
+
+    @PostConstruct
+    public void init() {
+        configValue = environment.getProperty("remote.config.key");
+    }
+}
+```
+
+### 模式四：自定义 BeanPostProcessor——给所有 Service 加日志
+
+```java
+@Component
+public class LoggingBeanPostProcessor implements BeanPostProcessor {
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
+        if (bean.getClass().isAnnotationPresent(Service.class)) {
+            return Proxy.newProxyInstance(
+                bean.getClass().getClassLoader(),
+                bean.getClass().getInterfaces(),
+                (proxy, method, args) -> {
+                    System.out.println("call: " + beanName + "." + method.getName());
+                    return method.invoke(bean, args);
+                }
+            );
+        }
+        return bean;
+    }
+}
+```
+
+### 模式五：ApplicationContextAware——手写 SpringUtil
+
+```java
+@Component
+public class SpringUtil implements ApplicationContextAware {
+    private static ApplicationContext ctx;
+    @Override
+    public void setApplicationContext(ApplicationContext context) {
+        ctx = context;
+    }
+    public static <T> T getBean(Class<T> clazz) { return ctx.getBean(clazz); }
+}
+```
+
+### 模式六：@PostConstruct + @PreDestroy 管理分布式锁
+
+```java
+@Component
+public class LeaderElection {
+    private final StringRedisTemplate redis;
+    private boolean isLeader;
+    public LeaderElection(StringRedisTemplate redis) { this.redis = redis; }
+
+    @PostConstruct
+    public void tryElect() {
+        isLeader = redis.opsForValue()
+            .setIfAbsent("leader", InetAddress.getLocalHost().getHostName());
+    }
+
+    @PreDestroy
+    public void stepDown() {
+        if (isLeader) redis.delete("leader");
+    }
+
+    public boolean isLeader() { return isLeader; }
+}
+```
+
+每次你写 @PostConstruct 的时候，在脑子里过一遍这个时序：实例化 -> 属性注入 -> Aware -> @PostConstruct -> 初始化 -> 可用 -> @PreDestroy -> 销毁。写多了自然就记住了。
+
+## BeanPostProcessor 和 BeanFactoryPostProcessor 的区别（补充）
 
 ```mermaid
 flowchart LR
-    subgraph BFP["BeanFactoryPostProcessor\n容器启动早期"]
+    subgraph BFP["BeanFactoryPostProcessor
+容器启动早期"]
         B1["读取配置"] --> B2["修改 BeanDefinition"]
         B2 --> B3["注册新的 Bean 定义"]
     end
-
-    subgraph BP["BeanPostProcessor\n每个 Bean 创建时"]
+    subgraph BP["BeanPostProcessor
+每个 Bean 创建时"]
         BP1["postProcessBeforeInit"] --> BP2["初始化方法"]
         BP2 --> BP3["postProcessAfterInit"]
     end
-
     BFP -->|"处理完所有 BeanDefinition"| BP
-
     classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
     classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
     class B1,B2,B3,BP1,BP2,BP3 process;
@@ -386,10 +523,21 @@ flowchart LR
 
 | 接口 | 作用 | 执行时机 | 操作对象 |
 |------|------|---------|---------|
-| `BeanFactoryPostProcessor` | 修改 Bean 的定义（属性占位符替换等） | **所有 Bean 实例化之前** | `BeanDefinition `（配置元数据） |
-| `BeanPostProcessor` | 对已实例化的 Bean 做增强 | **每个 Bean 创建过程中** | Bean 实例 |
+| BeanFactoryPostProcessor | 修改 Bean 的定义 | 所有 Bean 实例化之前 | BeanDefinition |
+| BeanPostProcessor | 对已实例化的 Bean 做增强 | 每个 Bean 创建过程中 | Bean 实例 |
 
-经常有开发者把 `@Value("${xxx}")` 不生效的原因归咎于 Bean 加载顺序，其实真正的原因是 `BeanFactoryPostProcessor `（处理占位符的 `PropertySourcesPlaceholderConfigurer `）还没有执行，而 Bean 已经被创建了。
+## 总结
+
+从一个 @PostConstruct 的踩坑开始，走了遍 Spring Bean 生命周期的九道工序。
+
+几个关键时间节点记清楚：
+
+1. @PostConstruct / @PreDestroy 是标配的初始化和销毁注解，适用大部分场景
+2. @Lazy 推迟的不是某个方法，而是整个生命周期
+3. BeanPostProcessor 可以在每个 Bean 初始化前后插入逻辑，适合横切关注点
+4. ApplicationContextAware 是让 Bean 拿到 Spring 容器引用的桥梁
+5. 远程配置中心的属性在 Environment 就绪后才会被注入——如果 @PostConstruct 依赖这些属性，确保它们在初始化前到位，否则用 @Lazy 推迟初始化
+6. 记生命周期的最好方式不是背源码，而是每次写 @PostConstruct 时想一遍：现在 Bean 的依赖注入了没有？配置到位了没有？
 
 ## 总结
 
