@@ -35,7 +35,7 @@ cover:
 
 第一个映入眼帘的就是各个 Application 类上的注解：
 
-`` `java
+```java
 @ComponentScan(basePackages = "cn.net.mall")
 ```
 
@@ -45,7 +45,7 @@ cover:
 mall-pay 启动 → 扫描 cn.net.mall → 发现 RedisUtil → 尝试创建 → StringRedisTemplate 不在 classpath → ClassNotFoundException → 启动失败
 ```
 
-`` `mermaid
+```mermaid
 flowchart LR
     subgraph SCAN["全量扫描 `cn.net.mall `"]
         PAY["mall-pay\n@ComponentScan"]
@@ -73,7 +73,7 @@ flowchart LR
 
 **改进方案：** 每个服务的 `@SpringBootApplication` 只扫自身包路径，Feign 客户端精确声明到具体 client 包：
 
-`` `java
+```java
 // ❌ 错误写法：扫全量
 @ComponentScan(basePackages = "cn.net.mall")
 
@@ -86,7 +86,7 @@ flowchart LR
 
 `mall-common` 里放了一个 `MallCommonAutoConfiguration `，通过 `AutoConfiguration.imports` 全局注册，然后用 `@ComponentScan` 统一扫描几个公共包：
 
-`` `java
+```java
 @AutoConfiguration
 @ComponentScan(basePackages = {
     "cn.net.mall.config",
@@ -99,7 +99,7 @@ public class MallCommonAutoConfiguration {}
 
 这相当于给所有依赖 `mall-common` 的服务强行注入了一整套 bean——不管服务用不用 Redis、用不用 Token 校验、用不用敏感词过滤。一旦某个服务的 classpath 缺了某个依赖，整个启动就崩了。
 
-`` `mermaid
+```mermaid
 flowchart TD
     subgraph COMMON_MODULE["mall-common（AutoConfiguration.imports）"]
         MCA["MallCommonAutoConfiguration\n无条件 @ComponentScan"]
@@ -129,7 +129,7 @@ flowchart TD
 
 **改进方案：** 每个公共组件应该用 `@ConditionalOnClass` 按条件加载：
 
-`` `java
+```java
 @AutoConfiguration
 @ConditionalOnClass(StringRedisTemplate.class)  // ← 没有 redis 就不激活
 public class RedisAutoConfiguration {
@@ -154,7 +154,7 @@ public class RedisAutoConfiguration {
 
 把所有东西塞进一个 common 模块，然后靠 `@ComponentScan` 一次性扫描，这本质上是**单体的"工具包"思维**——"把所有工具放一个包里，谁要用谁拿"。微服务下的正确做法是拆成独立的 starter，每个 starter 有自己的版本号、条件注解、按需加载。
 
-`` `mermaid
+```mermaid
 flowchart LR
     subgraph BEFORE["当前：common 大杂烩"]
         C["mall-common\nRedisUtil\nTokenHelper\nWorkIdAllocator\n敏感词\n全局异常"]
@@ -186,7 +186,7 @@ flowchart LR
 
 检查各服务的 POM 时发现了一个规律： `mall-common` 里几乎所有中间件依赖都打了 `<optional>true</optional>`：
 
-`` `xml
+```xml
 <!-- mall-common/pom.xml -->
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -204,7 +204,7 @@ flowchart LR
 
 更搞笑的是，全项目没有一个服务用到 RabbitMQ，但有 4 个服务的 POM 里赫然写着：
 
-`` `xml
+```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-amqp</artifactId>
@@ -221,7 +221,7 @@ flowchart LR
 
 典型的表现是：**A 服务启动正常，B 服务启动报错，查了半天发现 B 的 Nacos 配置里少了两个字段。** 因为每个服务的配置结构都不一样——有人把 ES 配在 `spring.elasticsearch.host `，有人用 `spring.data.elasticsearch.uris `，搬的时候只搬了看得见的，漏了藏在代码 `@Value` 注解里的。
 
-`` `mermaid
+```mermaid
 flowchart LR
     subgraph LOCAL["迁移前：分散在本地"]
         L1["mall-product\napplication.yml\n（含 ES、RocketMQ）"]
@@ -250,7 +250,7 @@ flowchart LR
 
 根 POM 中通过 `dependencyManagement` 导入了 `spring-cloud-alibaba-dependencies:2023.0.1.0 `：
 
-`` `xml
+```xml
 <dependencyManagement>
     <dependencies>
         <dependency>
@@ -266,7 +266,7 @@ flowchart LR
 
 这个 BOM 里有一条不起眼的配置：
 
-`` `xml
+```xml
 <rocketmq.version>5.1.4</rocketmq.version>
 ```
 
@@ -281,7 +281,7 @@ starter 父 POM → rocketmq-client:4.7.1 → ✅ 有 MessageModel
 
 **改进方案：** 根 POM 中统一锁定 RocketMQ 版本，覆盖 BOM 带来的错误版本：
 
-`` `xml
+```xml
 <dependency>
     <groupId>org.apache.rocketmq</groupId>
     <artifactId>rocketmq-client</artifactId>
@@ -299,7 +299,7 @@ starter 父 POM → rocketmq-client:4.7.1 → ✅ 有 MessageModel
 | mall-product | `ObjectProvider<RocketMQTemplate>` | 优雅跳过，不报错 |
 | mall-basic | 直接 `@Autowired RocketMQTemplate` | **启动崩溃** |
 
-`` `java
+```java
 // mall-basic（❌ 直接注入——没有就崩）
 public MqHelper(RocketMQTemplate rocketMQTemplate) {
     this.rocketMQTemplate = rocketMQTemplate;
@@ -341,7 +341,7 @@ public void send(String topic, Object data) {
 
 根 POM 的 `dependencyManagement` 和 `mall-common` 是两种完全不同的角色，混在一起用是最大的问题。
 
-`` `mermaid
+```mermaid
 flowchart TD
     subgraph WRONG["目前的做法"]
         ROOT["根 POM
@@ -424,7 +424,7 @@ dependencyManagement
 - 哪些依赖是传递进来的（服务自己甚至不知道它的存在）
 - 哪些服务之间存在编译期依赖（A 服务需要 B 服务的类才能编译）
 
-`` `bash
+```bash
 # 找出每个服务实际的编译依赖
 mvn dependency:tree -pl mall-pay -Dincludes=cn.net.mall
 # 找出未使用的声明依赖
@@ -502,7 +502,7 @@ mvn dependency:analyze -pl mall-pay
 
 - **引入 ArchUnit 等架构约束工具** — 用单元测试来强制执行架构规范，例如：
 
-  `` `java
+  ```java
   // 禁止全量包扫描
   classes().that().areAnnotatedWith(SpringBootApplication.class)
       .should().haveField("scanBasePackages")
@@ -531,7 +531,7 @@ mvn dependency:analyze -pl mall-pay
 
 不要试图保留一个"超级根 POM"来管理所有仓库的版本，也不要让每个仓库自己声明全套版本。正确做法是抽一个 **BOM 模块**：
 
-`` `mermaid
+```mermaid
 flowchart LR
     subgraph BOM["仓库1: mall-cloud-bom"]
         B["发布到 Nexus\n各服务仓库通过\nimport 引用此 BOM"]
@@ -563,7 +563,7 @@ flowchart LR
 
 这是一个独立的 Maven 模块，**只包含 `<dependencyManagement>`，没有任何业务代码**，独立发布到私有 Maven 仓库（Nexus / Artifactory）：
 
-`` `xml
+```xml
 <!-- mall-cloud-bom/pom.xml -->
 <artifactId>mall-cloud-bom</artifactId>
 <packaging>pom</packaging>
@@ -615,7 +615,7 @@ flowchart LR
 
 各服务仓库的根 POM 只需要 import 这个 BOM，不再自己管版本：
 
-`` `xml
+```xml
 <!-- mall-order 独立仓库的根 POM -->
 <dependencyManagement>
     <dependencies>
@@ -643,7 +643,7 @@ flowchart LR
 
 **Client 的 POM 必须最轻量**，不能依赖服务实现模块：
 
-`` `xml
+```xml
 <!-- mall-order-client/pom.xml — 正确 -->
 <dependencies>
     <dependency>
@@ -658,7 +658,7 @@ flowchart LR
 </dependencies>
 ```
 
-`` `xml
+```xml
 <!-- mall-order-client/pom.xml — 错误 -->
 <dependencies>
     <!-- 这会让 client 的消费者被迫引入整个业务实现 -->
@@ -671,7 +671,7 @@ flowchart LR
 
 Consumer 服务在 POM 里按需引入所需的 client：
 
-`` `xml
+```xml
 <!-- mall-pay/pom.xml -->
 <dependencies>
     <!-- 要调 order 接口 -->
@@ -691,7 +691,7 @@ Consumer 服务在 POM 里按需引入所需的 client：
 
 `mall-common` 拆散的每个 starter 也是独立仓库、独立版本号。它们的消费者只看自己需要哪些 starter，不再被迫继承整个 common。
 
-`` `xml
+```xml
 <!-- mall-redis-spring-boot-starter/pom.xml -->
 <dependencies>
     <!-- 显式声明自己依赖什么，不靠传递 -->
@@ -706,7 +706,7 @@ Consumer 服务在 POM 里按需引入所需的 client：
 </dependencies>
 ```
 
-`` `java
+```java
 // 自动配置类带条件，没有 redis 依赖就不激活
 @AutoConfiguration
 @ConditionalOnClass(StringRedisTemplate.class)
