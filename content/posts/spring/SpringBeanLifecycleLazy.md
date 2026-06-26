@@ -165,7 +165,7 @@ public class MyBean implements ApplicationContextAware {
 }
 ```
 
-> 📌 `ApplicationContextAware` 不是在 `invokeAwareMethods()` 中处理的——它在后面的 `ApplicationContextAwareProcessor`（一个 `BeanPostProcessor`）中执行。但效果一样：都在 `@PostConstruct` 之前完成。
+> 📌 `ApplicationContextAware` 不是在 `invokeAwareMethods()` 中处理的——它在后面的 `ApplicationContextAwareProcessor` （一个 `BeanPostProcessor` ）中执行。但效果一样：都在 `@PostConstruct` 之前完成。
 
 ## 第四步：BeanPostProcessor——Spring 的"插件系统"
 
