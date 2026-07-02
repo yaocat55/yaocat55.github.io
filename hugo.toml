@@ -57,7 +57,8 @@ math = true
       { name = "🏷️ 标签", url = "/tags" },
       { name = "📂 分类", url = "/categories" },
       { name = "🔍 搜索", url = "/search" },
-      { name = "🐱 GitHub", url = "https://github.com/yaocat55" }
+      { name = "🐱 GitHub", url = "https://github.com/yaocat55" },
+
     ]
 
   # 社交图标配置
