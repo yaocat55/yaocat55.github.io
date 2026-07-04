@@ -1,6 +1,6 @@
 ---
 title: "把 React + Vite 项目搬到 Electron 去：改造、踩坑与调试"
-date: 2024-03-03T11:30:03+00:00
+date: 2023-04-05T11:30:03+00:00
 tags: ["工程实践", "Electron", "实践教程"]
 categories: ["教程"]
 author: "yaomingye"
