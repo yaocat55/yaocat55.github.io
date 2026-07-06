@@ -1,6 +1,6 @@
 ---
 title: "Maven Surefire 测试中的 MalformedInputException：当 JVM 默认编码与 Nacos 配置编码不一致时"
-date: 2023-06-17T11:30:03+00:00
+date: 2023-06-19T11:30:03+00:00
 tags: ["工程实践", "服务治理", "故障排查"]
 categories: ["技术类"]
 author: "yaomingye"
