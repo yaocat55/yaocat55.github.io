@@ -9,7 +9,7 @@ TocOpen: true
 draft: false
 hidemeta: false
 comments: false
-description: "写给 Java/Go 后端程序员：怎么用 Flutter 当"中间翻译器"，把后端的类/接口/线程/阻塞思维平移到 React 的函数组件/Hooks/事件循环。联合类型、交叉类型、泛型默认值、unknown vs any、interface vs type、React 核心 Hooks 对照——读完就能写业务代码。"
+description: "写给 Java/Go 后端程序员：怎么用 Flutter 当「中间翻译器」，把后端的类/接口/线程/阻塞思维平移到 React 的函数组件/Hooks/事件循环。联合类型、交叉类型、泛型默认值、unknown vs any、interface vs type、React 核心 Hooks 对照——读完就能写业务代码。"
 disableShare: true
 hideSummary: false
 searchHidden: false
