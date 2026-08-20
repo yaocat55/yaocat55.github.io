@@ -73,8 +73,9 @@ check "<strong> glued to CJK" \
       "<strong> 标签与相邻中文字符之间须有空格"
 
 # 4. inline code glued to adjacent characters (exclude code block markers)
+# 排除 **加粗包裹代码** 场景: 反引号后跟 * (加粗闭合标记) 不算粘连
 check "inline code glued" \
-      '\w`[^\s]|[^\s]`\w' \
+      '\w`[^\s*]|[^\s]`\w' \
       "行内代码 `code` 与相邻文字之间须有空格" \
       '^[0-9]+:```'
 
@@ -99,6 +100,26 @@ if [ -n "$bold_issues" ]; then
   FAILED=1
 else
   echo "  OK : bold markers paired"
+fi
+
+# 5.6 ** bold must touch content (no space between ** and text)
+bold_space_issues=$(awk '
+  /^```/ { in_block = !in_block; next }
+  in_block { next }
+  {
+    # 打开标记失效: ** 后紧跟空格 且 ** 前是行首/空格（即它是"开"不是"闭"）
+    if (match($0, /(^|[[:space:]])[[:space:]]*\*\*[[:space:]]/)) {
+      print NR": "$0
+    }
+  }
+' "$FILE")
+if [ -n "$bold_space_issues" ]; then
+  echo "=== FAIL: bold must touch content ==="
+  echo "  rule: ** 加粗标记必须紧贴内容（** 与文字之间不能有空格，否则渲染失效）"
+  echo "$bold_space_issues" | head -20 | sed 's/^/  line /'
+  FAILED=1
+else
+  echo "  OK : bold must touch content"
 fi
 
 # 6. tags count must be exactly 3
