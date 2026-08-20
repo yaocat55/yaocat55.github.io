@@ -168,6 +168,32 @@ MVCC（Multi-Version Concurrency Control，多版本并发控制）的核心思�
 
 MVCC 的做法是：<strong>每次修改不覆盖原数据，而是生成一个新版本</strong>。读操作根据事务开始的时间，选择一个"应该看到"的版本，不需要加锁；写操作创建新版本后旧版本仍然保留，不影响正在进行的读。这样读写分离、互不阻塞。
 
+把两种方案放在一起对比，原理立刻清晰：
+
+```mermaid
+flowchart LR
+    subgraph LBCC["❌ 传统锁并发控制（LBCC）<br/>读写互斥，排队等待"]
+        direction TB
+        R1["事务 B 要读<br/>age=25"] -->|"加共享锁"| W1["事务 A 持有排他锁<br/>正在写 age=30"]
+        W1 -->|"锁冲突！<br/>B 必须等 A 提交"| Q1["⏳ B 阻塞等待"]
+    end
+
+    subgraph MVCC["✅ 多版本并发控制（MVCC）<br/>读写并行，互不干扰"]
+        direction TB
+        R2["事务 B 要读<br/>age=25"] -->|"无需加锁<br/>直接读旧版本"| V2["版本链上的 age=25<br/>（Undo Log 中的旧版本）"]
+        W2["事务 A 正在写<br/>age=30"] -->|"生成新版本<br/>不覆盖旧数据"| V3["数据页新版本 age=30"]
+    end
+
+    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    class R1,W1,Q1 process;
+    class R2,W2 process;
+    class V2,V3 data;
+```
+
+> 💡 左边是"一把锁管读写"——同一时刻只有一个人能碰这行数据；右边是"写的人造新版本，读的人看旧版本"——两个人各干各的，谁也不等谁。**这就是 MVCC 为什么能提升并发吞吐的本质**：把"读写互斥"变成"读写并行"。
+
 MVCC 的"多版本"体现在 InnoDB 维护了三个机制：
 
 1. <strong>隐藏列</strong>：每行数据有两个隐藏字段，记录最后一次修改的事务 ID 和指向旧版本的回滚指针
@@ -388,7 +414,34 @@ ReadView 的核心数据结构简单但精妙。它是一个 <strong>事务在�
 | `DB_TRX_ID` 在 `trx_ids` 中 | ❌ 不可见 | 修改该行的事务在 ReadView 创建时还未提交 |
 | `min_trx_id ≤ DB_TRX_ID < max_trx_id` 且不在 `trx_ids` 中 | ✅ 可见 | 修改该行的事务在 ReadView 创建时已提交（不在活跃列表 = 已提交） |
 
-> 💡 最后一条是判断的**核心分支**： `trx_ids` 存的是"ReadView 创建那一刻还没提交的事务"。一个事务的 DB_TRX_ID 落在 `[min_trx_id, max_trx_id)` 区间但**不在** `trx_ids` 里——说明它在 ReadView 创建**之前**就已经提交了，所以**可见**。RC 和 RR 在这个分支上行为一致；两者的差异只在于 ReadView 是"每次 SELECT 新建"还是"事务内复用"（见 §7）。
+把上面这张表画成**决策流程**，判断顺序一目了然——从版本链最新版本开始，逐条往下走：
+
+```mermaid
+flowchart TD
+    A["读到一个版本的 DB_TRX_ID"] --> B{"DB_TRX_ID ==<br/>creator_trx_id?"}
+    B -->|"是"| VIS1["✅ 可见<br/>自己改的"]
+    B -->|"否"| C{"DB_TRX_ID <br/>< min_trx_id?"}
+    C -->|"是"| VIS2["✅ 可见<br/>ReadView 创建前已提交"]
+    C -->|"否"| D{"DB_TRX_ID <br/>>= max_trx_id?"}
+    D -->|"是"| INV1["❌ 不可见<br/>'未来'事务的修改"]
+    D -->|"否"| E{"DB_TRX_ID <br/>在 trx_ids 中?"}
+    E -->|"是"| INV2["❌ 不可见<br/>ReadView 创建时未提交"]
+    E -->|"否"| VIS3["✅ 可见<br/>已提交(不在活跃列表)"]
+    INV1 --> F["沿 DB_ROLL_PTR<br/>找下一个旧版本"]
+    INV2 --> F
+    F --> A
+
+    classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
+    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    class A,F process;
+    class B,C,D,E condition;
+    class INV1,INV2 reject;
+    class VIS1,VIS2,VIS3 data;
+```
+
+> 💡 判断口诀：**先问"是不是自己"→ 再问"是不是够老（<min）"→ 再问"是不是太新（>=max）"→ 最后查"在不在活跃列表"**。前两步直接放行，中间两步直接拒绝，最后一步查表定论。不可见就沿版本链往前找旧版本，直到找到可见的或走到链尾。
 
 ## 6. MVCC 完整流程：从 SELECT 到返回结果
 
