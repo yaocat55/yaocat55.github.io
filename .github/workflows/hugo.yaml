@@ -49,7 +49,7 @@ jobs:
           extended: true
 
       - name: 构建 ECS 版本
-        run: hugo --minify --baseURL "http://yaocat.cloud"
+        run: hugo --minify --baseURL "https://yaocat.cloud"
 
       - name: 打包并部署到 ECS
         env:
@@ -94,7 +94,7 @@ jobs:
             sudo rm -f /tmp/blog-ecs.tar.gz
 
             echo "✅ ECS 部署成功"
-            echo "访问地址: http://yaocat.cloud"
+            echo "访问地址: https://yaocat.cloud"
           EOF
 
           # 清理本地文件

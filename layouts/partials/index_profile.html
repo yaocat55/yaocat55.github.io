@@ -465,7 +465,7 @@
             weatherPanel.innerHTML = `<p class="widget-loading">📍 正在定位您的位置...</p>`;
 
             try {
-                const ipResponse = await fetch('http://ip-api.com/json/?fields=status,city,regionName,countryCode,lat,lon,query', {
+                const ipResponse = await fetch('https://ip-api.com/json/?fields=status,city,regionName,countryCode,lat,lon,query', {
                     mode: 'cors'
                 });
                 const ipData = await ipResponse.json();
