@@ -153,9 +153,9 @@ server {
 }
 ```
 
-** `proxy_set_header` 为什么必须配**：Spring Cloud Gateway 拿到 `X-Forwarded-For` 才能做真实的 IP 限流和审计；拿到 `X-Forwarded-Proto` 才知道客户端是 http 还是 https（否则重定向会错）。不配这几行，网关层的很多能力直接失效。
+**proxy_set_header 为什么必须配**：Spring Cloud Gateway 拿到 `X-Forwarded-For` 才能做真实的 IP 限流和审计；拿到 `X-Forwarded-Proto` 才知道客户端是 http 还是 https（否则重定向会错）。不配这几行，网关层的很多能力直接失效。
 
-** `keepalive 32` 为什么重要**：nginx 到 gateway 每次请求都新建 TCP 连接的话，高并发下握手开销巨大。配了 keepalive，连接复用，gateway 压力直线下降。
+**keepalive 32 为什么重要**：nginx 到 gateway 每次请求都新建 TCP 连接的话，高并发下握手开销巨大。配了 keepalive，连接复用，gateway 压力直线下降。
 
 ### 3.3 超时配置（命门三）
 

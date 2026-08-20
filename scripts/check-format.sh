@@ -83,6 +83,24 @@ check "forbidden title prefix" \
       '^title:\s*".*?(深入理解|详解|深入浅出|一网打尽|手把手|一文读懂)' \
       "标题禁止使用 深入理解/详解/深入浅出/一网打尽/手把手/一文读懂 等套路前缀"
 
+# 5.5 ** bold markers must be paired (exclude code blocks)
+bold_issues=$(awk '
+  /^```/ { in_block = !in_block; next }
+  in_block { next }
+  {
+    n = gsub(/\*\*/, "**", $0)
+    if (n % 2 != 0) print NR": "$0
+  }
+' "$FILE")
+if [ -n "$bold_issues" ]; then
+  echo "=== FAIL: bold markers paired ==="
+  echo "  rule: ** 加粗标记必须成对出现（奇数个 ** 说明漏了闭合）"
+  echo "$bold_issues" | head -20 | sed 's/^/  line /'
+  FAILED=1
+else
+  echo "  OK : bold markers paired"
+fi
+
 # 6. tags count must be exactly 3
 tag_count=$(grep -P '^tags:' "$FILE" | grep -oP '"[^"]*"' | wc -l)
 if [ "$tag_count" -ne 3 ]; then

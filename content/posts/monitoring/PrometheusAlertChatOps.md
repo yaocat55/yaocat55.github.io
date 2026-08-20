@@ -323,7 +323,7 @@ curl -X POST http://localhost:9093/api/v2/alerts \
 
 解法：**改完文件用 `docker compose up -d --force-recreate` 重建容器**，不要 `restart` 。
 
-**坑 2：Grafana 12 禁用 `/api/login` **
+**坑 2：Grafana 12 禁用 `/api/login`**
 
 症状：API 调用一直 401。
 
