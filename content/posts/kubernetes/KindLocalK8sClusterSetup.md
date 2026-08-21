@@ -62,6 +62,77 @@ flowchart LR
 
 kind 是**用 Docker 模拟节点**（每个"节点"是一个跑着完整 Linux 的容器），所以它教不会你"怎么在裸机上装出 K8s"——那些是上云前的功课，本文不展开。先把 kind 能教的部分学扎实。
 
+## 先看全局：一主二从的节点们是怎么互相交流的
+
+> 📌 在看后面的安装步骤之前，先花 3 分钟把这张图看懂——它就是这个集群的全部骨架。后面装的东西，全是图里的某个角色。
+
+```mermaid
+flowchart TB
+    subgraph CP["控制面 learn-control-plane"]
+        API["kube-apiserver\n全部通信的枢纽"]
+        ETC[("etcd\n状态数据库")]
+        SCH["kube-scheduler"]
+        CM["controller-manager"]
+    end
+    subgraph N1["工作节点 learn-worker"]
+        K1["kubelet"]
+        P1["业务 Pod"]
+    end
+    subgraph N2["工作节点 learn-worker2"]
+        K2["kubelet"]
+        P2["业务 Pod"]
+    end
+    U["开发者"] -->|"kubectl 指令"| API
+    API <-->|"① 唯一读写通道"| ETC
+    API <-->|"② Watch: 新 Pod 待调度"| SCH
+    API <-->|"② Watch: 状态调谐"| CM
+    API <-->|"③ 指令 / 状态 / 心跳"| K1
+    API <-->|"③ 指令 / 状态 / 心跳"| K2
+    K1 --> P1
+    K2 --> P2
+    P1 <==>|"④ Pod 互访: kindnet 覆盖网络"| P2
+    U -.->|"④ 访问 Service: kube-proxy 转发"| P1
+    U -.->|"④"| P2
+    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    class U,API root;
+    class ETC data;
+    class SCH,CM,K1,K2,P1,P2 process;
+```
+
+### 四条通信链路（图里的 ①②③④）
+
+| 链路 | 谁和谁 | 怎么交流 | 特点 |
+|---|---|---|---|
+| ① 控制面内部 | apiserver ↔ etcd | apiserver 是唯一能读写 etcd 的组件 | 其他组件都不能直接碰 etcd |
+| ② 控制面内部 | apiserver ↔ scheduler / controller-manager | Watch（监听）模式：scheduler 盯"没调度的 Pod"，CM 盯"实际 ≠ 期望" | 不主动干活，等变化才响应 |
+| ③ 控制面 ↔ 节点 | apiserver ↔ kubelet | kubelet 主动连接 apiserver：接收指令 + 上报状态 + 心跳续租（Lease） | 节点约 40 秒没心跳会被标记 NotReady |
+| ④ 数据面 | Pod ↔ Pod、外部 ↔ Service | 不经过控制面！Pod 互访走 kindnet（VXLAN 覆盖网络），Service 流量由 kube-proxy 的 iptables 规则转发 | 业务数据流和控制指令流完全分离 |
+
+> 最直白的一句话原理：**控制面是"大脑"，只管发指令和记状态；数据面是"手脚"，只管跑业务流量。** 大脑和手脚各走各的路——所以 apiserver 就算挂了，已经在跑的 Pod 之间业务流量依然通（只是不能再调度、不能自愈）。
+
+### 一次完整协作：部署 nginx 时全链路发生了什么
+
+```mermaid
+flowchart TD
+    S1["① 你执行 kubectl apply deployment.yaml"] --> S2["② apiserver 校验合法性, 存入 etcd"]
+    S2 --> S3["③ controller-manager 发现 期望3副本=实际0, 创建3个Pod对象"]
+    S3 --> S4["④ scheduler 为每个 Pod 挑节点 资源余量/污点/亲和性"]
+    S4 --> S5["⑤ 调度结果写回 etcd"]
+    S5 --> S6["⑥ worker 的 kubelet 监听发现 本节点有新任务"]
+    S6 --> S7["⑦ kubelet 调 containerd 拉镜像、启动容器"]
+    S7 --> S8["⑧ 容器就绪, kubelet 上报 Running + Ready"]
+    S8 --> S9["⑨ kube-proxy 感知 Service 变化, 更新转发规则"]
+    S9 --> S10["⑩ 访问 Service IP, 流量直达 Pod"]
+    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+    class S1 root;
+    class S2,S3,S4,S5,S6,S7,S8,S9,S10 process;
+```
+
+注意第 ④ 步：调度器挑中的可能是 learn-worker 也可能是 learn-worker2——这就是多节点的意义，**Pod 跑在哪是调度器根据集群整体资源动态决定的**。部署后可以执行 ` kubectl get pods -o wide ` 看 3 个副本分散在不同节点上，亲眼验证这张图。
+
 ## 前置条件
 
 ### 硬件：到底要多好的机器？
