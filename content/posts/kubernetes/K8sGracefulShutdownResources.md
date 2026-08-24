@@ -75,6 +75,38 @@ flowchart TD
 
 时间预算： ` terminationGracePeriodSeconds ` （本文 35s）= preStop(5s) + graceful 处理在途(≤30s)，超出则 SIGKILL 强杀。
 
+## 第0步：准备演示素材（慢接口 + 测试 Pod）
+
+课 4 的演示需要一个"慢接口"来模拟长事务——瞬时接口体现不出"在途请求"。给应用加一个睡 10 秒的端点：
+
+```java
+// HelloController.java 追加
+@GetMapping("/api/slow")
+public String slow() throws Exception {
+    Thread.sleep(10000);   // 10 秒, 模拟长事务 / 大文件下载
+    return "slow-done";
+}
+```
+
+重建镜像并更新 deployment（依赖层已缓存，只需几分钟）：
+
+```bash
+cd /root/k8s-demo-app
+docker build -t k8s-demo-app:1.1 .        # 依赖层缓存生效, 只重编译源码
+kind load docker-image k8s-demo-app:1.1 --name learn
+kubectl set image deployment/demo-app demo=k8s-demo-app:1.1
+kubectl rollout status deployment/demo-app --timeout=120s
+```
+
+准备集群内的测试 Pod（演示中用它在集群里发请求，模拟"另一个服务"）：
+
+```bash
+kubectl run dns-test --image=busybox:1.36 --restart=Never --command -- sleep 3600
+kubectl wait --for=condition=Ready pod/dns-test --timeout=60s
+```
+
+> 📌 为什么演示要"直接打 Pod IP"而不是走 Service？因为 Service 会把请求负载均衡到两个副本，无法确定慢请求落在哪个 Pod；直连 Pod IP 才能保证"请求一定在目标 Pod 上"，演示才确定可复现。
+
 ## 第1步：配置（应用侧 + 集群侧）
 
 应用侧（ ` application.yml ` ，系列第 4 篇已内置）：
@@ -100,6 +132,15 @@ spec:
           preStop:
             exec:
               command: ["sh", "-c", "sleep 5"]   # 摘流缓冲
+```
+
+部署后先**验证应用实际生效的停机模式**（防止环境变量悄悄覆盖镜像配置——这是本次实操踩过的坑）：
+
+```bash
+POD=$(kubectl get pods -l app=demo-app -o jsonpath='{.items[0].metadata.name}')
+kubectl exec $POD -- env | grep -i shutdown || echo "内置 graceful"
+# 无输出 = 用镜像内 application.yml 的 graceful
+# 有 SERVER_SHUTDOWN=xxx = 被环境变量覆盖了, 需清理 (见第3步的坑)
 ```
 
 ## 第2步：演示——慢请求在 Pod 被删时存活
@@ -146,7 +187,7 @@ kubectl logs $POD --tail=50 | grep -iE "graceful|shutdown"
 
 ## 第3步：一个真实的坑—— ` kubectl set env ` 的变量清不掉
 
-演示中把应用切回 graceful 时， ` kubectl apply -f ` 旧清单后 Pod 里仍残留 ` SERVER_SHUTDOWN=immediate ` ——** ` kubectl set env ` 加的环境变量，apply 旧清单不一定清得掉**（列表字段的合并语义问题）。显式删除才是确定性的：
+这次实操直接踩中：第一轮演示慢请求被切断（EXIT=1），排查半天误以为是优雅停机失效，最后发现是之前演示对照组时 ` kubectl set env SERVER_SHUTDOWN=immediate ` 的残留——** ` kubectl apply -f ` 旧清单并不会清掉 ` kubectl set env ` 加的环境变量**（列表字段的合并语义问题），而环境变量优先级高于镜像内配置，导致应用一直在 immediate 模式。显式删除才是确定性的：
 
 ```bash
 kubectl set env deployment/demo-app SERVER_SHUTDOWN-   # 变量名加 - 号 = 删除
@@ -223,6 +264,17 @@ kubectl get pods -l app=demo-app
 ```
 
 **原理**：limits 通过 cgroup 限制容器内存，JVM 试图分配超过 100Mi → 内核 OOM killer 直接杀容器 → kubelet 重启 → 又 OOM → CrashLoopBackOff 循环。
+
+恢复（移除 limits，回到 2 副本）：
+
+```bash
+kubectl patch deployment demo-app --type=json -p='[
+  {"op":"remove","path":"/spec/template/spec/containers/0/resources"}
+]'
+kubectl scale deployment demo-app --replicas=2
+kubectl rollout status deployment/demo-app --timeout=120s
+# 观察: 残留的坏 Pod 会以 OOMKilled 状态被清理, 新 Pod 正常
+```
 
 ## Java 应用必须配合的 JVM 参数
 
