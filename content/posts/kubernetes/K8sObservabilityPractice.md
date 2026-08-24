@@ -140,7 +140,13 @@ management:
     web:
       exposure:
         include: health,info,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true   # 发布直方图桶, Grafana P95 面板依赖 _bucket 序列
 ```
+
+> ⚠️ 新手提示：上面 ` percentiles-histogram ` 这一节**必须加**。Spring Boot 默认不发布直方图桶（ ` _bucket ` 序列），不加的话 Prometheus 里查不到 ` http_server_requests_seconds_bucket ` ，后面 Grafana 的 P95 面板会是空的（这个坑我一开始也踩了：P95 查询返回 ` nan ` ，排查才发现是配置缺失）。
 
 ### 3.3 重建镜像并滚动升级
 
