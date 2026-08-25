@@ -120,7 +120,7 @@ flowchart LR
     class DNS root;
 ```
 
-**一句话记忆**：Deployment 管"一群长得一样的牛"，StatefulSet 管"一群有名有姓、各带各的行李、按次序上下车的人"。
+**一句话记忆**：Deployment 的 Pod 无身份标识、可任意替换；StatefulSet 的 Pod 有固定名（稳定标识）、专属存储（各副本各一块盘）、有序生命周期（按索引顺序更新）——三大保证就是全部差异。
 
 ## 3. 演示 A：PVC 动态供应与数据持久化
 
