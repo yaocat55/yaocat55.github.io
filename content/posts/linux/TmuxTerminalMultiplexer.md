@@ -99,6 +99,17 @@ flowchart TD
 | 分离（退出但保持运行） | 前缀 + `d` |
 | 销毁会话 | `tmux kill-session -t 名字` |
 
+**命令简化：tmux 支持唯一前缀缩写，且单会话时参数可省**（日常最常用的其实就这几个）：
+
+| 完整命令 | 最简写法 | 说明 |
+|------|------|------|
+| `tmux new-session -s work` | `tmux new -s work` 或直接 `tmux` | `new` 是缩写；不带参数 = 新建默认会话 |
+| `tmux attach-session -t work` | `tmux a` | `a` 是缩写；**只有一个会话时连 `-t 名字` 都不用** |
+| `tmux list-sessions` | `tmux ls` | `ls` 是缩写 |
+| `tmux kill-session -t work` | `tmux kill` | `kill` 是缩写；单会话时可省 `-t` |
+
+所以最懒的用法是： ` tmux ` 建会话 → 干活 → ` Ctrl+B d ` 分离 → 下次 ` tmux a ` 直接回现场——全程两个命令。 ` tmux new ` / ` tmux a ` 这种写法在所有教程和运维脚本里通用，学了不亏。
+
 ### 窗口管理（前缀 = Ctrl+B）
 
 | 操作 | 快捷键 |
@@ -198,14 +209,36 @@ bind C-a send-prefix
 EOF
 ```
 
-可选增强（新人建议都开）：
+**完整配置步骤（推荐新人全开，我在服务器上就是这么配的）**——写入 ` ~/.tmux.conf ` ：
 
 ```bash
-set -g mouse on              # 鼠标滚轮/选择
-set -g history-limit 10000   # 回滚历史加大
+cat > ~/.tmux.conf <<'EOF'
+# 鼠标模式: 点击状态栏切窗口, 滚轮滚动历史
+set -g mouse on
+# 窗口从 1 开始编号(更符合直觉, 0 留给特殊用途)
+set -g base-index 1
+setw -g pane-base-index 1
+# 加大回滚历史
+set -g history-limit 10000
+EOF
 ```
 
-改完 `tmux kill-server` 重启生效（旧会话会丢，先确认没有重要会话）。
+**生效方式（二选一）**：
+
+```bash
+tmux source-file ~/.tmux.conf   # 正在跑的会话立即生效(推荐)
+# 或
+tmux kill-server                # 重启 tmux(旧会话会丢, 先确认没有重要会话)
+```
+
+**验证配置**（确认没写错，无报错即成功）：
+
+```bash
+tmux new-session -d -s check && tmux display-message -p "config OK" && tmux kill-session -t check
+# 输出: config OK
+```
+
+配好之后，鼠标点击状态栏窗口名即可切换——**这是把 tmux 繁杂感降到最低的关键一步**。
 
 ## 7. 实战场景
 
