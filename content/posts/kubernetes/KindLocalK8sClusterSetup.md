@@ -170,6 +170,37 @@ kind 创建集群要拉镜像（kindest/node，约 1.4 GB），kubectl / k9s 要
 
 > ⚠️ 新手提示：如果你的机器没有代理，可以先试直连；不行再配代理。代理只影响"拉取"，不影响集群本身运行。
 
+**给 Docker daemon 也配上代理（拉 kindest/node 镜像的关键）**。上面的 `curl -x` 只解决 kind / kubectl 二进制下载；kind 创建集群时 `Ensuring node image` 拉 kindest/node 镜像是 **Docker daemon 发起的请求**——daemon 不认识 curl 的代理参数，要在它自己的配置里单独配（Docker 20.10+ 支持 daemon.json 的 `proxies` 段，本次服务器的真实配置）：
+
+```bash
+cat > /etc/docker/daemon.json <<'EOF'
+{
+  "proxies": {
+    "http-proxy": "http://127.0.0.1:7890",
+    "https-proxy": "http://127.0.0.1:7890",
+    "no-proxy": "127.0.0.0/8,localhost,192.168.0.0/16"
+  }
+}
+EOF
+systemctl restart docker
+```
+
+验证代理生效：
+
+```bash
+docker info | grep -i proxy
+# HTTP Proxy: http://127.0.0.1:7890
+# HTTPS Proxy: http://127.0.0.1:7890
+# No Proxy: 127.0.0.0/8,localhost,192.168.0.0/16
+```
+
+两个容易误解的点：
+
+1. **daemon 代理只管"daemon 自己发起的请求"**（docker pull / build 拉镜像）；kind 节点容器运行起来后是容器自己的网络（直连），不走 daemon 代理——好在 kindest/node 镜像预装了 K8s 组件镜像（见 1.5 节），节点内 kubeadm init 不需要联网拉组件，所以**节点容器不需要代理配置**，代理只服务于"拉镜像"这一下；
+2. 如果 daemon.json 里已有其他配置（存储驱动、镜像加速等），要**合并**而不是整文件覆盖——先 `cat /etc/docker/daemon.json` 看现状再改。
+
+> ⚠️ 新手提示： ` systemctl restart docker ` 会重启所有容器——纯学习环境无所谓，但机器上若有正在跑的容器（比如生产服务器），先确认再动手。
+
 ## 第1步：安装 kind
 
 kind 就一个二进制，下载、校验、放 `/usr/local/bin` 完事：
