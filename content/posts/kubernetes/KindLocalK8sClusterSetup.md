@@ -403,6 +403,59 @@ flowchart LR
 | SHA256 校验失败 | `sha256sum -c` 报 FAILED open | 校验文件里的文件名和你存的文件名不一致，直接比对哈希值 |
 | 节点 NotReady | 刚建完所有节点 NotReady | 正常，CNI 还在初始化，等 30 秒 |
 | /usr/local/bin 无权限 | 普通用户 mv 被拒 | root 执行，或 WSL2 用 `wsl -d Debian -u root` |
+| **inotify 实例耗尽** | 已有集群常驻时，**建第二个集群**报 ` could not find a log line that matches "Reached target..." ` | 提高 ` fs.inotify.max_user_instances ` （见下方详解） |
+
+### 踩坑详解：inotify 实例耗尽——多集群同跑的隐形冲突
+
+这篇博客原本到此为止，但实际使用一段时间后，我在"不删旧集群、再建一个新集群"的场景里踩了一个隐蔽的坑，值得单独记录——它和"多集群同跑"强相关，早晚会撞上。
+
+**场景**：第一个集群 ` learn ` （一主二从）已经常驻运行，想在它旁边再建一个集群做演示（ ` kind create cluster --name learnbyself --config kind-config-learn.yaml ` ）。
+
+**症状一（kind 侧）**：建集群卡在 Preparing nodes，然后报：
+
+```text
+✗ Preparing nodes 📦 📦 📦
+ERROR: failed to create cluster: could not find a log line that matches "Reached target .*Multi-User System.*|detected cgroup v1"
+```
+
+这个报错的字面意思是"等了很久，没等到节点内的 systemd 启动完成的日志"——kind 认为节点没起来。但光看它不知道 systemd 为什么没起来。
+
+**症状二（容器侧，关键）**：用 ` --retain ` 重试让失败的节点容器保留下来， ` docker logs learnbyself-control-plane ` 看到真相：
+
+```text
+INFO: starting init
+systemd 257 running in system mode
+Welcome to Debian GNU/Linux 13 (trixie)!
+Failed to create control group inotify object: Too many open files
+Failed to allocate manager object: Too many open files
+[!!!!!!] Failed to allocate manager object.
+Exiting PID 1...
+```
+
+**systemd 在容器里启动时挂了**：它需要创建一个 inotify 对象来监听 cgroup 变化（"control group inotify object"），创建失败，直接放弃启动——PID 1 退出，节点容器等于没起来，kind 自然等不到就绪日志。
+
+**排查过程**（从表象到根因）：
+
+1. 先排除配置和镜像——同样一份配置第一个集群建得好好的，镜像也是同一个 ` kindest/node:v1.36.1 ` ；
+2. 看残留容器日志定位到 systemd 的 fd 报错；
+3. 查系统文件描述符总量： ` cat /proc/sys/fs/file-nr ` 显示 3671（远低于上限）——**排除"文件描述符总数耗尽"**；
+4. 怀疑对象转向 inotify（内核的"文件系统事件通知"机制，systemd 依赖它监听 cgroup）：
+   - 上限： ` sysctl fs.inotify.max_user_instances ` → **128**
+   - 当前占用： ` find /proc/[0-9]*/fd -lname "anon_inode:inotify" 2>/dev/null | wc -l ` → **137**
+   - **占用 137 > 上限 128，实锤**。
+
+**原理**：内核按**每用户**限制 inotify 实例数（默认 128），而容器里的 root 进程和宿主机 root 是同一个 uid——第一个集群跑起来后，3 个节点的 systemd / containerd / kubelet / apiserver 各自持有 inotify 实例，已经吃掉 137 个；第二个集群的 systemd 再创建就超限，被内核拒绝。
+
+**解决**：提高上限即可，一行命令即时生效，**无需重启 docker、无需动第一个集群**：
+
+```bash
+sysctl -w fs.inotify.max_user_instances=1024
+echo "fs.inotify.max_user_instances=1024" > /etc/sysctl.d/99-inotify.conf   # 永久生效
+```
+
+改完重试 ` kind create cluster ` ，秒过。
+
+**启示**：学习环境"不删旧集群、另起新集群"（演示、对比、练手）是刚需，inotify 额度是第一个会撞的隐形墙——单集群永远碰不到，双集群必现。提前调大（1024 够用）或控制常驻容器数量，可以免踩。排查这个坑的过程本身也值得记住：**kind 报"等不到 systemd 日志"时，别盯着 kind 看，用 `--retain` + `docker logs` 直接看节点容器里 systemd 说了什么**——真相永远在日志里。
 
 ### 下一步学什么
 
