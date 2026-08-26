@@ -358,6 +358,20 @@ flowchart TD
 
 这就是为什么 kind 节点"重"：一个容器内跑了一整台最小 Linux。这也是 kind 能"以假乱真"的原因——**kubelet 视角里，它管理的就是一个真实节点**，调度、污点、驱逐这些机制全部真实生效。
 
+### 1.5 为什么第二次创建集群快得多
+
+第一次 `kind create cluster` 会卡在 `Ensuring node image` 好一会儿（拉取 kindest/node 镜像，几百 MB）；第二次创建同一个镜像的集群时，这一步**秒过**。这不是 kind 开挂了，是三层机制叠加：
+
+**第一层：宿主机 Docker 镜像缓存（最主要）**。kindest/node 就是标准 Docker 镜像——第一次 create 时 ` docker pull ` 到本地，第二次 create kind 检查本地已存在（ ` docker image inspect ` 命中），直接复用，**零网络下载**。"Ensuring node image" 从"拉几百 MB"变成"检查命中"。
+
+**第二层：镜像分层复用**。即使以后 kindest/node 更新了版本，Docker 按层存储（content-addressable）——公共基础层（Debian 层）不重拉，只拉差异层，更新成本也远低于全量。
+
+**第三层：node image 预装一切的设计（kind 快的根本）**。kindest/node 镜像在构建时就已经打包好了 systemd + containerd + kubelet + kubeadm + crictl，并且**预加载了 K8s 组件镜像**（kube-apiserver、etcd、coredns、pause 等，构建时导入镜像层）。所以 `kind create` 只是"把预装好的容器跑起来 + 本地跑一遍 kubeadm init"——**全程没有联网拉组件的环节**，几十秒完成。
+
+对比传统 kubeadm 安装你就明白差距在哪：裸机要先装 docker + kubeadm + kubelet，然后 `kubeadm init` 时**联网拉取 apiserver/etcd/coredns 等一堆组件镜像**（国内还要配代理）；kind 把这些耗时**前置到镜像构建阶段（一次性）**，使用者拿到的是"开箱即装"的节点镜像。
+
+一句话：**kind 把"装 K8s"的耗时全部前置进镜像，create 只是把容器跑起来**；第二次快，则是因为连"拉镜像"这一步都被本地缓存跳过了。
+
 ### 2. 控制面与工作节点如何分工
 
 K8s 集群就两类角色，理解这一张图就抓住了 K8s 的主干：
