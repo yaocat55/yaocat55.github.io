@@ -327,6 +327,38 @@ kubectl get cs             # 控制面健康检查: scheduler / controller-manag
 kubectl cluster-info       # 显示 API Server 地址（本次: https://127.0.0.1:36513）
 ```
 
+### 多集群：kubectl 上下文切换（创建第二个集群后必会）
+
+kind 每次 ` create ` 都会自动把新集群的 kubeconfig 写进 ` ~/.kube/config ` 并**设为当前上下文**——建第二个集群后， ` kubectl ` 默认打向**最新创建**的集群。这是我在服务器上建完第二个集群后的真实状态：
+
+```text
+$ kubectl config get-contexts
+CURRENT   NAME               CLUSTER            AUTHINFO           NAMESPACE
+          kind-learn         kind-learn         kind-learn         
+*         kind-learnbyself   kind-learnbyself   kind-learnbyself
+```
+
+`*` 标记当前上下文。**切换集群**：
+
+```bash
+kubectl config use-context kind-learn        # 切回第一个集群
+kubectl config use-context kind-learnbyself  # 切到第二个集群
+kubectl config current-context               # 查看当前是哪个
+```
+
+> ⚠️ 重要认知： ` kubectl ` 的一切操作只作用于**当前上下文**对应的集群—— ` kubectl get pods ` 看的是当前集群的 Pod。双集群同跑时最容易犯的错就是"以为在 A 集群操作，实际打在 B 集群"（比如把清单 apply 到错的集群）。**动手前先 ` kubectl config current-context ` 确认**，养成习惯。
+
+相关命令：
+
+```bash
+kind get clusters                          # 列出所有 kind 集群
+kind get kubeconfig --name learnbyself     # 单独导出某集群的 kubeconfig
+kind delete cluster --name learnbyself     # 删集群(自动清理它的 context)
+kubectl config delete-context kind-learnbyself   # 手动清理残留 context(如果手动改过 kubeconfig)
+```
+
+**注意**： ` kind delete cluster ` 会顺带移除对应 context；但手动改过 kubeconfig 的话可能残留，用 ` delete-context ` 清理。k9s 也支持多集群——启动时 ` k9s --context kind-learnbyself ` 指定，或界面里敲 ` :context ` 回车选择。
+
 ## 第6步：安装 k9s（可选但推荐）
 
 k9s 是 K8s 的终端 UI——不用记一堆命令，用键盘就能浏览 Pod、看日志、进容器。下载包里有多个文件，只解压需要的二进制：
