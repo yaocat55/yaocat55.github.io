@@ -89,6 +89,8 @@ nginx-demo-5474c98dc4-p5g5v   1/1     Running   10.244.2.3   learn-worker
 | control-plane 一个都没有 | 控制面节点带**污点**（Taint） ` NoSchedule ` ，业务 Pod 默认不上去——这是保护机制 |
 | IP 是 10.244.2.x / 10.244.1.x | kindnet 给每个节点分配独立子网，跨节点通信走覆盖网络 |
 
+> 🤔 读者此刻一定会问：**分布为什么是 2+1？谁决定的？control-plane 的污点到底是什么？**——这不是随机，是调度器（kube-scheduler）的决策，完整的机制（过滤 + 打分、污点/容忍度、NodeSelector、节点亲和性）见原理第 3 节，那里有实测演示。
+
 ## 第2步：看对象层级
 
 ```bash
@@ -229,6 +231,106 @@ flowchart LR
 ```
 
 策略由两个参数控制（默认各 25%）：**maxSurge**（允许超出期望的临时 Pod 数）和 **maxUnavailable**（允许同时不可用的旧 Pod 数）。两者共同保证：任意时刻，可用副本数不低于期望的 75%、总副本数不超过期望的 125%。这就是"发版不中断"的数学保证。
+
+### 3. Pod 是怎么分配到节点的：调度器、污点、容忍度、NodeSelector 与节点亲和性
+
+回到第 1 步的问题：**3 个副本为什么是 2+1 分布在两个 worker？为什么从来不落 control-plane？**——不是随机，每一步都是调度器的决策。
+
+**调度器（kube-scheduler）怎么选节点**：两步走，先过滤、再打分：
+
+```mermaid
+%% 调度决策: 过滤(硬性条件) + 打分(优先级)
+flowchart TD
+    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
+
+    P["新 Pod 创建(调度器 watch 到)"]
+    F["过滤 Filtering\n资源够不够?\n污点能否容忍?\nNodeSelector/Affinity 匹配?"]
+    S["打分 Scoring\n资源余量、软亲和性偏好\n(倾向负载更低的节点)"]
+    R["选最高分节点\n写入 nodeName"]
+    X["节点出局(不满足硬性条件)"]
+
+    P --> F
+    F -->|"满足"| S
+    F -->|"不满足"| X
+    S --> R
+
+    class P,R root;
+    class F,S process;
+    class X reject;
+```
+
+- **过滤（Filtering）**：硬性条件，不满足直接出局——资源够不够、节点的污点 Pod 能不能容忍、NodeSelector / 亲和性匹不匹配；
+- **打分（Scoring）**：候选节点按优先级排序（资源余量、软亲和偏好），调度器倾向把 Pod 放到副本更少、负载更低的节点；
+- **"2+1 分散"是打分逻辑的自然结果**：两个 worker 资源相同时分数接近，多副本被均衡地分散开——看起来像随机，其实是"确定性决策 + 负载均衡目标"。
+
+**四个控制手段，一张表分清**：
+
+| 概念 | 一句话作用 | 写在谁上 | 硬/软 |
+|------|------|------|------|
+| **污点（Taint）** | 节点说"我有特殊要求，普通 Pod 别来" | 节点 | 硬 |
+| **容忍度（Toleration）** | Pod 说"这个污点我能忍" | Pod | 硬（与污点配对） |
+| **NodeSelector** | Pod 说"我只去带这个标签的节点" | Pod | 硬 |
+| **节点亲和性（Node Affinity）** | NodeSelector 的进化：表达式匹配 + 软硬分级 | Pod | 硬 / 软 |
+
+**污点与容忍度：为什么业务 Pod 永远不落 control-plane**
+
+控制面节点自带污点（kind 集群实测）：
+
+```bash
+kubectl describe node learn-control-plane | grep -A2 Taints
+# Taints:  node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+`NoSchedule` 的含义：**没有对应容忍度的 Pod 不允许调度到这个节点**——控制面组件（etcd/apiserver）独享控制面节点，业务 Pod 默认被拒之门外。这就是保护机制。Pod 若想上去（一般不该），要显式声明容忍度：
+
+```yaml
+tolerations:
+- key: node-role.kubernetes.io/control-plane
+  operator: Exists
+  effect: NoSchedule
+```
+
+典型应用：GPU 节点打污点，只有声明了容忍度的 GPU 任务才能上去。
+
+**NodeSelector：最直白的"我要去那台机器"**
+
+给节点打标签，Pod 指名道姓（实测演示）：
+
+```bash
+kubectl label node learn-worker disktype=ssd    # 1. 给节点打标签
+```
+
+```yaml
+# 2. Pod 声明: 我只去带 disktype=ssd 的节点
+spec:
+  nodeSelector:
+    disktype: ssd
+```
+
+实测结果：Pod 精确落在 learn-worker（ ` Running learn-worker ` ）。
+
+**硬性条件的含义**：没有匹配的节点就 **Pending**。对照组实测（声明 ` disktype=hdd ` ，集群里没有这个标签）——调度器拒绝消息原文：
+
+```text
+0/3 nodes are available: 1 node(s) had untolerated taint(s),
+2 node(s) didn't match Pod's node affinity/selector.
+```
+
+这一句话同时演示了两个机制：**控制面的污点拒绝了 1 个节点**（untolerated taint），**两个 worker 没有匹配标签**（didn't match selector）——3 个节点全军覆没，Pod Pending。排查 Pending 时 `kubectl describe pod` 的这行事件就是答案。
+
+**节点亲和性（Node Affinity）：NodeSelector 的进化版**
+
+NodeSelector 只能"等于"，亲和性支持表达式（ ` In ` / ` NotIn ` / ` Exists ` / ` Gt ` / ` Lt ` ），且分软硬两种：
+
+- **requiredDuringSchedulingIgnoredDuringExecution**（硬）：必须满足，否则不调度——NodeSelector 的超集；
+- **preferredDuringSchedulingIgnoredDuringExecution**（软）：尽量满足，满足加分、不满足也调度。
+
+典型场景：大内存任务"优先"去大内存节点（软亲和），GPU 任务"必须"去 GPU 节点（硬亲和 + 污点容忍双保险）。
+
+**一句话总结**：污点是节点侧"拒绝"，容忍度是 Pod 侧"申请"，NodeSelector / 亲和性是 Pod 侧"指名道姓"——调度器先过滤（硬条件出局）再打分（均衡优先），Pod 最终落在哪，是这些规则共同决定的结果，**从来不是随机**。
 
 ## 总结与下一步
 

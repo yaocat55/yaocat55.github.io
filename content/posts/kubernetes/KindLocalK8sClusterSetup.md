@@ -1,5 +1,5 @@
 ---
-title: "从零搭建 Kubernetes 学习环境：kind 一主二从 + kubectl + k9s 实战记录"
+title: "kind 一主二从集群搭建全记录：代理配置、多集群切换与踩坑实录"
 date: 2023-11-14T11:30:03+00:00
 tags: ["容器技术", "入门指南", "Kubernetes"]
 categories: ["教程"]
