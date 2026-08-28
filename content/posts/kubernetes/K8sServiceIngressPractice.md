@@ -282,7 +282,7 @@ flowchart TD
 
 ## 踩坑速查表（复现必看）
 
-> ⚠️ **2026 年 3 月起，标准 Ingress Controller（ingress-nginx）已归档停止维护**（GitHub 实测 `archived: true`，最后 release v1.15.1）。存量 Ingress 照常工作，但**新项目的流量入口建议用新标准 Gateway API**——本文的 Ingress 原理仍然有效（它是 Gateway API 的设计基础），完整实战见：
+> ⚠️ **2026 年 3 月起，标准 Ingress Controller（ingress-nginx）已归档停止维护**（GitHub 实测 ` archived: true ` ，最后 release v1.15.1）。存量 Ingress 照常工作，但**新项目的流量入口建议用新标准 Gateway API**——本文的 Ingress 原理仍然有效（它是 Gateway API 的设计基础），完整实战见：
 
 > 📎 **《Gateway API 实战：ingress-nginx 归档后的新标准（kind + Envoy Gateway 全打通）》**：[点此阅读](/posts/kubernetes/GatewayApiPractice/)
 
