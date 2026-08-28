@@ -88,6 +88,31 @@ kubectl get endpoints nginx-svc
 # 输出: 10.244.1.5:80,10.244.1.6:80,10.244.2.10:80 + 2 more...
 ```
 
+**YAML 版本（主流写法）**： ` kubectl expose ` 适合快速试，但生产/团队协作用 **YAML**——配置一目了然、可进 git 评审、可复用（与 Deployment 篇的"声明式才是主流"同一逻辑）。同样的 Service 用 YAML 写（注意 ` selector ` 字段就是"自动匹配 Pod"的声明）：
+
+```yaml
+# svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx-demo
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+```bash
+kubectl apply -f svc.yaml        # 实测输出: service/nginx-svc created
+kubectl get svc nginx-svc
+# 与 expose 版行为完全一致 —— selector 声明决定一切, endpoints 自动填充
+```
+
+> ⚠️ 新手提示：如果前面已经用 `kubectl expose` 创建过同名 Service，先 `kubectl delete svc nginx-svc` 再 apply，或换个名字验证（两种方式效果相同）。
+
 **关键认知**：Service 没有"注册"任何东西——它靠**标签选择器**（selector）自动匹配 Pod，匹配结果实时出现在 **Endpoints** 里。Pod 挂了重建、IP 变了，Endpoints 自动更新。这就是"Nacos 注册中心"的替代品：**服务发现被下沉到了平台层**。
 
 ### 测试集群内 DNS
@@ -127,6 +152,29 @@ kubectl get svc nginx-np
 # 从宿主机访问（kind 节点 IP 是 172.18.0.x，宿主机可达）
 curl -s http://172.18.0.3:32613 | head -1   # 返回 HTML
 curl -s http://172.18.0.4:32613 | head -1   # 另一个节点也通
+```
+
+**YAML 版本（主流写法）**：`--type=NodePort` 一行在 YAML 里就是 `type` 字段，而且 YAML 可以**显式指定节点端口**（expose 只能随机分配）：
+
+```yaml
+# svc-np.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-np
+spec:
+  type: NodePort
+  selector:
+    app: nginx-demo
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 32614        # 显式指定节点端口(30000-32767), expose 只能随机
+```
+
+```bash
+kubectl apply -f svc-np.yaml        # service/nginx-np created
+curl -s http://172.18.0.3:32614 | head -1    # 实测 HTTP 200, 与 expose 版行为一致
 ```
 
 NodePort 的原理：每个节点上的 **kube-proxy** 用 iptables 规则把"节点IP:32613" DNAT 到后端 Pod。可以亲眼看一下规则落地形态：
@@ -184,6 +232,31 @@ kubectl get svc nginx-lb
 # 输出: nginx-lb   LoadBalancer   10.96.125.156   172.18.255.1   80:32466/TCP
 curl -s http://172.18.255.1 | head -1   # 用"公网 IP"访问成功
 ```
+
+**YAML 版本（主流写法）**：LoadBalancer 的 YAML 与 NodePort 几乎一样，只改 ` type ` （云上还会加 ` annotations ` 控制负载均衡器规格，如带宽/计费——这是命令式做不到的）：
+
+```yaml
+# svc-lb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx-demo
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+```bash
+kubectl apply -f svc-lb.yaml        # service/nginx-lb created
+kubectl get svc nginx-lb            # EXTERNAL-IP 由 metallb 分配(实测: 172.18.255.3, 池内按序)
+curl -s http://172.18.255.3 | head -1    # 实测 HTTP 200
+```
+
+> 📌 三个阶段串起来看：ClusterIP / NodePort / LoadBalancer 的 YAML **结构几乎一样**，只差 `type` 字段和个别属性——这正是"Service 是一种资源，类型是它的一个字段"的直观体现。
 
 > ⚠️ 新手提示（本阶段最大的坑）：metallb 的 Pod 起不来，最常见的症状是**配置 IP 池时报 webhook 拒绝连接**（ ` failed to call webhook ... connection refused ` ）——根因是 controller 还没就绪，而不是配置写错。而 controller 起不来，大概率又是**节点直连拉镜像超时**（metallb 镜像在 quay.io，kind 节点内 containerd 不走宿主代理）。解法：宿主机 ` docker pull ` （走代理）+ ` kind load docker-image ` 预载入所有节点。
 
