@@ -208,6 +208,56 @@ curl http://172.18.255.4                              # 无匹配 Host → HTTP 
 
 **坑 2 的细节**（值得单独说）：NGINX Gateway Fabric v2.6.7 是 ingress-nginx 归档后最自然的"继任者"，但实测它的配置生成器有 bug——生成的 ` server_tokens ` 指令连它自己配套的 nginx 1.31.3 都解析失败（ ` Config apply failed, rollback successful ` ），数据面永远不就绪。这是**发布级 bug**（官方配套版本自相矛盾），不是操作问题。GitHub issue 无现成 workaround，遂换 Envoy Gateway——**这也说明"Gateway API 是标准，实现可换"正是它的设计价值**。
 
+**坑 2 的续集：降级 v2.5.1 后 bug 消失（实测验证）**。写博客时有个怀疑：v2.6.7 是 2026-07 刚发布的新版本（两个月内连打 7 个补丁 v2.6.0→v2.6.7），bug 可能出在"太新"——于是实测降级到更成熟的 **v2.5.1**（2026-04-08 发布），验证"稳定版是否绕开"。
+
+过程（全部实测）：
+
+```bash
+# 1. 清理 v2.6.7 残留
+kubectl delete gatewayclass nginx
+kubectl delete gateway gw -n default
+kubectl delete deploy gw-nginx svc gw-nginx -n default 2>/dev/null
+kubectl delete ns nginx-gateway
+
+# 2. 拉 v2.5.1 双镜像并预载(控制面 + 数据面)
+docker pull ghcr.io/nginx/nginx-gateway-fabric:2.5.1
+docker pull ghcr.io/nginx/nginx-gateway-fabric/nginx:2.5.1
+kind load docker-image ghcr.io/nginx/nginx-gateway-fabric:2.5.1 \
+  ghcr.io/nginx/nginx-gateway-fabric/nginx:2.5.1 --name learn
+
+# 3. 部署(清单从 v2.5.1 tag 下载, 含 GatewayClass nginx)
+kubectl apply -f deploy.yaml
+
+# 4. 创建 Gateway + HTTPRoute(域名 ngf.local)
+kubectl apply -f ngf-gw.yaml
+```
+
+结果：
+
+| 验证项 | 实测输出 |
+|------|------|
+| 控制器 | `nginx-gateway-69c9678649-kv7ms 1/1 Running` |
+| GatewayClass | `nginx ... ACCEPTED=True` |
+| Gateway | ` ngf-gw ... 172.18.255.2 PROGRAMMED=True ` （metallb 分配） |
+| 数据面日志 | ** ` Config apply successful ` **（v2.6.7 这里是 ` Config apply failed ` ）——**bug 消失** |
+| 路由 | `curl -H "Host: ngf.local" http://172.18.255.2` → **HTTP 200**；无匹配 Host → **404** |
+
+**意外收获——双实现共存**：Envoy Gateway 没有清理，两个实现同时在线：
+
+```text
+kubectl get gatewayclass
+# envoy-gateway   gateway.envoyproxy.io/gatewayclass-controller   True
+# nginx          gateway.nginx.org/nginx-gateway-controller      True
+
+kubectl get gateway
+# eg-gw    envoy-gateway   172.18.255.4   True
+# ngf-gw   nginx           172.18.255.2   True
+```
+
+` eg-gw ` （Envoy）和 ` ngf-gw ` （NGF）并行工作互不影响——**"标准 API + 多实现共存"从概念变成了眼前的现实**。
+
+**结论**：v2.6.7 的 server_tokens 是**版本级 bug**（官方配套版本自相矛盾），降级稳定版 v2.5.1 即绕开——"用稳定版"的直觉在这里是对的。这也给选型一个实用原则：**Gateway API 实现版本迭代快，踩到发布级 bug 时，优先试降级稳定版，而不是换实现**（换实现往往要重新过一遍镜像/清单的坑）。
+
 ## 5. Ingress → Gateway API 迁移思路
 
 ```mermaid
