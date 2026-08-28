@@ -61,6 +61,51 @@ docker pull nginx:1.27
 kind load docker-image nginx:1.25 nginx:1.27 --name learn
 ```
 
+**"加载进入每个节点"到底是什么意思？** kind 的"容器即节点"是嵌套结构：节点是一个 Docker 容器，容器内跑着 **containerd**（节点自己的容器运行时）——kubelet 只认 containerd。于是镜像存储有两层、**互不相通**：
+
+- 宿主机 Docker 的镜像存储（ ` docker images ` 看到的是它）；
+- 节点容器内 containerd 的镜像存储（ ` crictl images ` 看到的是它）。
+
+` docker pull ` 的镜像落在宿主机那层，节点里的 containerd 根本看不见。 ` kind load ` 就是**人工搬运**——三步走、对每个节点重复一遍：
+
+```mermaid
+%% kind load: 宿主机 Docker 镜像搬运到每个节点内的 containerd
+flowchart LR
+    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
+    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
+    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+
+    D["宿主机 Docker\n(存储 A: docker images)"]
+    T["镜像 tar 包\n(相当于 docker save 导出)"]
+    N1["节点1 containerd\n(存储 B: crictl images)"]
+    N2["节点2 containerd"]
+    N3["节点3 containerd"]
+
+    D -->|"① 导出"| T
+    T -->|"② docker exec 传入"| N1
+    T -->|"② 传入"| N2
+    T -->|"② 传入"| N3
+    N1 -->|"③ ctr images import"| N1
+    N2 -->|"③ 导入"| N2
+    N3 -->|"③ 导入"| N3
+
+    class D root;
+    class T process;
+    class N1,N2,N3 data;
+```
+
+① **导出**：读取宿主机 Docker 里的镜像（相当于 ` docker save ` 打成 tar）；② **传输**： ` docker exec ` 把 tar 传进节点容器；③ **导入**：节点内用 ` ctr images import ` （containerd 的命令行工具）导入。命令输出里的 "Loading image ... across 3 nodes!" 就是这个动作对 3 个节点各做一遍。
+
+**为什么每个节点都要？** 调度器可能把 Pod 放到任何节点（过滤 + 打分，见原理第 3 节）——不预载的节点一旦被选中，kubelet 从 containerd 找不到镜像、又拉不到，就是 ImagePullBackOff。所以 kind 全量复制：load 一次，所有节点都有。
+
+验证镜像确实进了节点（节点内 containerd 视角，和 kubelet 同款；IMAGE ID 与宿主机一致证明是同一个镜像）：
+
+```bash
+docker exec learn-worker crictl images | grep nginx
+# docker.io/library/nginx  1.25  e784f4560448b  192MB
+# docker.io/library/nginx  1.27  1e5f3c5b981a9  197MB
+```
+
 > ⚠️ 新手提示： ` kind load ` 要把几百 MB 镜像分别灌进每个节点容器，4 线程的机器上会明显卡顿（负载能飙到 10+），耐心等，别并发跑多个导入。
 
 > 📌 概念注脚：这个"先把镜像放到节点上"的动作，模拟的就是生产里"镜像进私有仓库（如阿里云 ACR）→ 节点从仓库拉取"的前半段。上云后节点自动从 ACR 拉，你只需要把镜像推上去。
@@ -90,6 +135,49 @@ nginx-demo-5474c98dc4-p5g5v   1/1     Running   10.244.2.3   learn-worker
 | IP 是 10.244.2.x / 10.244.1.x | kindnet 给每个节点分配独立子网，跨节点通信走覆盖网络 |
 
 > 🤔 读者此刻一定会问：**分布为什么是 2+1？谁决定的？control-plane 的污点到底是什么？**——这不是随机，是调度器（kube-scheduler）的决策，完整的机制（过滤 + 打分、污点/容忍度、NodeSelector、节点亲和性）见原理第 3 节，那里有实测演示。
+
+**补充：声明式（YAML）才是生产主流**。上面用的是 `kubectl create deployment` 命令式创建——适合临时快速实验，但生产环境几乎不用它，原因是：命令式是"我告诉你怎么做"，声明式是"我告诉你我要什么，你负责收敛"；YAML 清单是文本，**能进 git 版本化、能 diff 评审、能复用、能回滚**——这才是基础设施即代码（IaC）的形态。
+
+同一个 Deployment 的声明式写法（这也是全系列博客一直用的姿势）：
+
+```yaml
+# nginx-demo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-demo
+  template:
+    metadata:
+      labels:
+        app: nginx-demo
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+```
+
+```bash
+kubectl apply -f nginx-demo.yaml      # 声明式部署(实测输出同前: 3 副本分散到 2 个 worker)
+kubectl apply -f nginx-demo.yaml      # 再执行一次 → deployment.apps/nginx-demo unchanged
+```
+
+**第二次 apply 返回 `unchanged`**——这是声明式最直观的优越性：**幂等**。同样的清单执行多少次结果都一样，命令式 `create` 重复执行会直接报 AlreadyExists。生产里 CI/CD 每天对同一套清单跑 apply 是常态，幂等性保证了"跑不坏"。
+
+| 对比 | 命令式 `kubectl create deployment ...` | 声明式 `kubectl apply -f xxx.yaml` |
+|------|------|------|
+| 语义 | "按我说的做" | "这是我想要的最终状态，帮我收敛" |
+| 可版本化 | ❌ 命令不在仓库里 | ✅ YAML 进 git，可 diff/评审/回滚 |
+| 幂等性 | ❌ 重复执行报错 | ✅ 重复执行 `unchanged` |
+| 适合场景 | 临时实验、快速验证 | 生产、CI/CD、多环境复用 |
+
+**结论：命令式适合"试一下"，声明式是"正式做法"**——后面的滚动更新、回滚、配置管理，全部用 YAML 展开，这也是为什么本文"关键一步"要提前把 YAML 思维建立起来。
 
 ## 第2步：看对象层级
 
