@@ -342,4 +342,3 @@ kubectl delete pvc data-nginx-sts-0 data-nginx-sts-1 data-nginx-sts-2   # Statef
 
 存储抽象则是四两拨千斤的设计：**开发者写 PVC，StorageClass 造 PV**——本地一个目录、云上一块盘，同一份清单。系列到此，工作负载的拼图完整了：无状态（Deployment）、配置（ConfigMap/Secret）、健康（探针）、生命周期（优雅停机/资源）、有状态（StatefulSet/存储）、观察（Prometheus/Grafana）——这套组合拳，就是 ACK 上跑生产应用的完整知识底座。
 
-（本篇无图片/视频占位。）

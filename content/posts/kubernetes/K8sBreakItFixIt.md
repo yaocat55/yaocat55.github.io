@@ -247,4 +247,3 @@ k8s-demo-app | down | Get "http://demo-app-svc:9999/actuator/prometheus": contex
 
 练完一轮可以循环加难度：把两个破坏组合（如"drain 节点 + 同时改探针"），或者换成自己的真实应用。**故障不会提前打招呼，但见过的症状都会**——这就是练习的全部意义。
 
-（本篇无图片/视频占位。）

@@ -257,4 +257,3 @@ kind 里这些组件和真实 K8s **几乎一致**（kubeadm 式部署，控制�
 2. **排障先定位归属**：Pending 找 scheduler、起不来找 kubelet、流量不通找 kube-proxy、网络不通找 CNI——组件职责就是排障地图；
 3. **上云后一半消失一半保留**：ACK 托管了控制面（不用管 apiserver/etcd），但节点侧的 kubelet/CNI 还是兼职运维的活——**懂原理才能用好托管**。
 
-（本篇无图片/视频占位。）

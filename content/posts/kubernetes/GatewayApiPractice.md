@@ -337,4 +337,3 @@ flowchart LR
 2. **Gateway API 的核心是分层**：GatewayClass（用哪个实现）→ Gateway（入口长什么样）→ HTTPRoute（流量怎么路由），暴露与路由解耦是它相对 Ingress 的最大改进；
 3. **标准 API + 可换实现**：这次实践里 NGF 出 bug 直接换 Envoy Gateway，资源模型一行不用改——这就是"标准"的价值。
 
-（本篇无图片/视频占位。）

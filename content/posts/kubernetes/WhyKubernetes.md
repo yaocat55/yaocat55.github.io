@@ -185,4 +185,3 @@ flowchart LR
 
 补上了"为什么"，系列才算完整。后续文章也会按这个标准写：先讲传统怎么做、痛点在哪，再讲 K8s 的机制——把"为什么"变成每篇的固定开场。云上选型的两家对比见 [EKS 与 ACK 托管对比](/posts/kubernetes/EksVsAckComparison/)。
 
-（本篇无图片/视频占位。）
