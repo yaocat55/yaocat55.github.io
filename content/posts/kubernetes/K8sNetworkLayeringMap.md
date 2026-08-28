@@ -64,11 +64,8 @@ cover:
 ### 1.2 TCP/IP 四层与 OSI 的映射
 
 ```mermaid
-%% OSI 七层 与 TCP/IP 四层 的对应关系
+%% OSI 七层 与 TCP/IP 四层 的对应关系 (style 强制深底白字)
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-
     subgraph OSI["OSI 七层"]
         A7["L7 应用层<br/>L6 表示层<br/>L5 会话层"]
         A4["L4 传输层"]
@@ -87,8 +84,16 @@ flowchart LR
     A3 -.-> B2
     A2 -.-> B1
 
-    class OSI process;
-    class TCPIP root;
+    style A7 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style A4 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style A3 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style A2 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style B4 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style OSI fill:#0f172a,stroke:#3b82f6,color:#ffffff,font-weight:bold
+    style TCPIP fill:#0f172a,stroke:#6b7280,color:#ffffff,font-weight:bold
 ```
 
 **关键认知**：TCP/IP 把 OSI 的 L5-L7 合并成"应用层"，L1-L2 合并成"网络接口层"，中间 L3/L4 一一对应。**我们讨论 K8s 网络时，主要用到的是 L2/L3/L4/L7**（L1 网线、L5/L6 已并入应用层，基本不参与讨论）。
@@ -205,12 +210,8 @@ flowchart TD
 ### 5.1 集群内：Pod A 调用 Pod B（微服务互调）
 
 ```mermaid
-%% 集群内服务调用: 每一跳标注 OSI 层与组件
+%% 集群内服务调用: 每一跳标注 OSI 层与组件 (style 强制深底白字, 双保险)
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-
     A["Pod A<br/>请求 http://nginx-svc"]
     D["CoreDNS (L7)<br/>nginx-svc → 10.96.x.x"]
     K["kube-proxy (L4)<br/>DNAT → 10.244.x.x:80"]
@@ -223,8 +224,11 @@ flowchart LR
     K -->|"4 改写目标地址"| R
     R -->|"5 到达 Pod 网段"| B
 
-    class A,B,D root;
-    class K,R process;
+    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style D fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style B fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style K fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style R fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **每一跳的层**：① DNS 解析（L7，CoreDNS）→ ③ 发往 ClusterIP（L3/L4）→ ④ 地址转换（L4，kube-proxy）→ ⑤ 路由送达（L3，CNI）。**一次调用，跨了应用层、传输层、网络层三个层，每个层都有对应的 K8s 组件**。
@@ -232,12 +236,8 @@ flowchart LR
 ### 5.2 集群外：浏览器访问
 
 ```mermaid
-%% 集群外访问: 域名 → Ingress(L7) → Service(L4) → Pod
+%% 集群外访问: 域名 → Ingress(L7) → Service(L4) → Pod (style 强制深底白字)
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-
     U["浏览器<br/>nginx.local"]
     I["Ingress (L7)<br/>按域名/路径路由"]
     S["Service (L4)<br/>ClusterIP 负载均衡"]
@@ -247,9 +247,10 @@ flowchart LR
     I -->|"按 Host 找到 Service"| S
     S -->|"kube-proxy DNAT"| P
 
-    class U,I root;
-    class S process;
-    class P data;
+    style U fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style I fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **多了一层 L7**：浏览器 → Ingress（L7 按域名路由）→ Service（L4 负载均衡）→ Pod。这就是"从内到外全打通"的完整网络视图。
