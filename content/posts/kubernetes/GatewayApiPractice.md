@@ -96,6 +96,9 @@ flowchart TD
 curl -sL -o /tmp/gateway-crd.yaml \
   "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml"
 kubectl apply -f /tmp/gateway-crd.yaml
+
+# 确认装上了(标准 CRD + 可能带实验性 CRD)
+kubectl get crd | grep gateway.networking.k8s.io | wc -l
 ```
 
 ### 3.2 部署 Envoy Gateway（CNCF 实现，本文选用）
@@ -103,11 +106,11 @@ kubectl apply -f /tmp/gateway-crd.yaml
 ```bash
 curl -sL -o /tmp/eg-install.yaml \
   "https://github.com/envoyproxy/gateway/releases/download/v1.9.0/install.yaml"
-kubectl apply -f /tmp/eg-install.yaml        # 34 个资源: CRD + 控制器 + RBAC
-
-# 控制器镜像要预载进 kind 节点(节点内 containerd 直连公网拉不动):
+# 控制器镜像要预载进 kind 节点 —— 原因: kind 节点容器内的 containerd 直连公网 registry
+# (ghcr.io/docker.io) 会超时, 必须"宿主机代理拉取 → kind load 搬运进每个节点"(全系列老规矩):
 docker pull envoyproxy/gateway:v1.9.0
 kind load docker-image envoyproxy/gateway:v1.9.0 --name learn
+kubectl apply -f /tmp/eg-install.yaml        # 34 个资源: CRD + 控制器 + RBAC
 kubectl get pods -n envoy-gateway-system     # envoy-gateway-xxx 1/1 Running
 ```
 
@@ -159,11 +162,12 @@ kubectl get gateway eg-gw
 # eg-gw   envoy-gateway   172.18.255.4   True
 ```
 
-**注意**：Gateway 的 `PROGRAMMED=True` 意味着控制器已经为它创建了数据面（envoy 代理 pod）——数据面镜像同样要预载：
+**注意**：Gateway 的 ` PROGRAMMED=True ` 意味着控制器已经为它创建了数据面（envoy 代理 pod）。**数据面 pod 在 ` envoy-gateway-system ` 命名空间，不在 default——找 pod 别找错地方**。数据面镜像同样要预载，否则 pod 会卡在 ImagePullBackOff（kubelet 直连 docker.io 拉取超时，事件里能看到 ` dial tcp ... i/o timeout ` ）：
 
 ```bash
 docker pull envoyproxy/envoy:distroless-v1.39.0
 kind load docker-image envoyproxy/envoy:distroless-v1.39.0 --name learn
+# 数据面 pod 自动恢复(镜像到位后 kubelet 重试成功)
 kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=eg-gw
 # envoy-default-eg-gw-63522087-xxx   2/2 Running
 ```
@@ -195,6 +199,42 @@ curl http://172.18.255.4                              # 无匹配 Host → HTTP 
 
 **实测结果**： ` Host: nginx.local ` → **200**（ ` <title>Welcome to nginx!</title> ` ）；不带 Host → **404**——路由匹配精确生效，和 Ingress 的体验一致，但资源是拆开的、可复用的。
 
+### 3.6 弯路全记录：NGF v2.6.7 完整尝试（为什么放弃）
+
+先试的是 NGINX Gateway Fabric（ingress-nginx 归档后最自然的"继任者"），v2.6.7 是当时的 latest。**完整踩坑过程如下，每一步都是实测**。
+
+**架构发现（v2 与 v1 不同）**：NGF v2 是**控制面/数据面分离**——主 Deployment（ ` nginx-gateway ` ）只是控制面（leader 选举 + 配置生成 + agent 通道），它自动 provision 一个**数据面 Deployment**（名字 = ` <Gateway 名>-nginx ` ，如 ` gw-nginx ` ），真正跑 nginx 的是数据面。而且**两个是不同镜像**：
+
+```text
+控制面: ghcr.io/nginx/nginx-gateway-fabric:2.6.7
+数据面: ghcr.io/nginx/nginx-gateway-fabric/nginx:2.6.7   ← 别漏了 /nginx
+```
+
+**坑 A：数据面镜像漏 load**。只 load 了控制面镜像，数据面 pod 卡 Pulling（kubelet 直连 ghcr.io 超时）。排查： ` kubectl describe pod ` 看事件（ ` Pulling image ... i/o timeout ` ）→ 补 load 数据面镜像。
+
+**坑 B：控制面 Service 的 targetPort 被弄乱**。给控制面 Service 加 HTTP 端口时误把 443 的 targetPort 从 8443 改成 80 → 数据面 nginx 连控制面 agent 通道（ ` 10.96.1.15:443 ` ）持续报 ` connection refused ` 。排查链路：数据面容器日志暴露连接目标 → 检查 Service/endpoints 发现 targetPort 错 → 修回 8443（数据面 pod 就绪）。
+
+**坑 C（放弃原因）：server_tokens 配置解析失败**。镜像补齐、agent 通道修好后，数据面日志：
+
+```text
+Config apply failed, rollback successful
+error="failed to parse config invalid number of arguments in
+\"server_tokens\" directive in /etc/nginx/conf.d/http.conf:46"
+```
+
+NGF v2.6.7 生成的配置，它**自己配套的 nginx 1.31.3**（v2.6.7 release notes 明示 ` Update NGINX OSS to 1.31.3 ` ）解析不了 → 配置回滚 → nginx 没起来 → readiness 失败 → 流量不通。这是**发布级 bug**（官方配套版本自相矛盾），不是操作问题。GitHub issue 搜索无现成 workaround（搜到的都是 server_tokens 功能请求，不是这个解析 bug）。
+
+**排查方法论**（这条弯路沉淀的可复用技能）：
+
+| 步骤 | 命令/动作 | 得到什么 |
+|------|------|------|
+| 1 | `kubectl describe pod` | 事件：Pulling / ImagePullBackOff / 探针失败 |
+| 2 | `kubectl logs` 数据面容器 | 根因：agent 连接错误 → 配置解析错误 |
+| 3 | ` nginx -T ` （容器内） | 回滚后显示 ` syntax is ok ` ——证明坏配置没生效 |
+| 4 | GitHub issue 搜索 | 确认是发布级 bug 而非已知可绕问题 |
+
+**结论**：标准 API 之下实现可换——换 Envoy Gateway（本文主线），零配置改动。v2.6.7 的问题后续用降级 v2.5.1 验证为版本级 bug（见第 4 节续集）。
+
 ## 4. 真实踩坑记录（复现必看）
 
 | # | 坑 | 症状 | 解法 |
@@ -206,7 +246,7 @@ curl http://172.18.255.4                              # 无匹配 Host → HTTP 
 | 5 | Envoy install.yaml 不创建 GatewayClass | 控制器日志 ` failed to get GatewayClass "envoy-gateway" not found ` 、Gateway 卡 PROGRAMMED=False | 手动创建 GatewayClass |
 | 6 | kind load 大镜像慢（低配机器） | 命令 300s 超时被 kill | 后台跑（ ` background=true ` ）；再 load 同镜像会提示 ` already present on all nodes ` |
 
-**坑 2 的细节**（值得单独说）：NGINX Gateway Fabric v2.6.7 是 ingress-nginx 归档后最自然的"继任者"，但实测它的配置生成器有 bug——生成的 ` server_tokens ` 指令连它自己配套的 nginx 1.31.3 都解析失败（ ` Config apply failed, rollback successful ` ），数据面永远不就绪。这是**发布级 bug**（官方配套版本自相矛盾），不是操作问题。GitHub issue 无现成 workaround，遂换 Envoy Gateway——**这也说明"Gateway API 是标准，实现可换"正是它的设计价值**。
+**坑 2 的细节见 3.6 节**（NGF 架构发现、数据面镜像、targetPort、server_tokens 的完整排查链）。要点：v2.6.7 生成的 `server_tokens` 配置连它自己配套的 nginx 1.31.3 都解析失败（发布级 bug），遂换 Envoy Gateway——**"Gateway API 是标准，实现可换"正是它的设计价值**。
 
 **坑 2 的续集：降级 v2.5.1 后 bug 消失（实测验证）**。写博客时有个怀疑：v2.6.7 是 2026-07 刚发布的新版本（两个月内连打 7 个补丁 v2.6.0→v2.6.7），bug 可能出在"太新"——于是实测降级到更成熟的 **v2.5.1**（2026-04-08 发布），验证"稳定版是否绕开"。
 
