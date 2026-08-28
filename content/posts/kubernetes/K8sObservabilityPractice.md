@@ -90,9 +90,6 @@ Prometheus 和传统监控（比如 Zabbix 的 agent 主动上报）最大的区
 ```mermaid
 %% 观察回路: 应用暴露指标 -> Prometheus 拉取 -> Grafana 可视化
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     APP["demo-app Pod\nSpring Boot 应用"]
     PROM["Prometheus\n抓取器 + TSDB + PromQL"]
@@ -104,10 +101,11 @@ flowchart TD
     GRA -->|"PromQL 查询"| PROM
     USER -->|"浏览器访问"| GRA
     KUBE -->|"同样打到这个端点"| APP
-
-    class APP process;
-    class PROM,GRA data;
-    class USER,KUBE root;
+    style APP fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style PROM fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style GRA fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style USER fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style KUBE fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
 注意一个关键设计：Prometheus 的抓取目标（target）我写的是 ` demo-app-svc:8080 ` ，这是集群内的 Service DNS。**它决定了 Prometheus 必须部署在集群内**——这个"为什么"会在坑③里用一次真实的失败讲透。
@@ -326,9 +324,6 @@ kubectl logs deployment/prometheus     # 日志显示 Listening on [::]:9090，�
 ```mermaid
 %% 为什么 127.0.0.1:31090 拒连: kind 节点是独立网络命名空间的容器
 flowchart TD
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     CMD1["curl 127.0.0.1:31090"]
     CMD2["curl 172.18.0.3:31090"]
@@ -340,10 +335,12 @@ flowchart TD
     CMD1 -.->|"connection refused"| LOOP
     CMD2 -->|"经 Docker 网桥可达"| ETH
     ETH --> KPROXY --> PODN
-
-    class CMD1,LOOP reject;
-    class CMD2,ETH,KPROXY process;
-    class PODN data;
+    style CMD1 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style LOOP fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CMD2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style ETH fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style KPROXY fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style PODN fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **解法**：访问地址从 `127.0.0.1` 换成节点 IP：
@@ -484,8 +481,6 @@ The ConfigMap "grafana-provisioning" is invalid:
 ```mermaid
 %% 正解: 同一个 ConfigMap, subPath 逐个挂到目标子目录
 flowchart LR
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
 
     subgraph CM["ConfigMap grafana-files"]
         K1["key: datasource.yml"]
@@ -501,9 +496,12 @@ flowchart LR
     K1 -->|"subPath 单文件挂载"| D1
     K2 -->|"subPath 单文件挂载"| D2
     K3 -->|"subPath 单文件挂载"| D3
-
-    class K1,K2,K3 data;
-    class D1,D2,D3 process;
+    style K1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style K2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style K3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 > ⚠️ 新手提示： ` subPath ` 是"单文件挂载"，和整卷挂载有个重要区别——**ConfigMap 更新后，subPath 挂载的文件不会热更新**，要重建 Pod 才生效。学习环境无所谓，生产里改仪表盘要么重建 Pod，要么接受重启，别指望"改完 ConfigMap 面板自动变"。

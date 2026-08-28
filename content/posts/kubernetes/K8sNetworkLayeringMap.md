@@ -103,10 +103,6 @@ flowchart LR
 ```mermaid
 %% K8s 四层网络栈: 每层一个容器, 内含该层的真实 IP 实例; 数据包自上而下穿透
 flowchart TD
-    classDef real fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#eff6ff,font-weight:bold;
-    classDef kind fill:#312e81,stroke:#a78bfa,stroke-width:2px,color:#f5f3ff,font-weight:bold;
-    classDef pod fill:#065f46,stroke:#34d399,stroke-width:2px,color:#ecfdf5,font-weight:bold;
-    classDef virt fill:#7f1d1d,stroke:#f87171,stroke-width:2px,color:#fef2f2,font-weight:bold;
 
     subgraph L1["① 物理机层 · 真实网卡 (L3)"]
         M["debian 宿主机<br/>192.168.8.26<br/>真实 IP · SSH 入口"]
@@ -138,6 +134,7 @@ flowchart TD
     style L2 fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ffffff,font-weight:bold
     style L3 fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#ffffff,font-weight:bold
     style L4 fill:#0f172a,stroke:#ef4444,stroke-width:2px,color:#ffffff,font-weight:bold
+
 ```
 
 **读图方法**：四层容器（①②③④），每层装着自己的 **IP 实例**——物理机层只有 192.168.8.26，节点层是 3 个容器 IP，Pod 层是真实的 10.244.x.x，Service 层是虚拟的 10.96.x.x（CoreDNS 10.96.0.10 也在其中）。**"哪个 IP 属于哪层"从图上一眼可见**；粗箭头是数据包穿透路径。颜色从蓝（真实）渐变到红（纯虚拟），文字为高对比浅色。

@@ -89,9 +89,10 @@ flowchart LR
   DESC -->|"Events 提示应用报错?"| LOGS
   LOGS -->|"日志不够, 需要验证内部?"| EXEC
   GET -->|"一切正常?"| GET
-
-classDef cmd fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class GET,DESC,LOGS,EXEC cmd
+    style GET fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DESC fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style LOGS fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EXEC fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 #### 4.1.1 `kubectl get` —— 第一眼
@@ -125,11 +126,11 @@ kubectl get pods -n my-first-app -w
 | Deployment | READY、UP-TO-DATE、AVAILABLE | `READY 2/2` 说明全部就绪 |
 | Node | STATUS、ROLES、AGE、VERSION | 有哪些 Node 可用 |
 
-> ⚠️ 新手提示：`kubectl get all -n <ns>` **并不会列出所有资源**。它只列 Pod、Service、Deployment、ReplicaSet、StatefulSet、DaemonSet、Job、CronJob。ConfigMap、Secret、Ingress、PVC 等不会出现在 `get all` 中，需要显式指定资源名。
+> ⚠️ 新手提示： ` kubectl get all -n <ns> ` **并不会列出所有资源**。它只列 Pod、Service、Deployment、ReplicaSet、StatefulSet、DaemonSet、Job、CronJob。ConfigMap、Secret、Ingress、PVC 等不会出现在 ` get all ` 中，需要显式指定资源名。
 
 #### 4.1.2 `kubectl describe` —— 第二眼，看 Events
 
-`get` 只看表面状态，`describe` 看**发生了什么**：
+` get ` 只看表面状态， ` describe ` 看**发生了什么**：
 
 ```bash
 kubectl describe pod <pod-name> -n my-first-app
@@ -165,7 +166,7 @@ Events:
   Normal   Pulling    25s   kubelet  Pulling image "ngix:1.25"
 ```
 
-> ⚠️ 新手提示：`kubectl describe pod` 的 Events **不是标准日志**，是对外发布的事件摘要。太旧的 Events 会被 K8s 自动清理（默认保留 1 小时）。不要依赖 Events 来做长期审计。
+> ⚠️ 新手提示： ` kubectl describe pod ` 的 Events **不是标准日志**，是对外发布的事件摘要。太旧的 Events 会被 K8s 自动清理（默认保留 1 小时）。不要依赖 Events 来做长期审计。
 
 #### 4.1.3 `kubectl logs` —— 第三眼，听容器怎么说
 
@@ -245,7 +246,7 @@ kubectl exec -it <pod-name> -c <container-name> -n my-first-app -- /bin/sh
 | `df -h` | 磁盘用量 |
 | `free -m` | 内存用量 |
 
-> ⚠️ 新手提示：生产环境 Pod 的基础镜像通常是 **distroless** 或 **scratch** 的——里面没有 shell、没有 `ls`、没有 `curl`。这种 Pod `kubectl exec` 进不去。Google 的 distroless 镜像以安全著称，但也意味着任何需要在容器内执行命令的调试方式都失效了。要么在开发环境用 debug 镜像，要么用 ephemeral container（`kubectl debug`，v1.18+）。
+> ⚠️ 新手提示：生产环境 Pod 的基础镜像通常是 **distroless** 或 **scratch** 的——里面没有 shell、没有 ` ls ` 、没有 ` curl ` 。这种 Pod ` kubectl exec ` 进不去。Google 的 distroless 镜像以安全著称，但也意味着任何需要在容器内执行命令的调试方式都失效了。要么在开发环境用 debug 镜像，要么用 ephemeral container（ ` kubectl debug ` ，v1.18+）。
 
 #### 4.2.2 `kubectl port-forward` —— 调试神器
 
@@ -266,7 +267,7 @@ kubectl port-forward svc/<svc-name> 8080:80 -n my-first-app --address=0.0.0.0
 - 临时访问数据库 Pod
 - 本地 IDE 调试远程 K8s 里的服务
 
-> ⚠️ 新手提示：`port-forward` 走的是 kubectl → API Server → kubelet → Pod 的 SPDY 隧道，**不适合长期使用或生产流量**。关掉终端隧道就断。生产环境要暴露服务请用 Ingress 或 LoadBalancer。
+> ⚠️ 新手提示： ` port-forward ` 走的是 kubectl → API Server → kubelet → Pod 的 SPDY 隧道，**不适合长期使用或生产流量**。关掉终端隧道就断。生产环境要暴露服务请用 Ingress 或 LoadBalancer。
 
 #### 4.2.3 `kubectl rollout` —— 控制部署节奏
 
@@ -420,17 +421,46 @@ flowchart TD
   NOTREADY --> NR1["1. kubectl describe pod 看 Conditions"]
   NR1 --> NR2["2. readinessProbe 是否在检查未就绪的依赖?"]
   NR2 --> NR3["3. 应用是否真的在监听 targetPort?"]
-
-classDef start fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class START start
-
-classDef problem fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class IMAGE,CRASH,PENDING,OOM,CONFIG,MOUNT,EVICTED,PROBE,NOTREADY problem
-
-classDef step fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class IMG1,IMG2,IMG3,CR1,CR2,CR3,CR4,PD1,PD2,PD3,PD4 step
-  class OOM1,OOM2,OOM3,OOM4,CFG1,CFG2,CFG3,M1,M2,M3 step
-  class EV1,EV2,EV3,PR1,PR2,PR3,NR1,NR2,NR3 step
+    style START fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style IMAGE fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CRASH fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PENDING fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style OOM fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CONFIG fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style MOUNT fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EVICTED fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PROBE fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style NOTREADY fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style IMG1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style IMG2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style IMG3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CR1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CR2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CR3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CR4 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PD1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PD2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PD3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PD4 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style OOM1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style OOM2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style OOM3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style OOM4 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CFG1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CFG2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CFG3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style EV1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style EV2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style EV3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PR1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PR2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PR3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style NR1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style NR2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style NR3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 #### 逐状态补充关键命令
@@ -494,9 +524,9 @@ kubectl cp my-first-app/<pod>:/var/log/app.log ./app.log
 kubectl cp ./config.yaml my-first-app/<pod>:/etc/app/config.yaml
 ```
 
-> ⚠️ 新手提示：`kubectl cp` 依赖 `tar` 命令，**容器里必须有 `tar`**。distroless 镜像没有 tar，cp 会报错。
+> ⚠️ 新手提示： ` kubectl cp ` 依赖 ` tar ` 命令，**容器里必须有 ` tar ` **。distroless 镜像没有 tar，cp 会报错。
 
-#### 4.5.3 `kubectl debug`（v1.18+）—— 给 distroless Pod 注入调试容器
+#### 4.5.3 ` kubectl debug ` （v1.18+）—— 给 distroless Pod 注入调试容器
 
 ```bash
 # 复制一个 Pod 并注入调试容器
@@ -557,7 +587,7 @@ kubectl delete namespace <ns>                         # 删整个 Namespace
 
 用一篇场景串联所有命令。
 
-**场景：** 部署了新版本后，`kubectl get pods` 发现一个 Pod 在 CrashLoopBackOff。
+**场景：** 部署了新版本后， ` kubectl get pods ` 发现一个 Pod 在 CrashLoopBackOff。
 
 ### 排查步骤（一步不能跳）：
 
@@ -619,7 +649,7 @@ sequenceDiagram
   KC-->>U: 显示 Pod 列表
 ```
 
-**kubeconfig（`~/.kube/config`）里有什么：**
+**kubeconfig（ ` ~/.kube/config ` ）里有什么：**
 
 | 字段 | 用途 |
 |------|------|
@@ -660,7 +690,7 @@ kubectl config set-context --current --namespace=prod  # 切换默认 Namespace
 下一篇文章（本系列最后一篇）《第 4 步：开发者 K8s 全景图》将涵盖：
 
 - Ingress 七层路由（域名 → Service → Pod）
-- Helm 包管理入门（`helm install` / `helm upgrade` / values 覆盖）
+- Helm 包管理入门（ ` helm install ` / ` helm upgrade ` / values 覆盖）
 - 本地 K8s 环境选型（Docker Desktop vs Minikube vs KIND vs k3s）
 - 那些"知道存在就行"的高级资源（StatefulSet / HPA / NetworkPolicy / RBAC）
 - Dev 和 Ops 的分界线——什么归你管，什么扔给运维

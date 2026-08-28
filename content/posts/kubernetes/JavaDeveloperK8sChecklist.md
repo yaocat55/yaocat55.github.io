@@ -83,9 +83,6 @@ cover:
 ```mermaid
 %% 云托管时代的职责分层: 你管应用声明, 平台管集群运转
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
 
     subgraph APP["你关心的应用层"]
         A1["镜像 / 清单 / 配置"]
@@ -103,10 +100,13 @@ flowchart TD
 
     APP -->|"提交声明"| I1
     I1 -->|"平台执行"| PLAT
-
-    class A1,A2,A3 root;
-    class I1 condition;
-    class P1,P2,P3 process;
+    style A1 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style A2 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style A3 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style I1 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style P2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style P3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 下面第 4 节"不用学"就是这个图的必然推论：平台已经替你承担了，你当然不用会操作。
@@ -199,10 +199,6 @@ flowchart TD
 ```mermaid
 %% 职责边界: 开发负责应用运行时的健康, 平台负责集群稳定, 中间是共同区
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
 
     subgraph DEV["开发职责（应用运行时的健康）"]
         D1["镜像 / 依赖 / 启动参数"]
@@ -222,10 +218,15 @@ flowchart TD
 
     DEV --> SHARED
     SHARED --> OPS
-
-    class D1,D2,D3 root;
-    class S1,S2,S3 condition;
-    class O1,O2,O3 process;
+    style D1 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style D2 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style D3 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S1 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S2 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S3 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style O2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style O3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 | 场景 | 开发 | 平台/运维 |

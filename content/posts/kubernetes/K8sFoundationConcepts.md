@@ -50,7 +50,7 @@ cover:
 
 | 前置知识 | 要求程度 | 验证方式 |
 |----------|:---:|------|
-| Linux 基本命令 | 会用 `cd`、`ls`、`cat`、`ps` | 打开终端敲一下看看 |
+| Linux 基本命令 | 会用 ` cd ` 、 ` ls ` 、 ` cat ` 、 ` ps ` | 打开终端敲一下看看 |
 | 进程概念 | 知道一个程序运行起来就是一个进程 | 打开任务管理器看一眼 |
 | IP + 端口 | 知道 `127.0.0.1:8080` 是什么意思 | 用过浏览器访问 `localhost` 即可 |
 | YAML 格式 | 见过 YAML，知道缩进表示层级 | 写过 Spring Boot 的 `application.yml` 就算 |
@@ -104,15 +104,10 @@ flowchart LR
   L3["Layer 3: JDK 17 运行环境"]
   L2["Layer 2: apt-get install 的依赖库"]
   L1["Layer 1: ubuntu:22.04 Base Image"]
-
-classDef base fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
-  class L1 base
-
-classDef mid fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class L2,L3 mid
-
-classDef top fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
-  class L4 top
+    style L1 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style L2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L4 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 每一层都是只读的。Docker 用 UnionFS 把这些层"叠"成一个完整的文件系统。换 JDK 版本？只需要替换 Layer 3，不用重装整个操作系统。
@@ -165,7 +160,7 @@ Docker 做得很好的事情：
 
 Docker **做不了**的事情：
 
-- 容器挂了自动重启？Docker 可以（`--restart=always`），但这是在单机上
+- 容器挂了自动重启？Docker 可以（ ` --restart=always ` ），但这是在单机上
 - 一台机器宕机，容器自动迁移到另一台？做不到
 - 100 个容器分布在 5 台机器上，怎么均匀调度？做不到
 - 容器之间怎么互相发现、怎么负载均衡？自己搞
@@ -188,18 +183,11 @@ flowchart LR
   KC -->|"REST API 调用"| K8S
   K8S -->|"CRI 接口调用"| CR
   CR -->|"创建/启停"| C
-
-classDef dev fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class D,KC dev
-
-classDef k8s fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class K8S k8s
-
-classDef runtime fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class CR runtime
-
-classDef ct fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class C ct
+    style D fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style KC fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style K8S fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CR fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style C fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 > ⚠️ 新手提示：K8s 1.24 之后**不再默认支持 Docker 作为容器运行时**（改用 containerd），但对开发者来说几乎无感——镜像还是那个镜像，Dockerfile 还是那个 Dockerfile。变化的只是 K8s 跟容器运行时之间的接口，开发者感知不到。
@@ -218,7 +206,7 @@ classDef ct fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weig
 
 > 📌 前置知识：REST API、HTTP 请求 / 响应
 
-API Server 是集群的**唯一入口**。一切操作——`kubectl apply`、`kubectl get`、Dashboard 点击——最终都是向 API Server 发 HTTP 请求。
+API Server 是集群的**唯一入口**。一切操作—— ` kubectl apply ` 、 ` kubectl get ` 、Dashboard 点击——最终都是向 API Server 发 HTTP 请求。
 
 关键特点：
 
@@ -261,12 +249,12 @@ flowchart TD
 
   C1["策略: 资源最空闲? 跟已有 Pod 分散(打散)? 亲和性?"]
   C --- C1
-
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class A,B,C,D process
-
-classDef note fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#fde68a;
-  class B1,C1 note
+    style A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B1 fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#ffffff
+    style C1 fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#ffffff
 ```
 
 **Controller Manager（kube-controller-manager）**
@@ -309,18 +297,11 @@ flowchart LR
   KL -->|"CRI: 创建容器"| CR
   CR --> CT
   CR --> CT2
-
-classDef api fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class AS api
-
-classDef kl fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class KL kl
-
-classDef rt fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
-  class CR rt
-
-classDef ct fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a;
-  class CT,CT2 ct
+    style AS fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style KL fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CR fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff
+    style CT fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff
+    style CT2 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff
 ```
 
 **kube-proxy**
@@ -445,15 +426,12 @@ flowchart TD
 
   S1 -.-> S2
   S2 -.-> S3
-
-classDef deploy fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-  class D deploy
-
-classDef rs fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
-  class RS_OLD,RS_NEW rs
-
-classDef step fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#fde68a;
-  class S1,S2,S3 step
+    style D fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RS_OLD fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RS_NEW fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S1 fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#ffffff
+    style S2 fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#ffffff
+    style S3 fill:#2d1a05,stroke:#f59e0b,stroke-width:1px,color:#ffffff
 ```
 
 ### 6.6 Service —— 给 Pod 一个"不变的联系方式"
@@ -530,9 +508,9 @@ ConfigMap/Secret 可以通过三种方式注入 Pod：
 
 Namespace 只是给资源加了"分组标签"：
 
-- `default`：不带 `-n` 参数时的默认 Namespace
-- `kube-system`：K8s 自己的系统组件（CoreDNS、kube-proxy 等）
-- 自定义：`dev`、`staging`、`prod` 按环境分
+- ` default ` ：不带 ` -n ` 参数时的默认 Namespace
+- ` kube-system ` ：K8s 自己的系统组件（CoreDNS、kube-proxy 等）
+- 自定义： ` dev ` 、 ` staging ` 、 ` prod ` 按环境分
 
 > ⚠️ 新手提示：不同 Namespace 的 Pod **默认网络互通**（除非配了 NetworkPolicy）。Namespace 不是安全边界，只是组织边界。不要把"生产数据库密码"和"开发数据库密码"放在同一个 Namespace 就觉得安全了——该用 RBAC 配额 RBAC，该用 Secret 加密用 Secret 加密。
 
@@ -627,15 +605,21 @@ flowchart LR
   G3 --> G3A["Pod 为啥 Pending?"]
   G3 --> G3B["Pod 为啥 CrashLoop?"]
   G3 --> G3C["Service 为啥不通?"]
-
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class R root
-
-classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class G1,G2,G3 branch
-
-classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class G1A,G1B,G1C,G1D,G2A,G2B,G2C,G2D,G3A,G3B,G3C leaf
+    style R fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style G1 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style G2 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style G3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style G1A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G1B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G1C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G1D fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G2A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G2B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G2C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G2D fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G3A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G3B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style G3C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 ### 9.2 记住三句话

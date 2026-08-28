@@ -56,9 +56,6 @@ Helm 三个核心概念：
 ```mermaid
 %% Helm 工作原理: Chart + Values 渲染出最终 YAML, 装进集群
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     CHART["Chart\n模板 templates/ + 元数据"]
     VAL["Values\nvalues.yaml / -f 环境文件 / --set"]
@@ -72,10 +69,12 @@ flowchart LR
     RENDER --> YAML
     YAML --> K8S
     RENDER --> REL
-
-    class CHART,VAL data;
-    class RENDER,REL process;
-    class YAML,K8S root;
+    style CHART fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style VAL fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RENDER fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style REL fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style YAML fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style K8S fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
 模板语法就是 Go template：`{{ .Values.replicaCount }}` 引用参数，`{{- if .Values.probes.enabled }}...{{- end }}` 做条件渲染，`{{ .Release.Name }}` 引用 release 名（用它做资源名前缀，**同一套 Chart 装 dev/prod 两个 release 互不冲突**）。

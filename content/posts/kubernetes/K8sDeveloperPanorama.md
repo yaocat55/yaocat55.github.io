@@ -35,7 +35,7 @@ cover:
 读完这篇文章，读者能：
 
 - 写出完整的 Ingress YAML，理解域名路由规则
-- 用 Helm 安装和管理应用（`helm install` / `upgrade` / `rollback`）
+- 用 Helm 安装和管理应用（ ` helm install ` / ` upgrade ` / ` rollback ` ）
 - 选择适合自己场景的本地 K8s 环境
 - 知道 StatefulSet、HPA、Job/CronJob、PVC 是干什么的、什么时候需要
 - 认清 Dev vs Ops 的分界线，不再背不该背的锅
@@ -63,7 +63,7 @@ Service 的三种类型：
 | Service 类型 | 外部访问 | 问题 |
 |-------------|:---:|------|
 | ClusterIP | 不能 | 只能集群内用 |
-| NodePort | 能（`NodeIP:30000-32767`）| 端口丑、不能基于域名路由，一个端口只能绑一个 Service |
+| NodePort | 能（ ` NodeIP:30000-32767 ` ）| 端口丑、不能基于域名路由，一个端口只能绑一个 Service |
 | LoadBalancer | 能（云 LB 分配公网 IP）| **每个 Service 都要创建一个 LB，烧钱** |
 
 Ingress 解决的问题：**用一个入口（一个 LB / 一个公网 IP），根据域名和路径把流量分发到不同的 Service**。
@@ -92,18 +92,17 @@ flowchart TD
   SVC1 --> POD1
   SVC2 --> POD2
   SVC3 --> POD3
-
-classDef user fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe;
-  class USER user
-
-classDef ingress fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class INGRESS,EP1,EP2,EP3 ingress
-
-classDef svc fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class SVC1,SVC2,SVC3 svc
-
-classDef pod fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
-  class POD1,POD2,POD3 pod
+    style USER fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff
+    style INGRESS fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EP1 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EP2 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EP3 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SVC1 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SVC2 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SVC3 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style POD1 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
+    style POD2 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
+    style POD3 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
 ```
 
 > ⚠️ 新手提示：Ingress 本身**只是一个 YAML 规则**（同 Service 一样是虚拟概念）。真正干活的是 **Ingress Controller**（比如 nginx-ingress、traefik）。你需要先在集群里部署 Ingress Controller，Ingress 规则才会生效。Docker Desktop 不内置 Ingress Controller，需要自己装。
@@ -157,8 +156,8 @@ spec:
 | `ingressClassName: nginx` | 指定用哪个 Ingress Controller（一个集群可以有多个） |
 | `rules[].host` | 匹配请求的 `Host` 头（域名），不写则匹配所有域名 |
 | `rules[].http.paths[].path` | URL 路径匹配规则 |
-| `pathType: Prefix` | 前缀匹配（`/users` 匹配 `/users`、`/users/123`、`/users/123/profile`） |
-| `pathType: Exact` | 精确匹配（只匹配 `/users`，不匹配 `/users/123`） |
+| ` pathType: Prefix ` | 前缀匹配（ ` /users ` 匹配 ` /users ` 、 ` /users/123 ` 、 ` /users/123/profile ` ） |
+| ` pathType: Exact ` | 精确匹配（只匹配 ` /users ` ，不匹配 ` /users/123 ` ） |
 | `backend.service` | 流量转发到哪个 Service 的哪个端口 |
 
 #### 3.1.4 本地测试 Ingress
@@ -181,7 +180,7 @@ curl -H "Host: api.example.local" http://localhost/users
 
 #### 3.2.1 为什么需要 Helm？
 
-部署一个 MySQL 到 K8s，需要写 Deployment + Service + ConfigMap + Secret + PVC + ServiceAccount ——至少 6 个 YAML 文件。Helm 把这一套东西打包成 **Chart**（类似 `apt` 的 `.deb` 包或 `npm` 的 `package`），一条命令安装。
+部署一个 MySQL 到 K8s，需要写 Deployment + Service + ConfigMap + Secret + PVC + ServiceAccount ——至少 6 个 YAML 文件。Helm 把这一套东西打包成 **Chart**（类似 ` apt ` 的 ` .deb ` 包或 ` npm ` 的 ` package ` ），一条命令安装。
 
 ```mermaid
 flowchart LR
@@ -193,18 +192,10 @@ flowchart LR
   CHART -->|"helm install"| RELEASE
   VALUES -->|"覆盖默认值"| RELEASE
   RELEASE --> RES
-
-classDef chart fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class CHART chart
-
-classDef values fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class VALUES values
-
-classDef release fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class RELEASE release
-
-classDef res fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class RES res
+    style CHART fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style VALUES fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RELEASE fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RES fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 #### 3.2.2 安装 Helm
@@ -260,7 +251,7 @@ helm uninstall my-mysql -n my-first-app
 
 #### 3.2.4 自定义 values.yaml
 
-`--set` 适合少量参数，多参数用 `values.yaml`：
+` --set ` 适合少量参数，多参数用 ` values.yaml ` ：
 
 ```yaml
 # my-values.yaml
@@ -293,7 +284,7 @@ helm install my-mysql bitnami/mysql -n my-first-app -f my-values.yaml
 | 装中间件（MySQL、Redis、Kafka、ES）| `helm install` 官方或 Bitnami 的 Chart |
 | 装基础设施（Prometheus、Grafana、Jaeger）| `helm install` 社区 Chart |
 | 部署自己的微服务 | 也可以写 Chart，但简单场景用 `kubectl apply` 够了 |
-| CI/CD 中自动化部署 | `helm upgrade --install`（幂等的，不存在就装、存在就升级） |
+| CI/CD 中自动化部署 | ` helm upgrade --install ` （幂等的，不存在就装、存在就升级） |
 
 ### 3.3 本地 K8s 环境选型
 
@@ -309,15 +300,15 @@ flowchart TD
   B --> B1["Minikube&#aVirtualBox/Hyper-V, 功能全"]
   C --> C1["KIND&#aDocker 里跑 K8s 节点, 启动快"]
   D --> D1["k3s&#a轻量 K8s, 512MB 就能跑"]
-
-classDef q fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class Q1 q
-
-classDef a fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class A1,B1,C1,D1 a
-
-classDef scene fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class A,B,C,D scene
+    style Q1 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style A1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style C1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 | 工具 | 启动速度 | 内存需求 | 多节点 | 适用 |
@@ -337,10 +328,10 @@ classDef scene fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
 | 对比 | Deployment | StatefulSet |
 |------|-----------|-------------|
-| Pod 命名 | `my-app-随机后缀`（如 `5d8f7b6c9-abcde`）| `my-db-0`、`my-db-1`、`my-db-2`（有序编号） |
+| Pod 命名 | ` my-app-随机后缀 ` （如 ` 5d8f7b6c9-abcde ` ）| ` my-db-0 ` 、 ` my-db-1 ` 、 ` my-db-2 ` （有序编号） |
 | 启停顺序 | 并行创建/删除 | 0 → 1 → 2 顺序启动，反向停止 |
 | 存储 | 所有 Pod 共享 PVC 或不用存储 | **每个 Pod 独享一个 PVC**（volumeClaimTemplates） |
-| 网络标识 | Pod IP 会变 | 每个 Pod 有稳定的 DNS 名（`my-db-0.my-db-svc.default.svc`） |
+| 网络标识 | Pod IP 会变 | 每个 Pod 有稳定的 DNS 名（ ` my-db-0.my-db-svc.default.svc ` ） |
 
 > 📌 前置知识：理解 PVC（PersistentVolumeClaim）和 StorageClass 的基本概念——PVC 是 Pod 申请存储的"申请表"，StorageClass 是"哪种类型的存储"（SSD / HDD / 云盘）。
 
@@ -367,7 +358,7 @@ spec:
         averageUtilization: 70       # 平均 CPU 超过 70% 就扩容
 ```
 
-HPA 每 15 秒检查一次指标（需要 `metrics-server`），高于阈值加 Pod，低于阈值减 Pod。开发者需要知道 HPA **存在**，但具体阈值和策略是运维/架构师定的。
+HPA 每 15 秒检查一次指标（需要 ` metrics-server ` ），高于阈值加 Pod，低于阈值减 Pod。开发者需要知道 HPA **存在**，但具体阈值和策略是运维/架构师定的。
 
 #### 3.4.3 DaemonSet —— 每个 Node 跑一个 Pod
 
@@ -391,7 +382,7 @@ spec:
       restartPolicy: Never
 ```
 
-CronJob 是加了 `schedule`（Cron 表达式）的 Job：
+CronJob 是加了 ` schedule ` （Cron 表达式）的 Job：
 
 ```yaml
 apiVersion: batch/v1
@@ -410,7 +401,7 @@ spec:
           restartPolicy: Never
 ```
 
-> ⚠️ 新手提示：Job 的 `restartPolicy` **只能**是 `Never` 或 `OnFailure`，不能是 `Always`。Job 跑完就完，不需要常驻。如果用 `Always`——K8s 不允许，直接拒绝。
+> ⚠️ 新手提示：Job 的 ` restartPolicy ` **只能**是 ` Never ` 或 ` OnFailure ` ，不能是 ` Always ` 。Job 跑完就完，不需要常驻。如果用 ` Always ` ——K8s 不允许，直接拒绝。
 
 #### 3.4.5 PVC（PersistentVolumeClaim）—— 持久化存储
 
@@ -475,14 +466,23 @@ flowchart TD
   OPS --> O7["配置 NetworkPolicy 网络隔离"]
   OPS --> O8["管理节点 (扩缩/污点/标签)"]
   OPS --> O9["管理 Ingress Controller 本身"]
-
-classDef dev fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class DEV dev
-  class D1,D2,D3,D4,D5,D6 dev
-
-classDef ops fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class OPS ops
-  class O1,O2,O3,O4,O5,O6,O7,O8,O9 ops
+    style DEV fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D4 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D5 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D6 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style OPS fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O1 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O2 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O3 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O4 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O5 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O6 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O7 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O8 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O9 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 | 开发者的事 | 运维的事 |
@@ -556,15 +556,12 @@ flowchart TD
   W2 --> W3
   W3 --> W4
   W4 --> DONE
-
-classDef start fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class TODAY start
-
-classDef step fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class W1,W2,W3,W4 step
-
-classDef done fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class DONE done
+    style TODAY fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W1 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W2 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W4 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DONE fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ### 5.3 下一步学习方向

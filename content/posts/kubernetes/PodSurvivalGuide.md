@@ -90,21 +90,19 @@ flowchart TD
   METHOD --> M2["tcpSocket&#xaTCP 端口探测"]
   METHOD --> M3["exec&#xa容器内执行命令"]
   METHOD --> M4["gRPC&#xa(v1.24+) gRPC Health Check"]
-
-classDef probe fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class PROBE probe
-
-classDef three fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class L,R,S three
-
-classDef fail fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
-  class L_FAIL,R_FAIL,S_FAIL fail
-
-classDef ok fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
-  class S_OK ok
-
-classDef method fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class METHOD,M1,M2,M3,M4 method
+    style PROBE fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style R fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L_FAIL fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff
+    style R_FAIL fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff
+    style S_FAIL fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff
+    style S_OK fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
+    style METHOD fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style M4 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 #### 4.1.1 httpGet —— 最常用，HTTP 服务首选
@@ -140,7 +138,7 @@ failureThreshold=3, periodSeconds=10
 → 第 1 次失败 + 10s + 第 2 次失败 + 10s + 第 3 次失败 = 判定失败
 ```
 
-> ⚠️ 新手提示：`httpGet` 的返回值 **2xx 或 3xx 才算健康**，4xx 和 5xx 都算失败。如果你的 `/health` 端点在数据库断连时返回 503，Pod 就会被探针打死——如果你的 liveness 也在检查数据库的话。这就是很多人把 "/health" 端点逻辑写得过于复杂导致 Pod 反复重启的原因。**liveness 只查"进程本身还活着吗"，readiness 才查"依赖就绪了吗"。**
+> ⚠️ 新手提示： ` httpGet ` 的返回值 **2xx 或 3xx 才算健康**，4xx 和 5xx 都算失败。如果你的 ` /health ` 端点在数据库断连时返回 503，Pod 就会被探针打死——如果你的 liveness 也在检查数据库的话。这就是很多人把 "/health" 端点逻辑写得过于复杂导致 Pod 反复重启的原因。**liveness 只查"进程本身还活着吗"，readiness 才查"依赖就绪了吗"。**
 
 #### 4.1.2 tcpSocket —— 适用于非 HTTP 服务（数据库、Redis、gRPC）
 
@@ -171,7 +169,7 @@ livenessProbe:
 
 在容器内执行任意命令，**退出码为 0 就是健康**，非 0 就是失败。
 
-> ⚠️ 新手提示：exec 探针的 `command` 是在**容器内**执行的。如果容器是基于 `alpine` 镜像（没有 `curl`，只有 `wget`），你的 `curl` 命令会直接报 `/bin/sh: curl: not found`——然后探针一直失败。务必确认基础镜像里有你需要的命令。
+> ⚠️ 新手提示：exec 探针的 ` command ` 是在**容器内**执行的。如果容器是基于 ` alpine ` 镜像（没有 ` curl ` ，只有 ` wget ` ），你的 ` curl ` 命令会直接报 ` /bin/sh: curl: not found ` ——然后探针一直失败。务必确认基础镜像里有你需要的命令。
 
 #### 4.1.4 startupProbe —— 拯救启动慢的应用
 
@@ -210,8 +208,8 @@ sequenceDiagram
 
 | 场景 | 不用 startupProbe | 用了 startupProbe |
 |------|------------------|------------------|
-| 应用启动要 60 秒 | liveness 的 `initialDelaySeconds=60`，启动后**一直无人检查** | startupProbe 每 5 秒检查一次，启动完**立刻**交棒 liveness |
-| 启动有时快有时慢 | 设 60 秒太短→误杀，设 120 秒太长→真死了 2 分钟后才知道 | `failureThreshold=30`，最多等 150 秒，提前完成提前交棒 |
+| 应用启动要 60 秒 | liveness 的 ` initialDelaySeconds=60 ` ，启动后**一直无人检查** | startupProbe 每 5 秒检查一次，启动完**立刻**交棒 liveness |
+| 启动有时快有时慢 | 设 60 秒太短→误杀，设 120 秒太长→真死了 2 分钟后才知道 | ` failureThreshold=30 ` ，最多等 150 秒，提前完成提前交棒 |
 
 > ⚠️ 新手提示：如果应用启动需要 60 秒以上，**不要只调大 liveness 的 initialDelaySeconds**。设成 90 秒意味着：启动如果卡死了，也要 90 秒后才知道。用 startupProbe 既能给足启动时间，又能在启动完成后立即启用 liveness 保护。
 
@@ -256,7 +254,7 @@ Exit Code: 137           # 137 = 128 + 9 (SIGKILL)
 
 内存不像 CPU 可以"等一下再跑"——进程申请了内存，内核要么给、要么不给。不给→OOM Killer 出手→容器被杀→Pod 重建。
 
-> ⚠️ 新手提示：JVM 应用要特别注意——`-Xmx` 设置的是**堆**上限，JVM 进程还额外需要 Metaspace、线程栈、Native Memory。如果 `-Xmx=200m`，容器 `limits.memory=256Mi`，大概率 OOMKilled。建议容器内存 limits 至少是 `-Xmx` 的 **1.3 ~ 1.5 倍**。
+> ⚠️ 新手提示：JVM 应用要特别注意—— ` -Xmx ` 设置的是**堆**上限，JVM 进程还额外需要 Metaspace、线程栈、Native Memory。如果 ` -Xmx=200m ` ，容器 ` limits.memory=256Mi ` ，大概率 OOMKilled。建议容器内存 limits 至少是 ` -Xmx ` 的 **1.3 ~ 1.5 倍**。
 
 #### 4.2.2 三种 QoS 等级
 
@@ -276,18 +274,12 @@ flowchart TD
   Q1 -->|"否"| Q2
   Q2 -->|"是"| BE
   Q2 -->|"否 (requests &lt; limits)"| B
-
-classDef guaranteed fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class G guaranteed
-
-classDef burstable fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class B burstable
-
-classDef besteffort fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class BE besteffort
-
-classDef check fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class CHECK,Q1,Q2 check
+    style G fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style BE fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CHECK fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style Q1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style Q2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 | QoS | 条件 | Node 内存紧张时 |
@@ -312,15 +304,15 @@ flowchart TD
   W2 --> W2U["适合: 引用 Secret/ConfigMap 的指定 key&#a例: DB_PASSWORD"]
   W3 --> W3U["适合: 整个 ConfigMap/Secret 全注入&#a例: 应用通用配置"]
   W4 --> W4U["适合: 配置文件整体替换&#a例: application.yml, nginx.conf"]
-
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class ENV root
-
-classDef way fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class W1,W2,W3,W4 way
-
-classDef use fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class W1U,W2U,W3U,W4U use
+    style ENV fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W1 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W2 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W4 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W1U fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style W2U fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style W3U fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style W4U fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 #### 方式一：硬编码 `value`
@@ -363,11 +355,11 @@ envFrom:
 
 把整个 ConfigMap/Secret 的所有 key-value 都变成环境变量。**环境变量名 = key 名**。
 
-> ⚠️ 新手提示：`envFrom` 会把整个 Secret 和 ConfigMap 一次性注入。如果 ConfigMap 有 100 个 key，你的应用就能读 100 个环境变量。这通常不是问题，但如果某个 key 刚好跟系统已有的环境变量重名（比如 `PATH`、`HOME`）——恭喜，覆盖掉了，排查到天亮。
+> ⚠️ 新手提示： ` envFrom ` 会把整个 Secret 和 ConfigMap 一次性注入。如果 ConfigMap 有 100 个 key，你的应用就能读 100 个环境变量。这通常不是问题，但如果某个 key 刚好跟系统已有的环境变量重名（比如 ` PATH ` 、 ` HOME ` ）——恭喜，覆盖掉了，排查到天亮。
 
 #### 方式四：Volume Mount 文件挂载（配置文件的正确姿势）
 
-环境变量适合简单的 key=value。**整个配置文件**（比如 `application.yml`、`nginx.conf`）用 Volume Mount：
+环境变量适合简单的 key=value。**整个配置文件**（比如 ` application.yml ` 、 ` nginx.conf ` ）用 Volume Mount：
 
 ```yaml
 apiVersion: v1
@@ -410,7 +402,7 @@ spec:
 | `mountPath` | 挂载到容器里的哪个路径 |
 | `subPath` | 只挂载 ConfigMap 的**一个 key**，不覆盖 `mountPath` 目录下的其他文件 |
 
-> ⚠️ 新手提示：**如果不用 `subPath`，ConfigMap 挂载会把目标目录整个覆盖掉**。比如 `/etc/nginx/conf.d/` 下面原本有 `default.conf`，挂载后只剩你 ConfigMap 里的那几个文件。用了 `subPath` 才会精确替换单个文件。
+> ⚠️ 新手提示：**如果不用 ` subPath ` ，ConfigMap 挂载会把目标目录整个覆盖掉**。比如 ` /etc/nginx/conf.d/ ` 下面原本有 ` default.conf ` ，挂载后只剩你 ConfigMap 里的那几个文件。用了 ` subPath ` 才会精确替换单个文件。
 
 **环境变量 vs 文件挂载决策表：**
 
@@ -492,7 +484,7 @@ spec:
           name: nginx-config
 ```
 
-保存为 `03-deployment-v2.yaml`，apply：
+保存为 ` 03-deployment-v2.yaml ` ，apply：
 
 ```bash
 kubectl apply -f 03-deployment-v2.yaml -n my-first-app
@@ -554,7 +546,7 @@ kubectl exec -n my-first-app <pod-name> -- cat /usr/share/nginx/html/index.html
 | **Pending** | 无法调度 | `kubectl describe pod` → 资源不足？PVC 绑不上？Node 有污点？ |
 | **CreateContainerConfigError** | ConfigMap/Secret 不存在或格式错误 | 检查 ConfigMap/Secret 是否已创建，key 名是否匹配 |
 
-> ⚠️ 新手提示：`CrashLoopBackOff` 不要立刻手动重启。先 `kubectl logs --previous` 看上一次崩溃的日志——80% 的情况看日志就能定位。剩下的 20% 是配置问题（环境变量没注入、ConfigMap 挂载路径不对）。
+> ⚠️ 新手提示： ` CrashLoopBackOff ` 不要立刻手动重启。先 ` kubectl logs --previous ` 看上一次崩溃的日志——80% 的情况看日志就能定位。剩下的 20% 是配置问题（环境变量没注入、ConfigMap 挂载路径不对）。
 
 ---
 
@@ -564,9 +556,9 @@ kubectl exec -n my-first-app <pod-name> -- cat /usr/share/nginx/html/index.html
 
 kubelet 不是自己发 HTTP 请求去探 Pod，而是**在容器的网络命名空间中执行探测**。这意味着：
 
-- `httpGet`：kubelet 通过 Pod 的网络命名空间发 HTTP 请求到 `localhost:port/path`
-- `exec`：kubelet 直接在容器内（通过 CRI）执行命令
-- `tcpSocket`：kubelet 在 Pod 的网络命名空间中尝试 TCP 连接
+- ` httpGet ` ：kubelet 通过 Pod 的网络命名空间发 HTTP 请求到 ` localhost:port/path `
+- ` exec ` ：kubelet 直接在容器内（通过 CRI）执行命令
+- ` tcpSocket ` ：kubelet 在 Pod 的网络命名空间中尝试 TCP 连接
 
 探针的执行**不占用容器的 CPU 配额**——由 kubelet 进程自己承担。
 
@@ -592,15 +584,14 @@ flowchart TD
   Q2 -->|"没有"| Q3
   Q3 -->|"有"| EVICT2
   Q3 -->|"没有"| Q4
-
-classDef start fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class NODE start
-
-classDef action fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
-  class KILL,EVICT,EVICT2,Q4 action
-
-classDef check fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class Q1,Q2,Q3 check
+    style NODE fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style KILL fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style EVICT fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style EVICT2 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style Q4 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style Q1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style Q2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style Q3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 核心结论：**设了 limits 且 limits=requests（Guaranteed QoS）的 Pod 最安全。但设了 limits > requests（Burstable）的 Pod 可以利用 Burstable 的"弹性"——平时空闲的 CPU/内存被其他 Pod 共享，紧张时至少保证 requests 的量。**

@@ -39,10 +39,6 @@ cover:
 
 ```mermaid
 flowchart TD
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     PROBLEM([🚨 服务器异常]) --> CHECK_LOAD{"负载过高\n响应变慢？"}
     CHECK_LOAD -->|是| PATH_LOAD[📊 系统信息诊断]
@@ -59,11 +55,21 @@ classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-
     PATH_IO --> CMD3["iostat / iotop / df"]
     PATH_NET --> CMD4["ss / ping / tcpdump"]
     CHECK_PROC --> CMD5["ps / strace / lsof / journalctl"]
-
-    class PROBLEM startEnd;
-    class CHECK_LOAD,CHECK_MEM,CHECK_IO,CHECK_NET condition;
-    class PATH_LOAD,PATH_MEM,PATH_IO,PATH_NET,CHECK_PROC process;
-    class CMD1,CMD2,CMD3,CMD4,CMD5 data;
+    style PROBLEM fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CHECK_LOAD fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CHECK_MEM fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CHECK_IO fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CHECK_NET fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style PATH_LOAD fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PATH_MEM fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PATH_IO fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PATH_NET fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CHECK_PROC fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CMD1 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CMD2 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CMD3 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CMD4 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CMD5 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 本文按照 **10 大分类** 组织 100 条指令，每一条都包含常用选项、实际输出示例、输出参数逐列解读，以及能从这些数据中看出服务器的什么状态。
@@ -78,7 +84,7 @@ classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-
 
 ### 🖥️ 1. uname — 系统内核信息
 
-**常用选项：** `-a`（全部信息）、`-r`（内核版本）、`-m`（机器架构）、`-n`（主机名）
+**常用选项：** ` -a ` （全部信息）、 ` -r ` （内核版本）、 ` -m ` （机器架构）、 ` -n ` （主机名）
 
 ```bash
 $ uname -a
@@ -100,7 +106,7 @@ Linux prod-server-01 5.15.0-91-generic #101-Ubuntu SMP Tue Nov 14 13:30:08 UTC 2
 
 ### 🖥️ 2. hostnamectl — 主机名详细信息
 
-**常用选项：** `status`（默认）、`set-hostname`（修改主机名）
+**常用选项：** ` status ` （默认）、 ` set-hostname ` （修改主机名）
 
 ```bash
 $ hostnamectl
@@ -115,7 +121,7 @@ $ hostnamectl
       Architecture: x86-64
 ```
 
-**怎么看输出：** 每条都是键值对。重点关注 `Virtualization`（确认是物理机还是虚拟机，以及虚拟化技术类型是 KVM / VMware / Xen）、`Operating System`（系统版本）、`Boot ID`（每次启动变化，可用于判断服务器最近是否重启过）。
+**怎么看输出：** 每条都是键值对。重点关注 ` Virtualization ` （确认是物理机还是虚拟机，以及虚拟化技术类型是 KVM / VMware / Xen）、 ` Operating System ` （系统版本）、 ` Boot ID ` （每次启动变化，可用于判断服务器最近是否重启过）。
 
 ### 🖥️ 3. uptime — 系统运行时间与负载
 
@@ -134,9 +140,9 @@ $ uptime
 | `load average: 0.15, 0.22, 0.18` | 过去 **1 分钟** / **5 分钟** / **15 分钟** 的平均负载 |
 
 **可以看出服务器什么状态：** 负载值需要结合 CPU 核心数解读。假设是 4 核 CPU：
-- `load average < 4.0`：系统负载正常，CPU 未饱和
-- `load average ≈ 4.0`：CPU 刚好满负荷
-- `load average > 4.0`：有任务在排队等待 CPU，值越大排队越长
+- ` load average < 4.0 ` ：系统负载正常，CPU 未饱和
+- ` load average ≈ 4.0 ` ：CPU 刚好满负荷
+- ` load average > 4.0 ` ：有任务在排队等待 CPU，值越大排队越长
 - **1 分钟值远大于 15 分钟值** ：负载正在快速上升，需立即排查
 - **1 分钟值远小于 15 分钟值** ：之前的高峰已过去
 
@@ -152,11 +158,11 @@ Release:        22.04
 Codename:       jammy
 ```
 
-**怎么看输出：** `Release` 是版本号，`Codename` 是代号（用于匹配 APT 源配置）。确认系统版本后才知道该用什么包管理工具（apt / yum / dnf）和软件源。
+**怎么看输出：** ` Release ` 是版本号， ` Codename ` 是代号（用于匹配 APT 源配置）。确认系统版本后才知道该用什么包管理工具（apt / yum / dnf）和软件源。
 
 ### 🖥️ 5. dmesg — 内核环形缓冲区日志
 
-**常用选项：** `-T`（显示人类可读时间戳）、`--level=err,warn`（只显示错误和警告）
+**常用选项：** ` -T ` （显示人类可读时间戳）、 ` --level=err,warn ` （只显示错误和警告）
 
 ```bash
 $ dmesg -T | tail -20
@@ -166,12 +172,12 @@ $ dmesg -T | tail -20
 ```
 
 **怎么看输出：** 每条日志包含时间戳和事件描述。重点关注：
-- `Out of memory` / `OOM`：进程被 OOM Killer（内核在内存不足时强制终止进程的机制）杀掉
-- `SYN flooding`：可能遭受 SYN Flood 攻击或 Web 服务并发过高
-- `segfault`：程序访问了非法内存地址，通常意味着代码有 Bug
-- `I/O error`：磁盘硬件可能故障
+- ` Out of memory ` / ` OOM ` ：进程被 OOM Killer（内核在内存不足时强制终止进程的机制）杀掉
+- ` SYN flooding ` ：可能遭受 SYN Flood 攻击或 Web 服务并发过高
+- ` segfault ` ：程序访问了非法内存地址，通常意味着代码有 Bug
+- ` I/O error ` ：磁盘硬件可能故障
 
-**可以看出服务器什么状态：** `dmesg` 记录的是内核级事件，能看到应用层看不到的硬件错误、OOM 杀死记录、驱动问题。服务器出现莫名重启或进程无故消失时，优先查 `dmesg`。
+**可以看出服务器什么状态：** ` dmesg ` 记录的是内核级事件，能看到应用层看不到的硬件错误、OOM 杀死记录、驱动问题。服务器出现莫名重启或进程无故消失时，优先查 ` dmesg ` 。
 
 ### 📁 6. lscpu — CPU 架构信息
 
@@ -190,9 +196,9 @@ L2 cache:                4 MiB
 L3 cache:                16 MiB
 ```
 
-**怎么看输出：** 总 CPU 数 = Socket 数 × 每槽核心数 × 每核线程数 = 1 × 4 × 2 = 8。如果开启了超线程，实际物理核心 = `CPU(s)` / `Thread(s) per core`。
+**怎么看输出：** 总 CPU 数 = Socket 数 × 每槽核心数 × 每核线程数 = 1 × 4 × 2 = 8。如果开启了超线程，实际物理核心 = ` CPU(s) ` / ` Thread(s) per core ` 。
 
-**可以看出服务器什么状态：** 确认 CPU 是否跑在标称频率（有时因散热或电源管理降频）、缓存大小（影响性能优化策略）、是否支持特定指令集（`Flags` 字段，如 `avx512` 表示支持 AVX-512 向量指令）。
+**可以看出服务器什么状态：** 确认 CPU 是否跑在标称频率（有时因散热或电源管理降频）、缓存大小（影响性能优化策略）、是否支持特定指令集（ ` Flags ` 字段，如 ` avx512 ` 表示支持 AVX-512 向量指令）。
 
 ### 📁 7. lsblk — 块设备列表
 
@@ -210,13 +216,13 @@ sdb      8:16   0  500G  0 disk /data
 
 | 字段 | 含义 |
 |------|------|
-| `NAME` | 设备名称，`sd*` 表示 SCSI/SATA 磁盘，`nvme*` 表示 NVMe SSD |
+| ` NAME ` | 设备名称， ` sd* ` 表示 SCSI/SATA 磁盘， ` nvme* ` 表示 NVMe SSD |
 | `RM` | 1 = 可移动设备，0 = 固定磁盘 |
 | `RO` | 1 = 只读，0 = 可读写 |
-| `TYPE` | `disk` = 整块磁盘，`part` = 分区 |
+| ` TYPE ` | ` disk ` = 整块磁盘， ` part ` = 分区 |
 | `MOUNTPOINT` | 挂载位置，`[SWAP]` 表示该分区用作交换空间 |
 
-**可以看出服务器什么状态：** 磁盘是否已分区、哪些磁盘挂载到了哪些目录、是否有 SWAP 分区、磁盘使用 MBR 还是 GPT（`gdisk -l` 进一步确认）。
+**可以看出服务器什么状态：** 磁盘是否已分区、哪些磁盘挂载到了哪些目录、是否有 SWAP 分区、磁盘使用 MBR 还是 GPT（ ` gdisk -l ` 进一步确认）。
 
 ### 📁 8. lspci — PCI 设备列表
 
@@ -237,11 +243,11 @@ Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 Bus 001 Device 002: ID 0781:5591 SanDisk Corp. Ultra Flair
 ```
 
-**怎么看输出：** `ID 0781:5591` 中 `0781` 是厂商 ID（此处为 SanDisk），`5591` 是产品 ID。可以用来确认外接设备是否被系统识别。
+**怎么看输出：** ` ID 0781:5591 ` 中 ` 0781 ` 是厂商 ID（此处为 SanDisk）， ` 5591 ` 是产品 ID。可以用来确认外接设备是否被系统识别。
 
 ### 🖥️ 10. dmidecode — DMI 表信息
 
-**常用选项：** `-t memory`（内存信息）、`-t system`（系统信息）、`-t bios`（BIOS 版本）
+**常用选项：** ` -t memory ` （内存信息）、 ` -t system ` （系统信息）、 ` -t bios ` （BIOS 版本）
 
 ```bash
 $ sudo dmidecode -t memory | grep -E "Size|Speed|Type"
@@ -250,9 +256,9 @@ $ sudo dmidecode -t memory | grep -E "Size|Speed|Type"
         Type: DDR4
 ```
 
-**可以看出服务器什么状态：** 物理内存插了多少、每条多大、频率多少、型号是 DDR4 还是 DDR5。这是确认服务器真实硬件配置的终极手段——有时你以为有 64G 内存，`dmidecode` 一看只有 32G。
+**可以看出服务器什么状态：** 物理内存插了多少、每条多大、频率多少、型号是 DDR4 还是 DDR5。这是确认服务器真实硬件配置的终极手段——有时你以为有 64G 内存， ` dmidecode ` 一看只有 32G。
 
-> ⚠️ 新手提示：`dmidecode` 读取的是 BIOS 写入的 DMI 表（Desktop Management Interface，主板固件记录的硬件配置信息），不依赖操作系统配置，因此它能反映真实物理硬件，不会被虚拟化层蒙蔽。
+> ⚠️ 新手提示： ` dmidecode ` 读取的是 BIOS 写入的 DMI 表（Desktop Management Interface，主板固件记录的硬件配置信息），不依赖操作系统配置，因此它能反映真实物理硬件，不会被虚拟化层蒙蔽。
 
 ---
 
@@ -262,7 +268,7 @@ $ sudo dmidecode -t memory | grep -E "Size|Speed|Type"
 
 ### 📁 11. ls — 列出目录内容
 
-**常用选项：** `-l`（长格式）、`-a`（显示隐藏文件）、`-h`（人类可读大小）、`-t`（按时间排序）、`-S`（按大小排序）、`-i`（显示 inode 号）
+**常用选项：** ` -l ` （长格式）、 ` -a ` （显示隐藏文件）、 ` -h ` （人类可读大小）、 ` -t ` （按时间排序）、 ` -S ` （按大小排序）、 ` -i ` （显示 inode 号）
 
 ```bash
 $ ls -lah
@@ -278,7 +284,7 @@ drwxr-xr-x  2 dev dev 4.0K Nov 15 14:29 logs
 
 | 字段 | 示例 | 含义 |
 |------|------|------|
-| `-rw-r--r--` | 10 个字符 | 类型+权限：`-` 是文件，`d` 是目录，`l` 是软链接；接着 3 组 rwx 分别代表所有者/组/其他人权限 |
+| ` -rw-r--r-- ` | 10 个字符 | 类型+权限： ` - ` 是文件， ` d ` 是目录， ` l ` 是软链接；接着 3 组 rwx 分别代表所有者/组/其他人权限 |
 | `1` | 硬链接数 | 指向该 inode 的硬链接数量 |
 | `dev` | 所有者 | 文件所属用户 |
 | `dev` | 所属组 | 文件所属用户组 |
@@ -289,7 +295,7 @@ drwxr-xr-x  2 dev dev 4.0K Nov 15 14:29 logs
 
 ### 📁 12. find — 搜索文件
 
-**常用选项：** `-name`（按名称）、`-type`（按类型 f/d/l）、`-size`（按大小）、`-mtime`（按修改时间）、`-exec`（对结果执行命令）
+**常用选项：** ` -name ` （按名称）、 ` -type ` （按类型 f/d/l）、 ` -size ` （按大小）、 ` -mtime ` （按修改时间）、 ` -exec ` （对结果执行命令）
 
 ```bash
 $ find /var/log -name "*.log" -type f -size +100M -mtime -7
@@ -297,9 +303,9 @@ $ find /var/log -name "*.log" -type f -size +100M -mtime -7
 /var/log/nginx/access.log
 ```
 
-**怎么看输出：** 命令查找 `/var/log` 下过去 7 天（`-mtime -7`）修改过的、大于 100MB（`-size +100M`）的 `.log` 文件。结果可以直接判断哪些日志文件在快速增长。
+**怎么看输出：** 命令查找 ` /var/log ` 下过去 7 天（ ` -mtime -7 ` ）修改过的、大于 100MB（ ` -size +100M ` ）的 ` .log ` 文件。结果可以直接判断哪些日志文件在快速增长。
 
-**可以看出服务器什么状态：** 快速定位大文件（磁盘空间问题）、找最近修改的配置文件、批量清理过期日志（配合 `-exec rm {} \;` 或 `-delete`）。
+**可以看出服务器什么状态：** 快速定位大文件（磁盘空间问题）、找最近修改的配置文件、批量清理过期日志（配合 ` -exec rm {} \; ` 或 ` -delete ` ）。
 
 ### 📁 13. stat — 文件/文件系统状态
 
@@ -326,11 +332,11 @@ Change: 2023-11-15 14:28:00.000000000 +0800
 | `Modify` | 最后修改时间（mtime，文件 **内容** 被修改） |
 | `Change` | 最后状态变更时间（ctime，文件 **元数据** 如权限/所有者被修改） |
 
-> ⚠️ 新手提示：`Modify` 和 `Change` 的区别是常见面试题。修改文件内容只会变 `Modify`；用 `chmod` 改权限只会变 `Change`。修改内容时 `Change` 也会同时更新（因为文件大小这个元数据变了）。
+> ⚠️ 新手提示： ` Modify ` 和 ` Change ` 的区别是常见面试题。修改文件内容只会变 ` Modify ` ；用 ` chmod ` 改权限只会变 ` Change ` 。修改内容时 ` Change ` 也会同时更新（因为文件大小这个元数据变了）。
 
 ### 💿 14. du — 磁盘使用量
 
-**常用选项：** `-h`（人类可读）、`-s`（汇总）、`-d 1`（深度为 1 层）、`--max-depth=N`（限制深度）
+**常用选项：** ` -h ` （人类可读）、 ` -s ` （汇总）、 ` -d 1 ` （深度为 1 层）、 ` --max-depth=N ` （限制深度）
 
 ```bash
 $ du -sh /home/dev/*
@@ -365,11 +371,11 @@ $ file unknown.dat
 unknown.dat: PNG image data, 1920 x 1080, 8-bit/color RGB, non-interlaced
 ```
 
-**怎么看输出：** `file` 通过"魔数"（magic number，文件头部的标识字节）判断文件类型，不依赖后缀名。`not stripped` 表示二进制文件仍包含调试符号；`stripped` 表示已被裁剪（生产环境发布版）。
+**怎么看输出：** ` file ` 通过"魔数"（magic number，文件头部的标识字节）判断文件类型，不依赖后缀名。 ` not stripped ` 表示二进制文件仍包含调试符号； ` stripped ` 表示已被裁剪（生产环境发布版）。
 
 ### 📝 17. wc — 字数统计
 
-**常用选项：** `-l`（行数）、`-w`（单词数）、`-c`（字节数）、`-m`（字符数）
+**常用选项：** ` -l ` （行数）、 ` -w ` （单词数）、 ` -c ` （字节数）、 ` -m ` （字符数）
 
 ```bash
 $ wc -l access.log
@@ -379,11 +385,11 @@ $ find src -name "*.java" | xargs wc -l | tail -1
   45230 total
 ```
 
-**可以看出服务器什么状态：** 快速统计日志行数（评估日志量）、代码行数、进程数（`ps aux | wc -l`）。
+**可以看出服务器什么状态：** 快速统计日志行数（评估日志量）、代码行数、进程数（ ` ps aux | wc -l ` ）。
 
 ### 📁 18. diff — 文件差异比较
 
-**常用选项：** `-u`（统一格式，最常用）、`-r`（递归比较目录）、`-q`（只报告是否不同）
+**常用选项：** ` -u ` （统一格式，最常用）、 ` -r ` （递归比较目录）、 ` -q ` （只报告是否不同）
 
 ```bash
 $ diff -u nginx.conf.bak nginx.conf
@@ -410,7 +416,7 @@ $ tar -tzvf backup.tar.gz
 -rw-r--r-- dev/dev  20480 2023-11-15 14:30 var/log/app/app.log
 ```
 
-**常用选项记忆口诀：** `-c` create / `-x` extract / `-t` list（查内容）、`-z` gzip（`.gz`）、`-j` bzip2（`.bz2`）、`-v` verbose、`-f` file。
+**常用选项记忆口诀：** ` -c ` create / ` -x ` extract / ` -t ` list（查内容）、 ` -z ` gzip（ ` .gz ` ）、 ` -j ` bzip2（ ` .bz2 ` ）、 ` -v ` verbose、 ` -f ` file。
 
 ### 📁 20. rsync — 远程文件同步
 
@@ -418,7 +424,7 @@ $ tar -tzvf backup.tar.gz
 $ rsync -avz --progress /local/dir/ user@remote:/remote/dir/
 ```
 
-**常用选项：** `-a`（归档模式，保留权限和属性）、`-v`（详细输出）、`-z`（传输时压缩）、`--delete`（删除目标端比源端多的文件）、`-n`（dry-run，模拟运行不实际传输）、`--progress`（显示进度）。
+**常用选项：** ` -a ` （归档模式，保留权限和属性）、 ` -v ` （详细输出）、 ` -z ` （传输时压缩）、 ` --delete ` （删除目标端比源端多的文件）、 ` -n ` （dry-run，模拟运行不实际传输）、 ` --progress ` （显示进度）。
 
 **可以看出服务器什么状态：** `rsync` 的 `--progress` 能显示传输速率，当速率异常低时可能说明网络带宽瓶颈或磁盘 I/O 瓶颈。
 
@@ -436,7 +442,7 @@ NAME="Ubuntu"
 VERSION="22.04.3 LTS (Jammy Jellyfish)"
 ```
 
-**常用选项：** `-n`（显示行号）、`-A`（显示所有不可见字符，包括 `$` 表示行尾、`^I` 表示 Tab）。适合查看小文件，大文件请用 `less`。
+**常用选项：** ` -n ` （显示行号）、 ` -A ` （显示所有不可见字符，包括 ` $ ` 表示行尾、 ` ^I ` 表示 Tab）。适合查看小文件，大文件请用 ` less ` 。
 
 ### 📁 22. less — 分页浏览文件
 
@@ -444,9 +450,9 @@ VERSION="22.04.3 LTS (Jammy Jellyfish)"
 $ less /var/log/syslog
 ```
 
-**常用快捷键：** `g` 跳到开头、`G` 跳到末尾、`/keyword` 向下搜索、`?keyword` 向上搜索、`n` 下一个匹配、`N` 上一个匹配、`F` 进入 tail -f 模式（实时监控）、`Ctrl+C` 退出实时模式、`q` 退出。
+**常用快捷键：** ` g ` 跳到开头、 ` G ` 跳到末尾、 ` /keyword ` 向下搜索、 ` ?keyword ` 向上搜索、 ` n ` 下一个匹配、 ` N ` 上一个匹配、 ` F ` 进入 tail -f 模式（实时监控）、 ` Ctrl+C ` 退出实时模式、 ` q ` 退出。
 
-> ⚠️ 新手提示：`less` 不会将整个文件读入内存，而是按需加载，因此打开几个 GB 的大文件也不会卡死。`less` 比 `more` 强大的核心区别是可以 **向前翻页** （more 只能向后）。
+> ⚠️ 新手提示： ` less ` 不会将整个文件读入内存，而是按需加载，因此打开几个 GB 的大文件也不会卡死。 ` less ` 比 ` more ` 强大的核心区别是可以 **向前翻页** （more 只能向后）。
 
 ### 📁 23. head — 显示文件头部
 
@@ -456,7 +462,7 @@ $ head -n 5 access.log
 192.168.1.11 - - [15/Nov/2023:14:30:02 +0800] "POST /api/orders HTTP/1.1" 201 567
 ```
 
-**常用选项：** `-n N`（显示前 N 行，默认 10）、`-c N`（显示前 N 字节）。也可以配合管道查看命令输出的前几行：`ps aux | head -5`。
+**常用选项：** ` -n N ` （显示前 N 行，默认 10）、 ` -c N ` （显示前 N 字节）。也可以配合管道查看命令输出的前几行： ` ps aux | head -5 ` 。
 
 ### 📁 24. tail — 显示文件尾部/实时跟踪
 
@@ -466,7 +472,7 @@ $ tail -f /var/log/app/app.log
 2023-11-15 14:35:02 ERROR DatabasePool - Connection timeout after 30s
 ```
 
-**常用选项：** `-f`（follow，文件有新内容时自动显示）、`-n N`（显示最后 N 行）、`-F`（同 `-f` 但文件被 rotate 后会自动重新打开新文件，运维场景优先用 `-F`）。
+**常用选项：** ` -f ` （follow，文件有新内容时自动显示）、 ` -n N ` （显示最后 N 行）、 ` -F ` （同 ` -f ` 但文件被 rotate 后会自动重新打开新文件，运维场景优先用 ` -F ` ）。
 
 **可以看出服务器什么状态：** `tail -f` 是实时监控日志的首选。如果错误日志刷屏速度异常快，说明线上可能出现大量报错。如果日志长时间没有新输出，要检查进程是否已挂起。
 
@@ -484,9 +490,9 @@ $ grep -n -B2 -A3 "NullPointerException" app.log
 132-2023-11-15 14:28:01 INFO  ServiceA - Order failed
 ```
 
-**常用选项：** `-c`（计数）、`-i`（忽略大小写）、`-n`（显示行号）、`-r`（递归搜索目录）、`-v`（反向匹配）、`-A N`（显示匹配行后 N 行）、`-B N`（显示匹配行前 N 行）、`-C N`（显示匹配行前后 N 行）、`-P`（使用 Perl 正则）、`-E`（扩展正则）、`--color=auto`（高亮匹配项）。
+**常用选项：** ` -c ` （计数）、 ` -i ` （忽略大小写）、 ` -n ` （显示行号）、 ` -r ` （递归搜索目录）、 ` -v ` （反向匹配）、 ` -A N ` （显示匹配行后 N 行）、 ` -B N ` （显示匹配行前 N 行）、 ` -C N ` （显示匹配行前后 N 行）、 ` -P ` （使用 Perl 正则）、 ` -E ` （扩展正则）、 ` --color=auto ` （高亮匹配项）。
 
-**可以看出服务器什么状态：** `grep -c` 快速统计错误数量、`grep "OutOfMemory"` 定位 OOM、`grep "killed" /var/log/syslog` 查看被 OOM Killer 杀掉的进程。
+**可以看出服务器什么状态：** ` grep -c ` 快速统计错误数量、 ` grep "OutOfMemory" ` 定位 OOM、 ` grep "killed" /var/log/syslog ` 查看被 OOM Killer 杀掉的进程。
 
 ### 📝 26. sed — 流编辑器
 
@@ -504,9 +510,9 @@ $ sed -n '10,20p' app.log
 $ sed -i 's/127.0.0.1/10.0.1.50/g' config.properties
 ```
 
-**常用选项：** `-i`（in-place，直接修改文件，macOS 上需 `-i ''`）、`-n`（只输出被 `p` 标记的行）、`-e`（执行多个表达式）、`-r`（使用扩展正则）。
+**常用选项：** ` -i ` （in-place，直接修改文件，macOS 上需 ` -i '' ` ）、 ` -n ` （只输出被 ` p ` 标记的行）、 ` -e ` （执行多个表达式）、 ` -r ` （使用扩展正则）。
 
-> ⚠️ 新手提示：`sed -i` 会直接修改文件内容，建议先在副本上测试。`-i` 在 Linux 和 macOS 上的行为不同——macOS 要求 `-i ''` 提供备份后缀（空字符串表示不备份）。
+> ⚠️ 新手提示： ` sed -i ` 会直接修改文件内容，建议先在副本上测试。 ` -i ` 在 Linux 和 macOS 上的行为不同——macOS 要求 ` -i '' ` 提供备份后缀（空字符串表示不备份）。
 
 ### 📝 27. awk — 文本处理语言
 
@@ -524,13 +530,13 @@ $ awk '{sum+=$10} END {print "Total bytes:", sum}' access.log
 Total bytes: 1234567890
 ```
 
-**常见内置变量：** `$1, $2, ...`（第 N 列）、`$0`（整行）、`NR`（行号）、`NF`（当前行列数）、`FS`（输入列分隔符，默认空格）、`OFS`（输出列分隔符）、`END{}`（所有行处理完后执行）。
+**常见内置变量：** ` $1, $2, ... ` （第 N 列）、 ` $0 ` （整行）、 ` NR ` （行号）、 ` NF ` （当前行列数）、 ` FS ` （输入列分隔符，默认空格）、 ` OFS ` （输出列分隔符）、 ` END{} ` （所有行处理完后执行）。
 
 **可以看出服务器什么状态：** 从日志中快速提取和分析数据——统计请求总数、按状态码统计错误率、计算平均响应时间、按 IP 统计访问量。
 
 ### 📝 28. sort — 排序
 
-**常用选项：** `-n`（按数值排序而非字典序）、`-r`（逆序）、`-k N`（按第 N 列排序）、`-t`（指定列分隔符）、`-u`（去重排序）
+**常用选项：** ` -n ` （按数值排序而非字典序）、 ` -r ` （逆序）、 ` -k N ` （按第 N 列排序）、 ` -t ` （指定列分隔符）、 ` -u ` （去重排序）
 
 ```bash
 #  按请求量统计 Top 10 IP
@@ -544,7 +550,7 @@ $ awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -10
 
 ### 📝 29. uniq — 去重
 
-**常用选项：** `-c`（统计每行出现次数）、`-d`（只显示重复行）、`-u`（只显示唯一行）
+**常用选项：** ` -c ` （统计每行出现次数）、 ` -d ` （只显示重复行）、 ` -u ` （只显示唯一行）
 
 **关键点：** `uniq` 只能去除 **相邻** 的重复行，通常配合 `sort` 使用（先排序再去重）。
 
@@ -569,7 +575,7 @@ $ echo "20231115" | cut -c1-4,5-6,7-8
 2023-11-15
 ```
 
-**常用选项：** `-d`（分隔符，默认 Tab）、`-f`（字段序号，从 1 开始，逗号分隔多个，`-` 表示范围）、`-c`（字符位置）。
+**常用选项：** ` -d ` （分隔符，默认 Tab）、 ` -f ` （字段序号，从 1 开始，逗号分隔多个， ` - ` 表示范围）、 ` -c ` （字符位置）。
 
 ---
 
@@ -612,18 +618,12 @@ mysql     1234  0.8 12.1 2097152 464896 ?     Ssl  Nov14   5:00 /usr/sbin/mysqld
 | `s` | 会话首进程 | 通常是 shell 或 init |
 | `l` | 多线程 | 包含多个线程的进程 |
 
-> ⚠️ 新手提示：如果有大量 `D` 状态进程，说明磁盘 I/O 是瓶颈。`Z` 状态进程无法被杀掉（它已经死了），需要重启父进程来清理。`ps aux | grep Z` 查看僵尸进程数量。
+> ⚠️ 新手提示：如果有大量 ` D ` 状态进程，说明磁盘 I/O 是瓶颈。 ` Z ` 状态进程无法被杀掉（它已经死了），需要重启父进程来清理。 ` ps aux | grep Z ` 查看僵尸进程数量。
 
 下图展示了 Linux 进程在整个生命周期中的状态转换关系，这是理解 `ps` STAT 列的基础：
 
 ```mermaid
 stateDiagram-v2
-classDef start fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-classDef running fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef sleeping fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe;
-classDef stopped fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
-classDef dead fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca;
-classDef queue fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     [*] --> Created
     Created --> Ready : fork()完成
@@ -637,12 +637,13 @@ classDef queue fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     Stopped --> Ready : 收到SIGCONT
     Running --> Zombie : 进程退出\nexit()/do_exit()
     Zombie --> [*] : 父进程wait()回收
-
-    class Created,Ready queue;
-    class Running running;
-    class SleepingInterruptible,SleepingUninterruptible sleeping;
-    class Stopped stopped;
-    class Zombie dead;
+    style Created fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style Ready fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style Running fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SleepingInterruptible fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff
+    style SleepingUninterruptible fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff
+    style Stopped fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff
+    style Zombie fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff
 ```
 
 | 状态 | STAT 码 | 本质 | 能否被 kill | 占用的内存能否释放 |
@@ -690,7 +691,7 @@ MiB Swap:   4096.0 total,   4096.0 free,      0.0 used.  16000.0 avail Mem
 | `buff/cache` | 缓冲区+页缓存（Linux 用空闲内存做缓存，可随时释放） |
 | `avail Mem` | 真正可分配给新进程的内存（= free + 可释放的 buff/cache） |
 
-**可以看出服务器什么状态：** `top` 是"一站式"概览面板。`wa` 高→磁盘问题，`st` 高→虚拟机宿主机超卖，`used` 高但 `avail` 也高→实际内存没问题（只是被缓存占用），`used` 高且 `avail` 低→需要加内存或排查内存泄漏。
+**可以看出服务器什么状态：** ` top ` 是"一站式"概览面板。 ` wa ` 高→磁盘问题， ` st ` 高→虚拟机宿主机超卖， ` used ` 高但 ` avail ` 也高→实际内存没问题（只是被缓存占用）， ` used ` 高且 ` avail ` 低→需要加内存或排查内存泄漏。
 
 ### 🔄 33. htop — 增强型进程监控
 
@@ -698,9 +699,9 @@ MiB Swap:   4096.0 total,   4096.0 free,      0.0 used.  16000.0 avail Mem
 $ htop
 ```
 
-`htop` 是 `top` 的增强版，支持鼠标点击、颜色高亮、树形进程视图（`F5`）、水平垂直滚动。相比 `top`，`htop` 的 CPU 和内存条是可视化柱状图，更容易一眼判断系统状态。
+` htop ` 是 ` top ` 的增强版，支持鼠标点击、颜色高亮、树形进程视图（ ` F5 ` ）、水平垂直滚动。相比 ` top ` ， ` htop ` 的 CPU 和内存条是可视化柱状图，更容易一眼判断系统状态。
 
-> 📌 前置知识：`htop` 通常不是预装的，需要 `sudo apt install htop`（Debian/Ubuntu）或 `sudo yum install htop`（CentOS/RHEL）。
+> 📌 前置知识： ` htop ` 通常不是预装的，需要 ` sudo apt install htop ` （Debian/Ubuntu）或 ` sudo yum install htop ` （CentOS/RHEL）。
 
 ### 🔄 34. kill — 发送信号给进程
 
@@ -727,7 +728,7 @@ $ kill -9  28431    # 强制杀死（谨慎使用！）
 $ kill -1  28431    # 重新加载配置（nginx/php-fpm）
 ```
 
-> ⚠️ 新手提示：`kill -9` 是最后手段，不要一上来就用。`-9` 不给进程任何清理机会（不关闭文件句柄、不释放锁、不回写缓存数据），可能导致数据损坏。正确的顺序：先 `-15`，等待几秒，进程还在再 `-9`。
+> ⚠️ 新手提示： ` kill -9 ` 是最后手段，不要一上来就用。 ` -9 ` 不给进程任何清理机会（不关闭文件句柄、不释放锁、不回写缓存数据），可能导致数据损坏。正确的顺序：先 ` -15 ` ，等待几秒，进程还在再 ` -9 ` 。
 
 ### 🔄 35. pkill — 按名称终止进程
 
@@ -736,7 +737,7 @@ $ pkill -f "java -jar app.jar"   # 按完整命令匹配
 $ pkill -HUP nginx               # 重新加载 nginx 配置
 ```
 
-**常用选项：** `-f`（匹配完整命令行而非只匹配进程名）、`-u user`（只杀掉指定用户的进程）、`-9`（SIGKILL）、`-SIGNAL`（指定信号）。
+**常用选项：** ` -f ` （匹配完整命令行而非只匹配进程名）、 ` -u user ` （只杀掉指定用户的进程）、 ` -9 ` （SIGKILL）、 ` -SIGNAL ` （指定信号）。
 
 ### 🔄 36. nice / renice — 进程优先级
 
@@ -745,7 +746,7 @@ $ nice -n 10 tar -czf backup.tar.gz /data/   # 以较低优先级运行
 $ renice -n -5 -p 28431                       # 提升已有进程的优先级
 ```
 
-**怎么看优先级：** Linux 优先级范围是 `-20`（最高优先级）到 `19`（最低优先级）。默认是 `0`。`nice` 值越大，进程越"友好"（让出 CPU 给其他进程）。普通用户只能调大 nice 值（降低优先级），只有 root 能调小（提高优先级）。
+**怎么看优先级：** Linux 优先级范围是 ` -20 ` （最高优先级）到 ` 19 ` （最低优先级）。默认是 ` 0 ` 。 ` nice ` 值越大，进程越"友好"（让出 CPU 给其他进程）。普通用户只能调大 nice 值（降低优先级），只有 root 能调小（提高优先级）。
 
 **可以看出服务器什么状态：** 如果某个备份任务或批处理任务拖慢了线上服务，用 `renice` 降低其优先级而不用杀死它。
 
@@ -756,7 +757,7 @@ $ nohup java -jar app.jar > app.log 2>&1 &
 [1] 28432
 ```
 
-**怎么看输出：** `[1]` 是任务编号（jobs 命令可用），`28432` 是 PID。`> app.log 2>&1` 将标准输出和标准错误都重定向到 app.log。命令在后台运行且 SSH 断开后不终止。
+**怎么看输出：** ` [1] ` 是任务编号（jobs 命令可用）， ` 28432 ` 是 PID。 ` > app.log 2>&1 ` 将标准输出和标准错误都重定向到 app.log。命令在后台运行且 SSH 断开后不终止。
 
 ### 🔄 38. jobs / bg / fg — 任务前后台切换
 
@@ -770,7 +771,7 @@ $ bg %2           # 将任务 2 在后台继续运行
 $ kill %2         # 用任务号终止（等价于 kill 28435）
 ```
 
-**可以看出服务器什么状态：** `jobs` 列出当前 shell 的后台任务状态。`Stopped` 状态通常是因为按了 `Ctrl+Z` 暂停了前台进程。
+**可以看出服务器什么状态：** ` jobs ` 列出当前 shell 的后台任务状态。 ` Stopped ` 状态通常是因为按了 ` Ctrl+Z ` 暂停了前台进程。
 
 ### 🔄 39. pgrep — 按名称查找进程 PID
 
@@ -783,7 +784,7 @@ $ pgrep -u dev -f "app.jar"
 28431
 ```
 
-**常用选项：** `-a`（列出 PID 和完整命令）、`-u user`（指定用户）、`-l`（列出进程名）、`-f`（匹配完整命令行）。
+**常用选项：** ` -a ` （列出 PID 和完整命令）、 ` -u user ` （指定用户）、 ` -l ` （列出进程名）、 ` -f ` （匹配完整命令行）。
 
 ### 🔄 40. pidstat — 进程资源统计
 
@@ -797,7 +798,7 @@ $ pidstat -p 28431 1 3
 
 **怎么看输出：** `1 3` 表示每 1 秒采样一次，共 3 次。`%usr` 是用户态 CPU，`%system` 是内核态，`%wait` 是进程等待 CPU 的时间（值高说明 CPU 竞争激烈）。
 
-**可以看出服务器什么状态：** 针对某个进程做精细的 CPU 使用率分析。如果 `%system` 远大于 `%usr`，说明进程把大量时间消耗在系统调用上（可能是频繁 I/O、锁竞争或网络操作）。
+**可以看出服务器什么状态：** 针对某个进程做精细的 CPU 使用率分析。如果 ` %system ` 远大于 ` %usr ` ，说明进程把大量时间消耗在系统调用上（可能是频繁 I/O、锁竞争或网络操作）。
 
 ---
 
@@ -868,7 +869,7 @@ $ mpstat -P ALL 1 3
 
 ### 🖥️ 44. sar — 系统活动报告
 
-**常用选项：** `-u`（CPU 历史）、`-r`（内存历史）、`-n DEV`（网络历史）、`-b`（I/O 历史）
+**常用选项：** ` -u ` （CPU 历史）、 ` -r ` （内存历史）、 ` -n DEV ` （网络历史）、 ` -b ` （I/O 历史）
 
 ```bash
 $ sar -u -f /var/log/sysstat/sa15
@@ -878,7 +879,7 @@ $ sar -u -f /var/log/sysstat/sa15
 14:50:01   50.00     8.00     25.00     17.00    # 持续高负载
 ```
 
-**怎么看输出：** `sar` 最大的价值是 **看历史数据** 。当服务器凌晨 3 点出问题而没人值守时，`sar` 保留了当时的 CPU、内存、I/O、网络快照。`-f` 指定历史日志文件（通常在 `/var/log/sysstat/` 下）。
+**怎么看输出：** ` sar ` 最大的价值是 **看历史数据** 。当服务器凌晨 3 点出问题而没人值守时， ` sar ` 保留了当时的 CPU、内存、I/O、网络快照。 ` -f ` 指定历史日志文件（通常在 ` /var/log/sysstat/ ` 下）。
 
 **可以看出服务器什么状态：** 回溯历史性能问题。如果某个时间段的 `%iowait` 突然飙升，可能是定时任务的数据库全量备份导致的。
 
@@ -892,7 +893,7 @@ cpu cores       : 4
 siblings        : 8
 ```
 
-**怎么看输出：** `processor` 是逻辑 CPU 编号，`cpu cores` 是每颗物理 CPU 的物理核心数，`siblings` 是每颗物理 CPU 的逻辑核心数（含超线程）。`siblings / cpu cores = 2` 说明开启了超线程（Hyper-Threading）。
+**怎么看输出：** ` processor ` 是逻辑 CPU 编号， ` cpu cores ` 是每颗物理 CPU 的物理核心数， ` siblings ` 是每颗物理 CPU 的逻辑核心数（含超线程）。 ` siblings / cpu cores = 2 ` 说明开启了超线程（Hyper-Threading）。
 
 ### 🖥️ 46. /proc/meminfo — 内存详细信息
 
@@ -906,7 +907,7 @@ SwapTotal:       4096000 kB
 SwapFree:        4096000 kB
 ```
 
-**怎么看输出：** 这是 `free` 命令的底层数据源。`Cached` 就是 `free` 中的 `buff/cache` 部分。`MemAvailable` 是内核估算可以立即分配给新进程的内存量（不含已使用的 Swap）。
+**怎么看输出：** 这是 ` free ` 命令的底层数据源。 ` Cached ` 就是 ` free ` 中的 ` buff/cache ` 部分。 ` MemAvailable ` 是内核估算可以立即分配给新进程的内存量（不含已使用的 Swap）。
 
 ### 🖥️ 47. /proc/loadavg — 系统负载平均值
 
@@ -923,7 +924,7 @@ $ cat /proc/loadavg
 | `2/1245` | 当前运行的线程数 / 系统总线程数 |
 | `35190` | 最近创建的进程 PID |
 
-**可以看出服务器什么状态：** 如果当前运行线程数（`2`）持续接近总线程数，说明线程资源紧张。最后的 PID 可以粗略判断系统启动以来创建了多少进程。
+**可以看出服务器什么状态：** 如果当前运行线程数（ ` 2 ` ）持续接近总线程数，说明线程资源紧张。最后的 PID 可以粗略判断系统启动以来创建了多少进程。
 
 ### ⏰ 48. numastat — NUMA 节点统计
 
@@ -938,7 +939,7 @@ local_node             120000000
 other_node               3456789
 ```
 
-**怎么看输出：** NUMA（Non-Uniform Memory Access，非一致内存访问）架构下，每个 CPU 有自己的本地内存。`numa_miss` 表示 CPU 需要访问远端节点的内存——这比访问本地内存慢。`numa_miss` 值持续高说明应用的内存分配策略没有做好 NUMA 绑定。
+**怎么看输出：** NUMA（Non-Uniform Memory Access，非一致内存访问）架构下，每个 CPU 有自己的本地内存。 ` numa_miss ` 表示 CPU 需要访问远端节点的内存——这比访问本地内存慢。 ` numa_miss ` 值持续高说明应用的内存分配策略没有做好 NUMA 绑定。
 
 > 📌 前置知识：NUMA 是多路服务器的内存架构。一台双路服务器有两个物理 CPU，每个 CPU 有自己的本地内存条。CPU 访问自己的本地内存快，访问另一个 CPU 的远程内存慢 30% ~ 50%。不需要手动管 NUMA 的常见场景：单路服务器（只有一颗 CPU）、小型虚拟机。
 
@@ -952,7 +953,7 @@ Address           Kbytes     RSS   Dirty Mode  Mapping
 00007f0000000000 4194304 1740800 1740800 rw---   [ anon ]
 ```
 
-**怎么看输出：** 每一行是一个内存映射区域（VMA，Virtual Memory Area）。`RSS` 是该区域实际占用的物理内存，`Dirty` 是已修改但未写回磁盘的页。`[ anon ]` 表示匿名映射（通常由 `malloc` 或 JVM 堆分配产生）。
+**怎么看输出：** 每一行是一个内存映射区域（VMA，Virtual Memory Area）。 ` RSS ` 是该区域实际占用的物理内存， ` Dirty ` 是已修改但未写回磁盘的页。 ` [ anon ] ` 表示匿名映射（通常由 ` malloc ` 或 JVM 堆分配产生）。
 
 **可以看出服务器什么状态：** 确认 JVM 堆实际大小（`[ anon ]` 中 RSS 最大的那一段）、进程是否映射了大量共享库、是否有异常大的匿名内存区域（内存泄漏嫌疑）。
 
@@ -964,9 +965,9 @@ $ sudo slabtop -o --once
  Active / Total Slabs (% used)      : 234567 / 234567 (100%)
 ```
 
-**常用选项：** `-o`（按占用排序）、`--once`（打印一次后退出，而非交互式）。`slabtop` 显示内核 Slab 分配器（管理内核对象内存的机制）的缓存使用情况。
+**常用选项：** ` -o ` （按占用排序）、 ` --once ` （打印一次后退出，而非交互式）。 ` slabtop ` 显示内核 Slab 分配器（管理内核对象内存的机制）的缓存使用情况。
 
-**可以看出服务器什么状态：** 如果某个 slab 类型（如 `dentry`、`inode_cache`）占用异常高，可能是文件系统操作过于频繁（大量打开/关闭文件），需要优化应用的文件 I/O 模式。
+**可以看出服务器什么状态：** 如果某个 slab 类型（如 ` dentry ` 、 ` inode_cache ` ）占用异常高，可能是文件系统操作过于频繁（大量打开/关闭文件），需要优化应用的文件 I/O 模式。
 
 ---
 
@@ -984,9 +985,9 @@ Filesystem      Size  Used Avail Use% Mounted on
 /dev/sdb        500G  450G   50G  91% /data
 ```
 
-**怎么看输出：** `Use%` 达到 100% 时该分区不可再写入。重点关注 `/` 根分区和 `/data`、`/var` 等数据分区。
+**怎么看输出：** ` Use% ` 达到 100% 时该分区不可再写入。重点关注 ` / ` 根分区和 ` /data ` 、 ` /var ` 等数据分区。
 
-**可以看出服务器什么状态：** 快速定位哪个分区快满了。`/boot` 分区如果满了（通常是旧内核积累），会导致 `apt upgrade` 失败。`df -i` 查看 inode 使用率——即使空间没满，inode 用完也无法创建新文件（常见于小文件极多的场景如邮件服务器）。
+**可以看出服务器什么状态：** 快速定位哪个分区快满了。 ` /boot ` 分区如果满了（通常是旧内核积累），会导致 ` apt upgrade ` 失败。 ` df -i ` 查看 inode 使用率——即使空间没满，inode 用完也无法创建新文件（常见于小文件极多的场景如邮件服务器）。
 
 ### ⏰ 52. iostat — I/O 统计
 
@@ -1007,7 +1008,7 @@ sdb    200.0 300.0  8000.0 12000.0  30.00   1.50  95.00   # 瓶颈！
 | `svctm` | 单个 I/O 请求的平均服务时间（ms） | 配合 `await` 使用 |
 | `%util` | 设备带宽利用率 | **> 80% 说明磁盘接近饱和** |
 
-**可以看出服务器什么状态：** `%util` 持续接近 100% 说明磁盘是瓶颈，需要扩容、加缓存层或优化 I/O。`await` 远大于 `svctm` 说明请求在队列中等待了很长时间——大量 I/O 请求堆积。
+**可以看出服务器什么状态：** ` %util ` 持续接近 100% 说明磁盘是瓶颈，需要扩容、加缓存层或优化 I/O。 ` await ` 远大于 ` svctm ` 说明请求在队列中等待了很长时间——大量 I/O 请求堆积。
 
 ### 🔄 53. iotop — I/O 进程监控
 
@@ -1031,7 +1032,7 @@ Device     Boot Start       End   Sectors  Size Id Type
 /dev/sda2      2099200 419430399 417331200  199G 83 Linux
 ```
 
-**常用选项：** `-l` 列出所有磁盘和分区。`fdisk` 用于查看分区表和创建/删除分区。操作分区表是高风险操作，务必确认磁盘名称。
+**常用选项：** ` -l ` 列出所有磁盘和分区。 ` fdisk ` 用于查看分区表和创建/删除分区。操作分区表是高风险操作，务必确认磁盘名称。
 
 ### 🔢 55. blkid — 块设备属性
 
@@ -1041,7 +1042,7 @@ $ blkid
 /dev/sda2: UUID="b2c3d4e5-f6a7-8901-bcde-f12345678901" TYPE="ext4" PARTUUID="12345678-02"
 ```
 
-**怎么看输出：** `UUID` 是文件系统的唯一标识符，用于 `/etc/fstab` 中挂载磁盘（比 `/dev/sda1` 更可靠，因为设备名可能变化）。`TYPE` 是文件系统类型。
+**怎么看输出：** ` UUID ` 是文件系统的唯一标识符，用于 ` /etc/fstab ` 中挂载磁盘（比 ` /dev/sda1 ` 更可靠，因为设备名可能变化）。 ` TYPE ` 是文件系统类型。
 
 ### 📁 56. mount — 挂载文件系统
 
@@ -1053,9 +1054,9 @@ tmpfs      on  /dev/shm  type  tmpfs    (rw,nosuid,nodev)
 ```
 
 **怎么看输出：** 每行展示一个挂载点。关注挂载选项：
-- `rw` / `ro`：读写 / 只读。如果 `/` 变成了 `ro`，说明文件系统检测到错误后自动降级为只读保护
-- `noexec`：禁止在该挂载点上执行程序（安全策略）
-- `noatime`：不更新文件访问时间（减少 I/O）
+- ` rw ` / ` ro ` ：读写 / 只读。如果 ` / ` 变成了 ` ro ` ，说明文件系统检测到错误后自动降级为只读保护
+- ` noexec ` ：禁止在该挂载点上执行程序（安全策略）
+- ` noatime ` ：不更新文件访问时间（减少 I/O）
 
 ### 📁 57. fsck — 文件系统检查
 
@@ -1109,12 +1110,12 @@ java    28431  dev   10w   REG   8,2  419430400     0 1024 /var/log/app.log (del
 |------|------|
 | `COMMAND` | 进程名 |
 | `PID` | 进程 ID |
-| `FD` | 文件描述符编号，`r`=读 `w`=写 `u`=读写，后缀数字是 fd 号 |
-| `TYPE` | 文件类型：`REG`=普通文件，`DIR`=目录，`IPv4/IPv6`=网络套接字 |
+| ` FD ` | 文件描述符编号， ` r ` =读 ` w ` =写 ` u ` =读写，后缀数字是 fd 号 |
+| ` TYPE ` | 文件类型： ` REG ` =普通文件， ` DIR ` =目录， ` IPv4/IPv6 ` =网络套接字 |
 | `NODE` | inode 号 |
 | `NAME` | 文件路径。`(deleted)` 标记表示文件已被删除但仍被进程持有 |
 
-> ⚠️ 新手提示：`lsof +L1` 是最常用的诊断命令之一。当 `df` 显示磁盘满了但 `du` 统计不出谁占用了空间时，几乎一定是某个进程打开了已被删除的大文件——文件已从目录中消失但进程仍持有文件句柄，空间不会释放。解决办法：找到对应进程后重启它。
+> ⚠️ 新手提示： ` lsof +L1 ` 是最常用的诊断命令之一。当 ` df ` 显示磁盘满了但 ` du ` 统计不出谁占用了空间时，几乎一定是某个进程打开了已被删除的大文件——文件已从目录中消失但进程仍持有文件句柄，空间不会释放。解决办法：找到对应进程后重启它。
 
 ### 📁 60. fuser — 文件使用者识别
 
@@ -1161,7 +1162,7 @@ rtt min/avg/max/mdev = 1.450/1.487/1.520/0.031 ms
 | `packet loss` | 丢包率 | **> 1% 需关注，> 5% 需立即排查** |
 | `mdev` | RTT 抖动 | **> 10ms 说明网络不稳定** |
 
-**可以看出服务器什么状态：** 丢包率高 → 网络质量差或带宽拥塞。RTT 突然增大 → 网络路径变化或中间路由器拥塞。`mdev` 大 → 网络时延不稳定（对实时应用如视频/游戏影响大）。
+**可以看出服务器什么状态：** 丢包率高 → 网络质量差或带宽拥塞。RTT 突然增大 → 网络路径变化或中间路由器拥塞。 ` mdev ` 大 → 网络时延不稳定（对实时应用如视频/游戏影响大）。
 
 ### 🔢 62. traceroute — 路由追踪
 
@@ -1197,7 +1198,7 @@ $ ip neigh show
 192.168.1.1 dev eth0 lladdr 00:11:22:33:44:55 REACHABLE
 ```
 
-> 📌 前置知识：`ip` 命令（iproute2 套件）是现代 Linux 的网络配置标准工具，替代了老旧的 `ifconfig`、`route`、`arp`。在较新的发行版中这些老命令可能未预装。
+> 📌 前置知识： ` ip ` 命令（iproute2 套件）是现代 Linux 的网络配置标准工具，替代了老旧的 ` ifconfig ` 、 ` route ` 、 ` arp ` 。在较新的发行版中这些老命令可能未预装。
 
 ### 🌐 64. ss — Socket 统计
 
@@ -1214,10 +1215,10 @@ LISTEN   0        128          *:8080                *:*                users:((
 
 | 字段 | 含义 | 解读提示 |
 |------|------|---------|
-| `State` | Socket 状态 | `LISTEN`=监听，`ESTAB`=已建立连接，`TIME-WAIT`=等待关闭 |
+| ` State ` | Socket 状态 | ` LISTEN ` =监听， ` ESTAB ` =已建立连接， ` TIME-WAIT ` =等待关闭 |
 | `Recv-Q` | 接收队列中等待被应用读取的字节数 | **> 0 持续说明应用处理不过来了** |
 | `Send-Q` | 发送队列中等待被对端 ACK 的字节数 | **> 0 说明对端接收慢或网络拥塞** |
-| `Local Address:Port` | 本地地址和端口 | `0.0.0.0` 监听所有网卡，`127.0.0.1` 只监听本地 |
+| ` Local Address:Port ` | 本地地址和端口 | ` 0.0.0.0 ` 监听所有网卡， ` 127.0.0.1 ` 只监听本地 |
 
 **常用选项组合：**
 
@@ -1228,7 +1229,7 @@ $ ss -tan state time-wait | wc -l  # 统计 TIME-WAIT 数量
 $ ss -tan state established '( sport = :443 )' | wc -l  # 到 443 端口的连接数
 ```
 
-**可以看出服务器什么状态：** `TIME-WAIT` 数量巨大（几万甚至几十万）→ 可能是短连接过多，需要优化连接池或开启 `tcp_tw_reuse`。`Recv-Q` 持续 > 0 → 应用读取速度跟不上网络流入速度，可能是应用处理瓶颈。
+**可以看出服务器什么状态：** ` TIME-WAIT ` 数量巨大（几万甚至几十万）→ 可能是短连接过多，需要优化连接池或开启 ` tcp_tw_reuse ` 。 ` Recv-Q ` 持续 > 0 → 应用读取速度跟不上网络流入速度，可能是应用处理瓶颈。
 
 ### 🌐 65. netstat — 网络连接统计
 
@@ -1248,7 +1249,7 @@ lo       65536      1234      0      0 0            1234      0      0      0 LR
 | `RX-DRP` / `TX-DRP` | 收发包丢弃数 | **> 0 说明接收 Ring Buffer 满了，CPU 来不及处理** |
 | `RX-OVR` / `TX-OVR` | 收发包溢出数 | **> 0 说明硬件 FIFO 溢出，网卡本身处理不过来** |
 
-> ⚠️ 新手提示：`netstat` 在很多新发行版中已被 `ss` 取代，但 `netstat -i` 的网卡错误统计仍然是快速判断物理网络问题的好工具。`ss` 侧重 Socket 级别，`netstat -i` 侧重网卡驱动级别——两者互补。
+> ⚠️ 新手提示： ` netstat ` 在很多新发行版中已被 ` ss ` 取代，但 ` netstat -i ` 的网卡错误统计仍然是快速判断物理网络问题的好工具。 ` ss ` 侧重 Socket 级别， ` netstat -i ` 侧重网卡驱动级别——两者互补。
 
 ### 🌐 66. curl — 数据传输工具
 
@@ -1267,7 +1268,7 @@ time_starttransfer: 0.200s   # 首字节到达时间（TTFB）
 time_total:       0.234s     # 总时间
 ```
 
-**可以看出服务器什么状态：** 将各阶段时间分解后可以精准定位瓶颈：`time_namelookup` 大→DNS 慢，`time_connect` 大→网络延迟高，`time_appconnect` 大→TLS 协商慢（可能是证书链长或 CA 响应慢），`time_starttransfer` 与 `time_connect` 差值大→服务端处理慢。
+**可以看出服务器什么状态：** 将各阶段时间分解后可以精准定位瓶颈： ` time_namelookup ` 大→DNS 慢， ` time_connect ` 大→网络延迟高， ` time_appconnect ` 大→TLS 协商慢（可能是证书链长或 CA 响应慢）， ` time_starttransfer ` 与 ` time_connect ` 差值大→服务端处理慢。
 
 ### 📁 67. wget — 文件下载
 
@@ -1311,11 +1312,11 @@ $ sudo tcpdump -i eth0 -A port 80 -c 10
 14:35:01.236789 IP 93.184.216.34.80 > 192.168.1.100.54321: Flags [S.], seq 987654321, ack 123456790
 ```
 
-**常用选项：** `-i eth0`（指定网卡）、`-A`（以 ASCII 格式打印包内容）、`-X`（同时打印 Hex 和 ASCII）、`-c N`（抓 N 个包后停止）、`-w file.pcap`（保存到文件用 Wireshark 分析）、`-n`（不解析主机名，加速显示）。
+**常用选项：** ` -i eth0 ` （指定网卡）、 ` -A ` （以 ASCII 格式打印包内容）、 ` -X ` （同时打印 Hex 和 ASCII）、 ` -c N ` （抓 N 个包后停止）、 ` -w file.pcap ` （保存到文件用 Wireshark 分析）、 ` -n ` （不解析主机名，加速显示）。
 
 **可以看出服务器什么状态：** 当应用层日志看不出问题时，抓包是最底层的诊断手段。可以看到是否发出了请求、是否收到了响应、TCP 握手是否完整、TLS 握手是否成功。
 
-> ⚠️ 新手提示：`tcpdump` 在高流量服务器上谨慎使用——抓包本身会消耗 CPU。用 `-c` 限制包数或用 `port` 过滤特定流量。
+> ⚠️ 新手提示： ` tcpdump ` 在高流量服务器上谨慎使用——抓包本身会消耗 CPU。用 ` -c ` 限制包数或用 ` port ` 过滤特定流量。
 
 ### 🌐 70. nc (netcat) — 网络瑞士军刀
 
@@ -1332,7 +1333,7 @@ $ nc -l -p 9999 > received.tar.gz   # 接收端
 $ nc 192.168.1.100 9999 < file.tar.gz  # 发送端
 ```
 
-**常用选项：** `-z`（只扫描不发送数据）、`-v`（详细输出）、`-l`（监听模式）、`-p`（指定端口）、`-u`（UDP 模式）、`-w N`（超时秒数）。
+**常用选项：** ` -z ` （只扫描不发送数据）、 ` -v ` （详细输出）、 ` -l ` （监听模式）、 ` -p ` （指定端口）、 ` -u ` （UDP 模式）、 ` -w N ` （超时秒数）。
 
 ---
 
@@ -1351,7 +1352,7 @@ eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         TX errors 0  dropped 0  overruns 0  carrier 0  collisions 0
 ```
 
-> 📌 前置知识：`ifconfig` 来自 net-tools 套件，在现代 Linux 发行版中已逐渐被 `ip` 命令取代，但仍广泛存在于旧系统中。
+> 📌 前置知识： ` ifconfig ` 来自 net-tools 套件，在现代 Linux 发行版中已逐渐被 ` ip ` 命令取代，但仍广泛存在于旧系统中。
 
 ### 🔢 72. route — 路由表管理
 
@@ -1363,7 +1364,7 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 192.168.1.0     0.0.0.0         255.255.255.0   U     100    0        0 eth0
 ```
 
-**怎么看输出：** `0.0.0.0` 的 Destination 是默认路由，`Flags` 中 `U`=路由可用 `G`=需要经过网关。所有出网流量先匹配最精确的路由，都没有匹配时才走默认路由。
+**怎么看输出：** ` 0.0.0.0 ` 的 Destination 是默认路由， ` Flags ` 中 ` U ` =路由可用 ` G ` =需要经过网关。所有出网流量先匹配最精确的路由，都没有匹配时才走默认路由。
 
 ### 🔢 73. arp — ARP 缓存表
 
@@ -1374,7 +1375,7 @@ Address                  HWtype  HWaddress           Flags Mask            Iface
 192.168.1.101            ether   66:77:88:99:aa:bb   C                     eth0
 ```
 
-**怎么看输出：** ARP 表（Address Resolution Protocol，IP 地址到 MAC 地址的映射缓存）。如果网关的 MAC 地址变成了陌生地址，可能是 ARP 欺骗攻击。`Flags` 中 `C`=动态学习到的条目。
+**怎么看输出：** ARP 表（Address Resolution Protocol，IP 地址到 MAC 地址的映射缓存）。如果网关的 MAC 地址变成了陌生地址，可能是 ARP 欺骗攻击。 ` Flags ` 中 ` C ` =动态学习到的条目。
 
 ### 🌐 74. iptables — 防火墙规则
 
@@ -1386,9 +1387,9 @@ Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
  5678  567K ACCEPT     tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:80
 ```
 
-**怎么看输出：** 每行是一条规则。`pkts` 和 `bytes` 是匹配到该规则的包数和字节数——如果某个预期端口（如 8080）没有对应规则，说明外部无法访问该端口。`policy ACCEPT/DROP` 是默认策略。
+**怎么看输出：** 每行是一条规则。 ` pkts ` 和 ` bytes ` 是匹配到该规则的包数和字节数——如果某个预期端口（如 8080）没有对应规则，说明外部无法访问该端口。 ` policy ACCEPT/DROP ` 是默认策略。
 
-> 📌 前置知识：较新的系统（Ubuntu 20.04+、CentOS 8+）使用 `nftables` 替代 `iptables`，但 `iptables` 命令语法仍被广泛支持（通过兼容层）。
+> 📌 前置知识：较新的系统（Ubuntu 20.04+、CentOS 8+）使用 ` nftables ` 替代 ` iptables ` ，但 ` iptables ` 命令语法仍被广泛支持（通过兼容层）。
 
 ### 🔢 75. nmap — 端口扫描
 
@@ -1427,7 +1428,7 @@ Settings for eth0:
 $ ethtool -S eth0 | head -10    # 网卡硬件统计
 ```
 
-**怎么看输出：** `Speed` 确认网卡协商速率（10000Mb/s = 万兆）。如果 `Speed: Unknown!` 或速率远低于预期，可能是网线/交换机端口不支持更高速度或自动协商失败。`ethtool -S` 显示网卡芯片级别的包统计（比 `ifconfig` 更详细）。
+**怎么看输出：** ` Speed ` 确认网卡协商速率（10000Mb/s = 万兆）。如果 ` Speed: Unknown! ` 或速率远低于预期，可能是网线/交换机端口不支持更高速度或自动协商失败。 ` ethtool -S ` 显示网卡芯片级别的包统计（比 ` ifconfig ` 更详细）。
 
 ### 🔢 78. host — DNS 查询
 
@@ -1450,7 +1451,7 @@ $ whois example.com | grep -E "Registrar|Creation Date|Name Server"
    Name Server: A.IANA-SERVERS.NET
 ```
 
-**可以看出服务器什么状态：** 确认域名是否过期（`Registry Expiry Date`）、DNS 服务器配置是否正确、域名所有者信息。
+**可以看出服务器什么状态：** 确认域名是否过期（ ` Registry Expiry Date ` ）、DNS 服务器配置是否正确、域名所有者信息。
 
 ### 🌐 80. iperf — 网络带宽测试
 
@@ -1478,7 +1479,7 @@ dev      pts/0        2023-11-15 14:20 (192.168.1.50)
 ops      pts/1        2023-11-15 14:25 (10.0.0.100)
 ```
 
-**可以看出服务器什么状态：** 查看当前有哪些用户登录了服务器。如果看到可疑 IP 或不认识的用户，可能是安全事件。`pts/0` 中的 `pts` 表示伪终端（pseudo-terminal，SSH 连接分配的虚拟终端）。
+**可以看出服务器什么状态：** 查看当前有哪些用户登录了服务器。如果看到可疑 IP 或不认识的用户，可能是安全事件。 ` pts/0 ` 中的 ` pts ` 表示伪终端（pseudo-terminal，SSH 连接分配的虚拟终端）。
 
 ### 🔐 82. w — 用户活动详情
 
@@ -1490,7 +1491,7 @@ dev      pts/0    192.168.1.50     14:20    5:00   0.15s  0.01s tail -f app.log
 ops      pts/1    10.0.0.100       14:25    2:00   0.10s  0.00s htop
 ```
 
-**怎么看输出：** `IDLE` 是该会话的空闲时间，`JCPU` 是该终端上所有进程累计 CPU 时间，`PCPU` 是当前活跃进程（`WHAT` 列）的 CPU 时间。可以确认每个用户在做什么操作。
+**怎么看输出：** ` IDLE ` 是该会话的空闲时间， ` JCPU ` 是该终端上所有进程累计 CPU 时间， ` PCPU ` 是当前活跃进程（ ` WHAT ` 列）的 CPU 时间。可以确认每个用户在做什么操作。
 
 ### 👤 83. last — 登录历史
 
@@ -1501,7 +1502,7 @@ ops      pts/1        10.0.0.100       Wed Nov 15 09:00 - 18:00  (09:00)
 reboot   system boot  5.15.0-91-generic Tue Nov 14 10:00   still running
 ```
 
-**可以看出服务器什么状态：** 查看谁在什么时间从什么 IP 登录了服务器。`reboot` 条目记录了系统重启时间。如果看到非预期的登录记录，需要进一步排查安全风险。
+**可以看出服务器什么状态：** 查看谁在什么时间从什么 IP 登录了服务器。 ` reboot ` 条目记录了系统重启时间。如果看到非预期的登录记录，需要进一步排查安全风险。
 
 ### 🔐 84. chmod — 权限修改
 
@@ -1549,7 +1550,7 @@ $ passwd -S dev    # 查看密码状态
 dev P 11/15/2023 0 99999 7 -1
 ```
 
-**怎么看 `-S` 输出：** `P`=密码已设置（`L`=锁定 `NP`=无密码），`11/15/2023`=上次修改日期，`0`=最短修改间隔，`99999`=密码有效期天数，`7`=过期前警告天数，`-1`=过期后宽限天数。
+**怎么看 ` -S ` 输出：** ` P ` =密码已设置（ ` L ` =锁定 ` NP ` =无密码）， ` 11/15/2023 ` =上次修改日期， ` 0 ` =最短修改间隔， ` 99999 ` =密码有效期天数， ` 7 ` =过期前警告天数， ` -1 ` =过期后宽限天数。
 
 ### 🔐 88. su / sudo — 用户切换
 
@@ -1567,7 +1568,7 @@ $ sudo visudo
 #  添加行：dev ALL=(ALL) NOPASSWD: /bin/systemctl restart nginx
 ```
 
-**![必须使用](visudo)** 编辑 `/etc/sudoers` 而不是直接用 vim。`visudo` 会在保存时做语法检查，防止因写错 sudoers 而导致所有用户无法 `sudo`（这是一个非常难修复的问题，因为修复它本身就需要 `sudo`）。
+**![必须使用](visudo)** 编辑 ` /etc/sudoers ` 而不是直接用 vim。 ` visudo ` 会在保存时做语法检查，防止因写错 sudoers 而导致所有用户无法 ` sudo ` （这是一个非常难修复的问题，因为修复它本身就需要 ` sudo ` ）。
 
 ### 🔢 90. ulimit — 资源限制
 
@@ -1608,8 +1609,8 @@ $ systemctl list-units --state=failed   # 列出所有启动失败的服务
 
 | 字段 | 含义 | 告警解读 |
 |------|------|---------|
-| `Loaded` | 服务单元文件状态 | `enabled`=开机自启，`disabled`=不会自启 |
-| `Active` | 运行状态 | `active (running)`=正常，`inactive (dead)`=已停止，`failed`=启动失败 |
+| ` Loaded ` | 服务单元文件状态 | ` enabled ` =开机自启， ` disabled ` =不会自启 |
+| ` Active ` | 运行状态 | ` active (running) ` =正常， ` inactive (dead) ` =已停止， ` failed ` =启动失败 |
 | `Main PID` | 主进程 PID | 用于后续进程级监控 |
 | `Memory` | 内存占用 | 对比历史值判断是否有内存泄漏 |
 
@@ -1662,11 +1663,11 @@ openat(AT_FDCWD, "/etc/resolv.conf", O_RDONLY) = 7
 openat(AT_FDCWD, "/data/app/config.yml", O_RDONLY) = -1 ENOENT (No such file or directory)
 ```
 
-**常用选项：** `-p PID`（附加到运行中的进程）、`-c`（统计模式，输出系统调用汇总）、`-e trace=network`（只追踪网络系统调用）、`-e trace=file`（只追踪文件系统调用）、`-f`（追踪子进程）、`-t`（显示时间戳）。
+**常用选项：** ` -p PID ` （附加到运行中的进程）、 ` -c ` （统计模式，输出系统调用汇总）、 ` -e trace=network ` （只追踪网络系统调用）、 ` -e trace=file ` （只追踪文件系统调用）、 ` -f ` （追踪子进程）、 ` -t ` （显示时间戳）。
 
-**可以看出服务器什么状态：** `strace` 是排查"进程卡住了在等什么"的终极工具。如果 `-c` 显示 99% 的时间都在 `futex`（用户态快速锁）——说明锁竞争严重。如果大部分时间在 `read`/`write`——说明 I/O 操作密集。
+**可以看出服务器什么状态：** ` strace ` 是排查"进程卡住了在等什么"的终极工具。如果 ` -c ` 显示 99% 的时间都在 ` futex ` （用户态快速锁）——说明锁竞争严重。如果大部分时间在 ` read ` / ` write ` ——说明 I/O 操作密集。
 
-> ⚠️ 新手提示：`strace` 对进程性能有显著影响（每个系统调用都要暂停进程并记录），生产环境谨慎使用，尽量用 `-e trace=` 限定追踪的系统调用类型。
+> ⚠️ 新手提示： ` strace ` 对进程性能有显著影响（每个系统调用都要暂停进程并记录），生产环境谨慎使用，尽量用 ` -e trace= ` 限定追踪的系统调用类型。
 
 ### ⏰ 95. watch — 周期性执行命令
 
@@ -1676,7 +1677,7 @@ $ watch -n 2 -d 'df -h /'                   # 每 2 秒刷新磁盘空间，高�
 $ watch 'ps aux --sort=-%cpu | head -5'     # 持续监控 CPU Top 5 进程
 ```
 
-**常用选项：** `-n N`（每 N 秒执行一次）、`-d`（高亮显示与上次输出的差异）。
+**常用选项：** ` -n N ` （每 N 秒执行一次）、 ` -d ` （高亮显示与上次输出的差异）。
 
 ### 🔢 96. time — 命令执行时间
 
@@ -1722,7 +1723,7 @@ $ sudo sysctl -w net.core.somaxconn=1024    # 临时修改
 $ sudo sysctl -p /etc/sysctl.conf           # 从配置文件加载（永久修改）
 ```
 
-**可以看出服务器什么状态：** 内核参数直接决定了 TCP 协议栈、文件系统、内存管理等核心行为。高并发服务通常需要调整 `somaxconn`（全连接队列长度）、`tcp_tw_reuse`（TIME-WAIT 复用）、`vm.swappiness`（内存交换倾向）等参数。
+**可以看出服务器什么状态：** 内核参数直接决定了 TCP 协议栈、文件系统、内存管理等核心行为。高并发服务通常需要调整 ` somaxconn ` （全连接队列长度）、 ` tcp_tw_reuse ` （TIME-WAIT 复用）、 ` vm.swappiness ` （内存交换倾向）等参数。
 
 ### 🖥️ 99. timedatectl — 时间日期管理
 
@@ -1736,7 +1737,7 @@ System clock synchronized: yes
               NTP service: active
 ```
 
-**可以看出服务器什么状态：** 时间不同步会导致 TLS 证书校验失败、日志时间错乱、分布式系统时钟漂移、Token 过期判断异常等问题。`NTP service: active` 确认自动时间同步已启用，`System clock synchronized: yes` 确认当前时间已与 NTP 服务器同步。
+**可以看出服务器什么状态：** 时间不同步会导致 TLS 证书校验失败、日志时间错乱、分布式系统时钟漂移、Token 过期判断异常等问题。 ` NTP service: active ` 确认自动时间同步已启用， ` System clock synchronized: yes ` 确认当前时间已与 NTP 服务器同步。
 
 ### 🐚 100. alias — 命令别名
 
@@ -1750,7 +1751,7 @@ alias grep='grep --color=auto'
 alias ll='ls -alFh'
 ```
 
-**常用持久化：** 将别名写入 `~/.bashrc` 或 `~/.bash_aliases`，每次登录自动生效。好的别名可以大幅减少打字量——`ll` 比 `ls -alFh` 省了 7 个字符。
+**常用持久化：** 将别名写入 ` ~/.bashrc ` 或 ` ~/.bash_aliases ` ，每次登录自动生效。好的别名可以大幅减少打字量—— ` ll ` 比 ` ls -alFh ` 省了 7 个字符。
 
 ---
 
@@ -1760,11 +1761,6 @@ alias ll='ls -alFh'
 
 ```mermaid
 flowchart TD
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
-classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT([🔍 常见服务器故障诊断入口])
 
@@ -1779,10 +1775,17 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
     S3 --> D3["free -h → available\nvmstat → si/so 交换\nps aux → RSS Top 10\npmap -x PID → 进程内存映射"]
     S4 --> D4["ping → 丢包率\nmtr → 路径丢包\nss -tlnp → 端口监听\ntcpdump → 底层抓包"]
     S5 --> D5["systemctl status\njournalctl -u svc -n 50\ndmesg | tail\nstrace -p PID"]
-
-    class ROOT startEnd;
-    class S1,S2,S3,S4,S5 condition;
-    class D1,D2,D3,D4,D5 process;
+    style ROOT fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S1 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style S2 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style S3 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style S4 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style S5 fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style D1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style D2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style D3 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style D4 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style D5 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 下面按排查顺序汇总 **各场景的首选指令组合** ：
@@ -1804,10 +1807,6 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
 
 ```mermaid
 flowchart TD
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
-classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     subgraph USERSPACE ["用户空间：诊断命令"]
         CMD_CPU["top / htop / mpstat"]
@@ -1835,9 +1834,17 @@ classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     CMD_NET -.->|包捕获| TRACE
     CMD_LOG -.-> RING
     CMD_LOG -.->|历史统计| PROC
-
-    class CMD_CPU,CMD_MEM,CMD_IO,CMD_NET,CMD_PROC,CMD_LOG process;
-    class PROC,SYS,NETLINK,TRACE,RING data;
+    style CMD_CPU fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CMD_MEM fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CMD_IO fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CMD_NET fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CMD_PROC fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style CMD_LOG fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style PROC fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style SYS fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style NETLINK fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style TRACE fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RING fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 > ⚠️ 新手提示：`/proc` 不是一个真实的磁盘目录，它是内核在内存中维护的一个"窗口"，映射了内核数据结构的当前状态。当你 `cat /proc/meminfo` 时，内核直接在内存中生成内容返回给你——零磁盘 I/O。这也是为什么这些诊断命令执行极快的原因。
@@ -1864,8 +1871,8 @@ classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 **关键原则：**
 
 1. **先概览再深入** ：登录服务器后 `uptime` → `top` → `df -h` → `free -h` 形成肌肉记忆
-2. **先看队列再看容量** ：`vmstat` 的 `r`/`b` 列、`ss` 的 `Recv-Q`/`Send-Q`、`iostat` 的 `await` 比总利用率更早暴露问题
-3. **善用历史数据** ：`sar` 和 `journalctl --since` 能让没人在凌晨值守时的问题"回溯重现"
+2. **先看队列再看容量** ： ` vmstat ` 的 ` r ` / ` b ` 列、 ` ss ` 的 ` Recv-Q ` / ` Send-Q ` 、 ` iostat ` 的 ` await ` 比总利用率更早暴露问题
+3. **善用历史数据** ： ` sar ` 和 ` journalctl --since ` 能让没人在凌晨值守时的问题"回溯重现"
 4. **知道数据从哪来** ：`/proc` 是绝大多数诊断命令的数据源，理解它能让你写出更精准的诊断脚本
 
-`perf top` 中的函数名、`tcpdump` 中的 TCP Flags、`strace` 中的系统调用名——这些是区分"会用命令"和"真正会排查问题"的分水岭。不要只记住命令拼写，去理解每条输出背后的含义。
+` perf top ` 中的函数名、 ` tcpdump ` 中的 TCP Flags、 ` strace ` 中的系统调用名——这些是区分"会用命令"和"真正会排查问题"的分水岭。不要只记住命令拼写，去理解每条输出背后的含义。

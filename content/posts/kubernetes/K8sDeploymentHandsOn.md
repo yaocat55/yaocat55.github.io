@@ -71,9 +71,6 @@ kind load docker-image nginx:1.25 nginx:1.27 --name learn
 ```mermaid
 %% kind load: 宿主机 Docker 镜像搬运到每个节点内的 containerd
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     D["宿主机 Docker\n(存储 A: docker images)"]
     T["镜像 tar 包\n(相当于 docker save 导出)"]
@@ -88,10 +85,11 @@ flowchart LR
     N1 -->|"③ ctr images import"| N1
     N2 -->|"③ 导入"| N2
     N3 -->|"③ 导入"| N3
-
-    class D root;
-    class T process;
-    class N1,N2,N3 data;
+    style D fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style T fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style N1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style N2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style N3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ① **导出**：读取宿主机 Docker 里的镜像（相当于 ` docker save ` 打成 tar）；② **传输**： ` docker exec ` 把 tar 传进节点容器；③ **导入**：节点内用 ` ctr images import ` （containerd 的命令行工具）导入。命令输出里的 "Loading image ... across 3 nodes!" 就是这个动作对 3 个节点各做一遍。
@@ -279,12 +277,10 @@ flowchart LR
     E --> F["kubelet 上报<br/>实际状态"]
     F --> C
     D -->|"否"| C
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
-    class A root;
-    class C,F process;
-    class D condition;
+    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style F fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 所以"扩容"只是把期望从 3 改成 5，控制器检测到差异（实际 3 ≠ 期望 5）就自动补 2 个；"坏版本卡死"是因为无论控制器怎么重试，Pod 都到不了就绪——差异永远无法消除。
@@ -312,10 +308,16 @@ flowchart LR
     O3 -.->|"逐步交替"| N3
     O4 -.->|"逐步交替"| N4
     O5 -.->|"逐步交替"| N5
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    class O1,O2,O3,O4,O5 data;
-    class N1,N2,N3,N4,N5 process;
+    style O1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O4 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style O5 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style N1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style N2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style N3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style N4 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style N5 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 策略由两个参数控制（默认各 25%）：**maxSurge**（允许超出期望的临时 Pod 数）和 **maxUnavailable**（允许同时不可用的旧 Pod 数）。两者共同保证：任意时刻，可用副本数不低于期望的 75%、总副本数不超过期望的 125%。这就是"发版不中断"的数学保证。
@@ -329,10 +331,6 @@ flowchart LR
 ```mermaid
 %% 调度决策: 过滤(硬性条件) + 打分(优先级)
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
 
     P["新 Pod 创建(调度器 watch 到)"]
     F["过滤 Filtering\n资源够不够?\n污点能否容忍?\nNodeSelector/Affinity 匹配?"]
@@ -344,10 +342,11 @@ flowchart TD
     F -->|"满足"| S
     F -->|"不满足"| X
     S --> R
-
-    class P,R root;
-    class F,S process;
-    class X reject;
+    style P fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style R fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style F fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style X fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 - **过滤（Filtering）**：硬性条件，不满足直接出局——资源够不够、节点的污点 Pod 能不能容忍、NodeSelector / 亲和性匹不匹配；

@@ -60,9 +60,6 @@ tmux 的层级关系一句话讲清：
 ```mermaid
 %% tmux 三件套层级: server 持会话, 会话持窗口, 窗口持窗格
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     SRV["tmux server\n(服务器上的常驻进程)"]
     S1["会话 work"]
@@ -78,10 +75,13 @@ flowchart TD
     S1 --> W2
     W2 --> P1
     W2 --> P2
-
-    class SRV root;
-    class S1,S2 process;
-    class W1,W2,P1,P2 data;
+    style SRV fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style W1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **操作模型**：所有快捷键都是"先按前缀键，再按功能键"。tmux 默认前缀是 **Ctrl+B**（和你切换 SSH 终端的习惯一致，冲突问题见第 6 节）。
@@ -252,8 +252,6 @@ tmux new-session -d -s check && tmux display-message -p "config OK" && tmux kill
 ```mermaid
 %% 实战: 一个 SSH 连接内的多窗口布局
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     SSH["一条 SSH 连接"]
     S["tmux 会话 work"]
@@ -267,10 +265,11 @@ flowchart LR
     S --> W1
     S --> W2
     S --> W3
-
-    class SSH root;
-    class S process;
-    class W0,W1,W2,W3 data;
+    style SSH fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style W0 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ## 8. 总结

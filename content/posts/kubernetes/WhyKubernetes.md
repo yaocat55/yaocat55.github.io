@@ -44,9 +44,6 @@ K8s 所有机制的地基是两个思想，先立起来：
 ```mermaid
 %% K8s 核心设计思想: 声明式期望 + 控制回路收敛
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
 
     DESIRED["期望状态\nkubectl apply 提交的 YAML"]
     CTRL["控制器\n对比 期望 vs 当前"]
@@ -58,10 +55,10 @@ flowchart LR
     CTRL -->|"不一致 →"| ACT
     ACT -->|"改变"| ACTUAL
     CTRL -.->|"一致 → 空闲"| CTRL
-
-    class DESIRED root;
-    class CTRL process;
-    class ACTUAL,ACT data;
+    style DESIRED fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style CTRL fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style ACTUAL fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style ACT fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **这个思想替代了什么**：传统运维的"巡检 + 手动修复"是**人肉控制回路**——人发现、人决策、人执行，慢且会忘。K8s 把回路自动化了。下面七个话题，全是这个思想的展开。

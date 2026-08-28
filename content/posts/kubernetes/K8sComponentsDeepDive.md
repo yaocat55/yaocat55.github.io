@@ -42,9 +42,6 @@ K8s 的所有组件分成两组，职责边界非常清晰：
 ```mermaid
 %% K8s 组件全景: 控制面 4 件套 + 节点 4 件套
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     subgraph CP["控制面（决策）"]
         API["kube-apiserver\n唯一入口 + 收费站"]
@@ -72,10 +69,18 @@ flowchart TD
     API <-->|"watch"| KP2
     API <-->|"watch"| SCH
     API <-->|"watch"| CM
-
-    class API,SCH,CM root;
-    class ETCD data;
-    class KL1,KL2,KP1,KP2,CT1,CT2,CNI1,CNI2 process;
+    style API fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style SCH fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style CM fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style ETCD fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style KL1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style KL2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style KP1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style KP2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style CT1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style CT2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style CNI1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style CNI2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 在 kind 里这些组件都是真实运行的 Pod（生产 K8s 同款，只是 kind 把它们跑在 Docker 里）。看它们：
@@ -125,9 +130,6 @@ coredns-589f44dc88-fnj77 / -l6rjv           Running   ← 集群 DNS
 ```mermaid
 %% kubectl apply 的 10 步旅程: 谁在每一步干什么
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     S1["① kubectl 发送请求\nPOST Deployment 清单"]
     S2["② apiserver\n认证 → 授权 → 准入 → 写入 etcd"]
@@ -141,10 +143,16 @@ flowchart TD
     S10["⑩ kube-proxy\nwatch 到 endpoints 变化, 更新 iptables 规则"]
 
     S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10
-
-    class S1,S2,S5 root;
-    class S3,S4,S9 process;
-    class S6,S7,S8,S10 data;
+    style S1 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S2 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S5 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S4 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S9 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S6 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S7 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S8 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S10 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 每一步的主角（控制面 3 个 + 节点 2 个接力）：
@@ -198,9 +206,6 @@ Started           ← kubelet                   # 节点: 容器启动
 ```mermaid
 %% 读路径: logs 命令的完整链路
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     K["kubectl logs"]
     API["apiserver\n(找到 Pod 在哪个节点)"]
@@ -210,10 +215,10 @@ flowchart LR
     K -->|"请求"| API
     API -->|"转发"| KL
     KL -->|"取日志"| CT
-
-    class K root;
-    class API,KL process;
-    class CT data;
+    style K fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style API fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style KL fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style CT fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **排障启示**： ` kubectl logs ` 失败但应用活着 → 大概率是 kubelet 或网络的问题（不是应用的问题）； ` get ` 能看到但 ` logs ` 看不到 → 节点侧出事了。

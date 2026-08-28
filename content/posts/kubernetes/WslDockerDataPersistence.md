@@ -73,10 +73,6 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef danger fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[Docker Desktop\nWSL2 后端架构]
 
@@ -89,11 +85,12 @@ classDef danger fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,fon
     DDD --> DDD_ROLE["💾 持久化数据存储\n• 镜像层 (image layers)\n• 容器文件系统 (container FS)\n• 数据卷 (volumes)\n• Docker 引擎状态"]
 
     DD -.->|读取/写入镜像与容器数据| DDD
-
-    class ROOT root;
-    class DD,DDD branch;
-    class DD_ROLE,DDD_ROLE leaf;
-    class DD_STORAGE danger;
+    style ROOT fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DD fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DDD fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DD_ROLE fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style DDD_ROLE fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style DD_STORAGE fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 ### 🛠️ 2.2 两个 WSL 实例的职责对比
@@ -147,11 +144,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
-classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     %% ==========================================
     %% 缺失数据实例的问题链条
@@ -186,11 +178,18 @@ classDef data fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-
     LOSS --> RESULT2
     LOSS --> RESULT3
     RESULT1 --> RESULT4
-
-    class START,SHUT startEnd;
-    class CHECK condition;
-    class FALLBACK,NOTE,TERM,RESET process;
-    class LOSS,RESULT1,RESULT2,RESULT3,RESULT4 reject;
+    style START fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SHUT fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CHECK fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style FALLBACK fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style NOTE fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style TERM fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style RESET fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style LOSS fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RESULT1 fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RESULT2 fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RESULT3 fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RESULT4 fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 ### 🛠️ 3.2 为什么安装路径（C盘/D盘）不是根因
@@ -236,10 +235,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef highlight fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     %% ==========================================
     %% 修复流程
@@ -272,12 +267,19 @@ classDef highlight fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,
         P3_VERIFY -- 是 --> P3_DONE([修复成功])
         P3_VERIFY -- 否 --> P3_RETRY
     end
-
-    class P1_START,P3_DONE startEnd;
-    class P3_CHECK,P3_VERIFY condition;
-    class P1_CLOSE,P1_TERM,P2_DIR,P2_DL,P2_IMPORT,P2_CLEAN,P3_RESTART process;
-    class P3_TEST,P3_SHUTDOWN highlight;
-    class P3_RETRY reject;
+    style P1_START fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P3_DONE fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P3_CHECK fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style P3_VERIFY fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style P1_CLOSE fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P1_TERM fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P2_DIR fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P2_DL fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P2_IMPORT fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P2_CLEAN fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P3_RESTART fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style P3_TEST fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style P3_SHUTDOWN fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 ### 🔢 4.2 详细操作步骤
@@ -369,7 +371,7 @@ b2c3d4e5f6a7   nginx     ...   test-nginx  # 容器依然存在！
 
 | 维度 | 修复前 | 修复后 |
 |------|--------|--------|
-| WSL 实例数量 | 1 个（仅 `docker-desktop`） | 2 个（`docker-desktop` + `docker-desktop-data`） |
+| WSL 实例数量 | 1 个（仅 ` docker-desktop ` ） | 2 个（ ` docker-desktop ` + ` docker-desktop-data ` ） |
 | 数据存储位置 | `docker-desktop` 内部（临时） | `docker-desktop-data` 的独立 VHD 中 |
 | `wsl --shutdown` 后 | 所有容器/镜像/卷丢失 | 数据完整保留 |
 | 磁盘占用 | 占用 C 盘（默认 VHD 位置） | 数据固定在指定路径（可放 D 盘） |
@@ -448,10 +450,6 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef highlight fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     ROOT[Docker Desktop\nWSL2 数据持久化]
 
@@ -464,10 +462,15 @@ classDef highlight fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,
     ROOT_CAUSE --> MECHANISM["机制\n• docker-desktop：无状态守护进程\n• 数据写在内置临时路径\n• shutdown 触发实例重置"]
     SOLUTION --> STEPS["操作\n• wsl --import 创建实例\n• 指定 VHD 存放路径\n• 重启 Docker Desktop"]
     VERIFY --> RESULT["结果\n• 容器/镜像持久化\n• 数据固定在指定磁盘\n• 可定期备份导出"]
-
-    class ROOT root;
-    class PROBLEM,ROOT_CAUSE,SOLUTION,VERIFY branch;
-    class SYMPTOM,MECHANISM,STEPS,RESULT highlight;
+    style ROOT fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PROBLEM fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style ROOT_CAUSE fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SOLUTION fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style VERIFY fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SYMPTOM fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style MECHANISM fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style STEPS fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RESULT fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 | 关键点 | 说明 |

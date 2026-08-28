@@ -58,11 +58,9 @@ flowchart TD
     U -->|"① 出站可达"| S
     S -.->|"② 入站被 NAT 丢弃"| D
     D -->|"③ 出站可达"| S
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    class S root;
-    class U,D process;
+    style S fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style U fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 图中 ② 那条虚线就是死路：**别人永远无法主动找到你**。但注意 ① 和 ③——出站永远是通的。这就是全部突破口。
@@ -232,11 +230,11 @@ flowchart LR
     J -->|"字节流转发"| T["ECS 127.0.0.1:22022"]
     T <==>|"反向隧道\n常驻连接"| A["autossh 守护"]
     A -->|"本机转发"| D["debian sshd :22"]
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    class L,T root;
-    class J,A,D process;
+    style L fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style T fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style J fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style A fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 ## 踩过的坑（都是真实发生的）

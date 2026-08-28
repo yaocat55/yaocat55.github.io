@@ -68,9 +68,6 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[本地 K8s 学习工具选型]
 
@@ -93,10 +90,23 @@ classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     B4 --> B4A["个人免费，企业收费"]
     B4 --> B4B["与 Docker 深度集成"]
     B4 --> B4C["版本更新可能破坏配置"]
-
-    class ROOT root;
-    class B1,B2,B3,B4 branch;
-    class B1A,B1B,B1C,B2A,B2B,B2C,B3A,B3B,B3C,B4A,B4B,B4C leaf;
+    style ROOT fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B2 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B4 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B1B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B1C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B2A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B2B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B2C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B3A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B3B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B3C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B4A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B4B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B4C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 ### 🛠️ 1.1 Kind 解决了什么
@@ -198,9 +208,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef verify fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     START([开始]) --> CHECK_WSL{确认 WSL 2 就绪？}
     CHECK_WSL -->|否| UPGRADE_WSL[升级到 WSL 2\nwsl --update]
@@ -212,11 +219,16 @@ classDef verify fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,fon
     VERIFY_KUBECTL --> INSTALL_KIND[安装 Kind]
     INSTALL_KIND --> VERIFY_KIND["验证：kind version"]
     VERIFY_KIND --> DONE([环境就绪])
-
-    class START,DONE startEnd;
-    class CHECK_WSL process;
-    class UPGRADE_WSL,INSTALL_DOCKER,INSTALL_KUBECTL,INSTALL_KIND process;
-    class VERIFY_DOCKER,VERIFY_KUBECTL,VERIFY_KIND verify;
+    style START fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DONE fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CHECK_WSL fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style UPGRADE_WSL fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style INSTALL_DOCKER fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style INSTALL_KUBECTL fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style INSTALL_KIND fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style VERIFY_DOCKER fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style VERIFY_KUBECTL fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style VERIFY_KIND fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 ## ⚙️ 三、第一个 Kind 集群
@@ -294,10 +306,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef host fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef docker fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
-classDef containers fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef apps fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     subgraph HOST ["🖥️ WSL 2 / Linux 宿主机"]
         DOCKER[🐳 Docker Daemon]
@@ -330,11 +338,13 @@ classDef apps fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-
     DOCKER -.->|管理| W1
     DOCKER -.->|管理| W2
     CR2 -.->|运行| PODS1
-
-    class HOST host;
-    class DOCKER docker;
-    class CP,W1,W2 containers;
-    class APP1,APP2 apps;
+    style HOST fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DOCKER fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style CP fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style W1 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style W2 fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style APP1 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style APP2 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 ## 📊 四、K8s 核心概念：用 Kind 逐个验证
@@ -346,9 +356,6 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     ROOT[K8s 核心概念分层\n掌握这8个概念即掌握80%]
 
@@ -370,10 +377,21 @@ classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     ROOT --> L5(运维层)
     L5 --> L5A["健康检查\nlivenessProbe + readinessProbe"]
     L5 --> L5B["滚动更新/回滚\n零停机部署"]
-
-    class ROOT root;
-    class L1,L2,L3,L4,L5 branch;
-    class L1A,L1B,L2A,L2B,L3A,L3B,L4A,L5A,L5B leaf;
+    style ROOT fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L1 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L2 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L4 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L5 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style L1A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L1B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L2A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L2B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L3A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L3B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L4A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L5A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style L5B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 ### 📦 4.1 Pod（容器组）
@@ -635,19 +653,15 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef producer fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
-classDef consumer fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
-classDef bridge fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
 
     ADMIN["管理员创建 PV\n定义：存储类型、容量、路径"] --> POOL[(存储池)]
     POOL --> MATCH["K8s 根据容量和访问模式\n自动匹配 PV 与 PVC"]
     USER["开发者创建 PVC\n声明：需要 10Gi RWO 存储"] --> MATCH
     MATCH --> POD["Pod 引用 PVC\n挂载到容器路径"]
     POD --> DATA[("数据持久化\nPod 被删数据仍在")]
-
-    class ADMIN producer;
-    class USER consumer;
-    class MATCH bridge;
+    style ADMIN fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style USER fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style MATCH fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 在 Kind 中演示 PV/PVC。创建 `pv-mysql.yaml` ：
@@ -865,10 +879,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef ok fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
-classDef fail fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     START([触发滚动更新]) --> NEW_POD["创建新版本 Pod"]
     NEW_POD --> PROBE{"readinessProbe\n连续通过？"}
@@ -880,11 +890,15 @@ classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     TERM --> NEXT{"所有副本\n更新完毕？"}
     NEXT -->|否| NEW_POD
     NEXT -->|是| DONE([滚动更新完成])
-
-    class START,DONE startEnd;
-    class PROBE,NEXT ok;
-    class RETRY fail;
-    class NEW_POD,ADD_SVC,DRAIN,TERM process;
+    style START fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DONE fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PROBE fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style NEXT fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style RETRY fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style NEW_POD fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style ADD_SVC fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style DRAIN fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style TERM fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 ### 🛠️ 4.9 概念对比：Docker Compose vs K8s
@@ -909,10 +923,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-classDef compose fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#fde68a,font-weight:bold;
-classDef k8s fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0,font-weight:bold;
-classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
 
     subgraph COMPOSE ["Docker Compose 原项目"]
         C1["nginx\nports: 80:80\nvolumes: ./nginx.conf"]
@@ -932,9 +942,14 @@ classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
     C2 -->|映射为| K2
     C3 -->|映射为| K3
     C4 -->|映射为| K4
-
-    class C1,C2,C3,C4 compose;
-    class K1,K2,K3,K4 k8s;
+    style C1 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style C2 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style C3 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style C4 fill:#2d1a05,stroke:#f59e0b,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style K1 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style K2 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style K3 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style K4 fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 ### 🖥️ 5.1 第一步：创建集群并映射端口
@@ -1274,10 +1289,6 @@ flowchart TD
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef phase1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-classDef phase2 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef phase3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-classDef detail fill:#1e1e24,stroke:#6b7280,stroke-width:1px,color:#e5e7eb;
 
     subgraph P1 ["🔵 第一阶段：Kind 学 K8s 核心（本地、免费、零成本）"]
         P1A["8 大核心概念\nPod/Deployment/Service/Ingress\nConfigMap/Secret/PV·PVC\n健康检查/滚动更新·回滚"] --> P1B["Docker Compose 迁移实战"]
@@ -1296,10 +1307,15 @@ classDef detail fill:#1e1e24,stroke:#6b7280,stroke-width:1px,color:#e5e7eb;
 
     P1 -.->|掌握 80%| P2
     P2 -.->|1 ~ 2天看清云本质| P3
-
-    class P1A,P1B,P1C phase1;
-    class P2A,P2B,P2C phase2;
-    class P3A,P3B,P3C phase3;
+    style P1A fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P1B fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P1C fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2A fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2B fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2C fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P3A fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P3B fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P3C fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ### 🎓 第一阶段：Kind 学 K8s 核心（现在）
@@ -1344,8 +1360,6 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef core fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-classDef cloud fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font-weight:bold;
 
     K8S[K8s 核心概念\nPod/Deployment/Service\nIngress/PV·PVC/探针\n你在 Kind 上已掌握] --> C1[阿里云 ACK]
     K8S --> C2[腾讯云 TKE]
@@ -1356,9 +1370,11 @@ classDef cloud fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#bfdbfe,font
     C2 -.->|云厂商封装层| CB["同上\n名称不同，本质一样"]
     C3 -.->|云厂商封装层| CC["同上"]
     C4 -.->|云厂商封装层| CD["同上"]
-
-    class K8S core;
-    class C1,C2,C3,C4 cloud;
+    style K8S fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style C1 fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style C2 fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style C3 fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff,font-weight:bold
+    style C4 fill:#0f172a,stroke:#3b82f6,stroke-width:1.5px,color:#ffffff,font-weight:bold
 ```
 
 **云 K8s 服务 = K8s 核心 + 云基础设施封装** 。你把核心学扎实了，切换云厂商只是换个 YAML 注解、换个 StorageClass 名字的问题。
@@ -1380,10 +1396,6 @@ flowchart LR
     %% ==========================================
     %% 样式定义
     %% ==========================================
-classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-classDef branch fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-classDef leaf fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,font-weight:bold;
 
     ROOT[Kind 学习 K8s 总结]
 
@@ -1400,10 +1412,18 @@ classDef highlight fill:#450a0a,stroke:#dc2626,stroke-width:1.5px,color:#fecaca,
     B3 --> B3A["① Kind 打基础（现在）"]
     B3 --> B3B["② 云试用 1 个月（进阶）"]
     B3 --> B3C["③ 公司生产（工作后）"]
-
-    class ROOT root;
-    class B1,B2,B3 branch;
-    class B1A,B1B,B2A,B2B,B2C,B3A,B3B,B3C leaf;
+    style ROOT fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B2 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B3 fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B1B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B2A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B2B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B2C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B3A fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B3B fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style B3C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
 ```
 
 **三个核心理念** ：

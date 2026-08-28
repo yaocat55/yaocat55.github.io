@@ -43,9 +43,6 @@ cover:
 ```mermaid
 %% 破坏性练习的反馈循环
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     A["① 破坏\n故意制造故障"]
     B["② 观察症状\n记录报错/状态"]
@@ -56,10 +53,12 @@ flowchart LR
 
     A --> B --> C --> D --> E --> F
     F -.->|"下次见到同症状"| C
-
-    class A,B process;
-    class C,F data;
-    class D,E root;
+    style A fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style F fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style E fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
 **排障黄金圈**（所有练习共用）：

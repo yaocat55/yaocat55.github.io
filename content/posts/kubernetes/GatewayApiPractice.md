@@ -48,9 +48,6 @@ cover:
 ```mermaid
 %% Gateway API 三级资源模型: 类 → 网关 → 路由 → 后端服务
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     GC["GatewayClass\n(类: 声明用哪个实现, 如 envoy-gateway)"]
     G["Gateway\n(入口: 监听端口/协议, 拿到 LB IP)"]
@@ -64,10 +61,12 @@ flowchart TD
     G --> R2
     R1 --> S1
     R2 --> S2
-
-    class GC,G root;
-    class R1,R2 process;
-    class S1,S2 data;
+    style GC fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style G fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style R1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style R2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 | 资源 | 一句话职责 | 类比 Ingress 时代 |
@@ -303,8 +302,6 @@ kubectl get gateway
 ```mermaid
 %% Ingress 到 Gateway API 的迁移映射
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
 
     subgraph OLD["Ingress 时代"]
         I1["IngressClass"]
@@ -319,9 +316,8 @@ flowchart LR
     I1 --> G1
     I2 --> G2
     I2 --> G3
-
-    class OLD process;
-    class NEW root;
+    style OLD fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style NEW fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
 1. **存量不动**：正在跑的 Ingress 照常工作（控制器不更新但能跑）；

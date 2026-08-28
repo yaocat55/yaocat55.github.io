@@ -39,9 +39,6 @@ cover:
 ```mermaid
 %% 全局拓扑: 本机 -> 云服务器(入口) -> 内网 debian(学习主力)
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     LAP["本机 Windows + WSL2\n开发写作 + SSH 运维入口"]
     ECS["云服务器 ECS\n唯一公网入口"]
@@ -55,6 +52,7 @@ flowchart TD
     ECS -->|"公网 80/443"| BLOG
     DEB -->|"拉镜像走代理"| MIH
     DEB --> KIND
+
 ```
 
 ### 1.1 内网笔记本服务器（学习主力）
@@ -148,9 +146,6 @@ Docker 里躺着 11 个业务相关镜像： ` k8s-demo-app ` 1.0/1.1/1.2（3 �
 ```mermaid
 %% 六课 -> 核心概念 -> 生产(ACK) 映射
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     L1["课1 镜像构建"]
     L2["课2 Service/Ingress"]
@@ -178,6 +173,7 @@ flowchart LR
     A4 --> ACK
     A5 --> ACK
     A6 --> ACK
+
 ```
 
 这个系列刻意**砍掉**的东西也要说清楚：kubeadm 安装、etcd 备份、HA 高可用、CNI 插件原理——这些是自建集群的运维课，托管版（ACK）全部免学。学习目标从一开始就锚定"Spring Boot 开发者视角 + 云上托管版"，每课的概念都能在 ACK 里找到对应物（LoadBalancer → SLB、NodePort → 云监控暴露方式、自己部署的 Prometheus → ARMS 托管监控）。
@@ -189,9 +185,6 @@ flowchart LR
 ```mermaid
 %% kind 集群 learn 内部资产: 入口 -> Service -> Pod -> 监控
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     ING["ingress-nginx\nNodePort 32465/30679"]
     LB["metallb LoadBalancer\n172.18.255.1"]
@@ -212,10 +205,16 @@ flowchart TD
     GRAS -->|"PromQL 查询"| PROMS
     PRO --> PROMS
     GRA --> GRAS
-
-    class ING,LB root;
-    class SVC1,SVC2,PRO,GRA process;
-    class POD1,POD2,PROMS,GRAS data;
+    style ING fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style LB fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style SVC1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style SVC2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style PRO fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style GRA fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style POD1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style POD2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PROMS fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style GRAS fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 9 个业务 Pod、5 个 Service、两套监控组件，全部跑在 7.6G 内存的旧笔记本上（集群节点约占用 5 ~ 6G，业务 Pod 只申请了约 190Mi）。这本身就说明了 kind 学习环境的门槛有多低。

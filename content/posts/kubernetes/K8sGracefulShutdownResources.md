@@ -57,12 +57,14 @@ flowchart TD
     E --> F["④ 应用处理完在途请求<br/>(Spring graceful 最多等 30s)"]
     F --> G["⑤ 应用退出, 容器停止"]
     G --> H["⑥ 超过 terminationGracePeriodSeconds<br/>则 SIGKILL 强杀"]
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-    class A root;
-    class B,C,D,E,F process;
-    class G,H reject;
+    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style F fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style G fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style H fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 三个保护机制配合（缺一不可）：
@@ -217,12 +219,12 @@ flowchart LR
         P4["Pod 超 limits → OOMKilled"]
     end
     P3 -.->|"Pending: Insufficient memory"| P3
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-    class N,L root;
-    class P1,P2,P4 data;
-    class P3 reject;
+    style N fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style L fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style P1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P4 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P3 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 **副本数上限公式**： ` 节点可分配资源 ÷ 单副本 requests ` 。两个 worker 合计约 12.8Gi 可分配，单副本 requests 4Gi → 上限 3 个（2 节点 × 1 个 + 余量不足第二个）——这就是"节点不多但能跑很多副本 / 节点很多但只能跑几个副本"的真相：**决定副本数的从来不是节点数量，是资源账本**。

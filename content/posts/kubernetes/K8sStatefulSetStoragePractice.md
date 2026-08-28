@@ -62,9 +62,6 @@ K8s 的存储不是"挂一块盘"这么简单，它把存储拆成三层，让**
 ```mermaid
 %% 存储三层抽象: 开发者只写 PVC, StorageClass 自动建 PV
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     DEV["开发者\n写 PVC 声明: 我要 100Mi 可读写一次的盘"]
     PVC["PVC\nPersistentVolumeClaim"]
@@ -76,10 +73,10 @@ flowchart TD
     PVC -->|"指定 storageClassName"| SC
     SC -->|"provisioner 动态供应"| PV
     PV --> DISK
-
-    class DEV root;
-    class PVC,PV data;
-    class SC process;
+    style DEV fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style PVC fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PV fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SC fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 **WaitForFirstConsumer**（本集群 storageclass 的绑定模式）值得单独说：PVC 创建后先 ` Pending ` ，**等第一个使用它的 Pod 被调度到节点后**，才在那个节点上创建卷并绑定——好处是卷落在"真正用它的节点"旁边，避免"卷在 A 节点、Pod 在 B 节点"的跨机访问。云上的云盘绑定也是这个模式。
@@ -97,9 +94,6 @@ Deployment 的 Pod 是无名氏： ` demo-app-8f47d9845-cqw4x ` ，删除重建�
 ```mermaid
 %% StatefulSet vs Deployment: 标识与存储的差异
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
 
     subgraph STS["StatefulSet nginx-sts"]
         P0["nginx-sts-0\n专属 PVC: data-nginx-sts-0"]
@@ -114,10 +108,12 @@ flowchart LR
 
     P0 -->|"headless Service 提供"| DNS
     P0 -.->|"重建后仍叫这个名字"| P0
-
-    class P0,P1,P2 data;
-    class Q1,Q2 reject;
-    class DNS root;
+    style P0 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Q1 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Q2 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DNS fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
 **一句话记忆**：Deployment 的 Pod 无身份标识、可任意替换；StatefulSet 的 Pod 有固定名（稳定标识）、专属存储（各副本各一块盘）、有序生命周期（按索引顺序更新）——三大保证就是全部差异。

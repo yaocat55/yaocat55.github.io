@@ -53,10 +53,6 @@ cover:
 ```mermaid
 %% 方案A: SSH 隧道 + 自建内网监控(本系列学习环境的真实形态)
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
 
     LAP["运维人员笔记本\n浏览器访问 localhost:32090"]
     ECS["中转机（公网 IP）\n唯一公网入口\n只开放 SSH"]
@@ -69,9 +65,11 @@ flowchart TD
     AUT -->|"经 SSH 通道"| DEB
     DEB --> MON
     LAP -.->|"浏览器流量实际路径"| MON
-
-    class LAP,ECS,DEB root;
-    class AUT,MON data;
+    style LAP fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style ECS fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style DEB fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style AUT fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style MON fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ### 特性
@@ -100,9 +98,6 @@ flowchart TD
 ```mermaid
 %% 方案B: 堡垒机 —— 公网入口收敛到一台守门员, 内网机器只认堡垒机
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     ADMIN["运维人员\nSSH / RDP / 浏览器"]
     BAST["堡垒机\n外网卡: 公网入口 443/22\n内网卡: 管理网段\n账号 + 授权 + 双因子 + 录屏审计"]
@@ -114,10 +109,11 @@ flowchart TD
     BAST -->|"代理连接(内网网段)"| SVR1
     BAST -->|"代理连接(内网网段)"| SVR2
     BAST --> MON
-
-    class ADMIN root;
-    class BAST process;
-    class SVR1,SVR2,MON data;
+    style ADMIN fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style BAST fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style SVR1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SVR2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style MON fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ### 产品化带来的能力
@@ -153,9 +149,6 @@ flowchart TD
 ```mermaid
 %% 方案C: 云原生监控 —— 数据上云, 人不需要进内网
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     APP["业务服务器\n轻量采集器 agent"]
     SAAS["云端托管监控\n托管 Prometheus + Grafana\n( Grafana Cloud / ARMS )"]
@@ -165,10 +158,10 @@ flowchart TD
     APP -->|"remote-write / agent 上报\n指标推送(主动出网)"| SAAS
     BRO -->|"公网 HTTPS"| SAAS
     MOB -->|"公网 HTTPS / APP"| SAAS
-
-    class APP root;
-    class SAAS data;
-    class BRO,MOB process;
+    style APP fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style SAAS fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style BRO fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style MOB fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 ### 特性
@@ -217,10 +210,6 @@ A 信任"密钥 + 个人操作纪律"；B 信任"组织账号体系 + 全程审�
 ```mermaid
 %% 决策: 按规模/合规/应用位置选型
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
 
     Q1{"应用/监控在哪？"}
     Q2{"团队规模？"}
@@ -235,9 +224,12 @@ flowchart TD
     Q2 -->|"多人团队"| Q3
     Q3 -->|"有 (等保/审计)"| D2
     Q3 -->|"无硬性要求"| D1
-
-    class Q1,Q2,Q3 condition;
-    class D1,D2,D3 data;
+    style Q1 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Q2 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Q3 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style D3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 三条路不是互斥的，现实中常常混用：内网自建监控走堡垒机（A 的通道 + B 的管控），业务上云后用云厂商托管监控（C），两边面板并存。演进路径一般是 A → B（规模扩大）→ C（业务上云）。

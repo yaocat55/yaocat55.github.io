@@ -52,12 +52,15 @@ flowchart LR
     B["kind 学不到"] --> B1["kubeadm 安装流程"]
     B --> B2["CNI 插件选型与安装"]
     B --> B3["证书 / etcd 集群 / HA 高可用"]
-    classDef startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#fce7f3,font-weight:bold;
-    classDef leaf fill:#1e1e24,stroke:#9ca3af,stroke-width:2px,color:#e5e7eb;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-    class A,A1,A2,A3 leaf;
-    class B,B1,B2,B3 reject;
-    class startEnd startEnd;
+    style A fill:#1e1e24,stroke:#9ca3af,stroke-width:2px,color:#ffffff
+    style A1 fill:#1e1e24,stroke:#9ca3af,stroke-width:2px,color:#ffffff
+    style A2 fill:#1e1e24,stroke:#9ca3af,stroke-width:2px,color:#ffffff
+    style A3 fill:#1e1e24,stroke:#9ca3af,stroke-width:2px,color:#ffffff
+    style B fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B2 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B3 fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style startEnd fill:#701a4c,stroke:#e11d48,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
 kind 是**用 Docker 模拟节点**（每个"节点"是一个跑着完整 Linux 的容器），所以它教不会你"怎么在裸机上装出 K8s"——那些是上云前的功课，本文不展开。先把 kind 能教的部分学扎实。
@@ -93,12 +96,15 @@ flowchart TB
     P1 <==>|"④ Pod 互访: kindnet 覆盖网络"| P2
     U -.->|"④ 访问 Service: kube-proxy 转发"| P1
     U -.->|"④"| P2
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    class U,API root;
-    class ETC data;
-    class SCH,CM,K1,K2,P1,P2 process;
+    style U fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style API fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style ETC fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SCH fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style CM fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style K1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style K2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style P1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style P2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 ### 四条通信链路（图里的 ①②③④）
@@ -125,10 +131,16 @@ flowchart TD
     S7 --> S8["⑧ 容器就绪, kubelet 上报 Running + Ready"]
     S8 --> S9["⑨ kube-proxy 感知 Service 变化, 更新转发规则"]
     S9 --> S10["⑩ 访问 Service IP, 流量直达 Pod"]
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    class S1 root;
-    class S2,S3,S4,S5,S6,S7,S8,S9,S10 process;
+    style S1 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style S2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S4 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S5 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S6 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S7 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S8 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S9 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S10 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 注意第 ④ 步：调度器挑中的可能是 learn-worker 也可能是 learn-worker2——这就是多节点的意义，**Pod 跑在哪是调度器根据集群整体资源动态决定的**。部署后可以执行 ` kubectl get pods -o wide ` 看 3 个副本分散在不同节点上，亲眼验证这张图。
@@ -408,13 +420,19 @@ flowchart TD
     K1 --> A
     K1 --> S
     K1 --> M
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    class DOCKER,CP,W1,W2 root;
-    class K1,K2,K3 process;
-    class E,P1,P2 data;
-    class A,S,M process;
+    style DOCKER fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style CP fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style W1 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style W2 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style K1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style K2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style K3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style A fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style S fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style M fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 每个节点容器内部：**systemd 作为 init 系统** → 拉起 **kubelet**（节点代理）→ kubelet 再通过 **containerd**（容器运行时）管理本节点的 Pod。控制面节点容器里，etcd、kube-apiserver 这些组件以"静态 Pod"的形式由 kubelet 直接托管。
@@ -449,12 +467,17 @@ flowchart LR
     API -->|"下发 Pod 指令"| K2["kubelet worker2"]
     K1 --> C1["containerd"] --> P1["业务 Pod"]
     K2 --> C2["containerd"] --> P2["业务 Pod"]
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    class U,API root;
-    class E data;
-    class S,M,K1,K2,C1,C2,P1,P2 process;
+    style U fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style API fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style E fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style S fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style M fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style K1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style K2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style P1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style P2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 | 组件 | 位置 | 一句话职责 |
@@ -543,10 +566,12 @@ flowchart LR
     C --> D["配置管理<br/>ConfigMap / Secret"]
     D --> E["持久化存储<br/>PV / PVC"]
     E --> F["HPA 自动伸缩<br/>需装 metrics-server"]
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    class A root;
-    class B,C,D,E,F process;
+    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style F fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
 ```
 
 集群里目前只有 K8s 自身的骨架（kube-system 命名空间），还没有任何业务应用——下一步就是部署第一个 Deployment，把"镜像 → Pod → Service → 访问"这条链路亲手打通。建议跟着"部署一个 3 副本 nginx"走一遍，你会亲眼看到它被调度到两个 worker 节点上，那一刻对"集群"的理解才算真正落地。

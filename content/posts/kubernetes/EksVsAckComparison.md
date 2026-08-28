@@ -41,10 +41,6 @@ cover:
 ```mermaid
 %% EKS 与 ACK 产品线对照
 flowchart LR
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
 
     EKS["AWS EKS 家族"]
     ACK["阿里云 ACK 家族"]
@@ -67,11 +63,17 @@ flowchart LR
     ACK --> A3
     ACK --> A4
     ACK --> A5
-
-    class EKS,ACK root;
-    class E1,E2,E3,A1,A2,A3 process;
-    class E4,A4,A5 data;
-    class A4 reject;
+    style EKS fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style ACK fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style E1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style A1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style A2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style A3 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E4 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style A4 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style A5 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 几个值得注意的点：
@@ -162,9 +164,6 @@ flowchart LR
 ```mermaid
 %% 中小企业选型决策树
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef condition fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe,font-weight:bold;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
 
     Q1{"业务/数据在哪？"}
     Q2{"预算敏感？"}
@@ -180,9 +179,13 @@ flowchart TD
     Q2 -->|"生产环境"| Q3
     Q3 -->|"稳定流量"| R2
     Q3 -->|"弹性波动"| R3
-
-    class Q1,Q2,Q3 condition;
-    class R1,R2,R3,R4 data;
+    style Q1 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Q2 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style Q3 fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold
+    style R1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style R2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style R3 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style R4 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ## 5. 附录：调研时间与文档版本

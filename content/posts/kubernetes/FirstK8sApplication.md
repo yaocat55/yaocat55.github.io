@@ -116,21 +116,13 @@ flowchart TD
   SEC -.->|"secretKeyRef"| POD2
   SVC -->|"selector: app=my-app"| POD1
   SVC -->|"selector: app=my-app"| POD2
-
-classDef deploy fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#fce7f3,font-weight:bold;
-  class DEP deploy
-
-classDef rs fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ede9fe;
-  class RS rs
-
-classDef pod fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class POD1,POD2 pod
-
-classDef svc fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class SVC svc
-
-classDef config fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class CM,SEC config
+    style DEP fill:#701a4c,stroke:#e11d48,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RS fill:#2a1147,stroke:#a855f7,stroke-width:2px,color:#ffffff
+    style POD1 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style POD2 fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SVC fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CM fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SEC fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ### 4.1 第一步：创建 Namespace（可跳过，但建议做）
@@ -144,13 +136,13 @@ metadata:
   name: my-first-app
 ```
 
-保存为 `00-namespace.yaml`，执行：
+保存为 ` 00-namespace.yaml ` ，执行：
 
 ```bash
 kubectl apply -f 00-namespace.yaml
 ```
 
-后续所有命令都加 `-n my-first-app`。
+后续所有命令都加 ` -n my-first-app ` 。
 
 ### 4.2 第二步：创建 ConfigMap —— 非敏感配置
 
@@ -168,7 +160,7 @@ data:
   SERVER_PORT: "8080"
 ```
 
-保存为 `01-configmap.yaml`。
+保存为 ` 01-configmap.yaml ` 。
 
 **每一行解释：**
 
@@ -196,17 +188,17 @@ stringData:
   REDIS_PASSWORD: "RedisP@ss123"
 ```
 
-保存为 `02-secret.yaml`。
+保存为 ` 02-secret.yaml ` 。
 
 **每一行解释：**
 
 | 字段 | 含义 |
 |------|------|
 | `type: Opaque` | 通用类型 Secret，可以存任意键值对（Opaque = 不透明的，即 K8s 不关心里面是什么） |
-| `stringData` | **明文**写密码，`kubectl apply` 时 K8s 自动 Base64 编码存到 `data` 字段 |
-| `data` vs `stringData` | `data` 要求值已经是 Base64 编码，`stringData` 可以直接写明文（省去手动 `echo -n xxx | base64`） |
+| ` stringData ` | **明文**写密码， ` kubectl apply ` 时 K8s 自动 Base64 编码存到 ` data ` 字段 |
+| ` data ` vs ` stringData ` | ` data ` 要求值已经是 Base64 编码， ` stringData ` 可以直接写明文（省去手动 ` echo -n xxx | base64 ` ） |
 
-> ⚠️ 新手提示：`stringData` 只是**写入时**的便利字段。Secret 存到 etcd 后只有 `data`（Base64 编码）。Base64 ≠ 加密，任何人拿到 `kubectl get secret -o yaml` 然后 `echo "xxx" | base64 -d` 就能看到明文。生产环境加密需要 Sealed Secrets 或云 KMS。
+> ⚠️ 新手提示： ` stringData ` 只是**写入时**的便利字段。Secret 存到 etcd 后只有 ` data ` （Base64 编码）。Base64 ≠ 加密，任何人拿到 ` kubectl get secret -o yaml ` 然后 ` echo "xxx" | base64 -d ` 就能看到明文。生产环境加密需要 Sealed Secrets 或云 KMS。
 
 ### 4.4 第四步：创建 Deployment —— 主角登场
 
@@ -265,7 +257,7 @@ spec:
           periodSeconds: 5
 ```
 
-保存为 `03-deployment.yaml`。
+保存为 ` 03-deployment.yaml ` 。
 
 **逐段拆解：**
 
@@ -303,7 +295,7 @@ spec:
     spec:                    # Pod 的内容规格
 ```
 
-> ⚠️ 新手提示：`template.metadata.labels` **必须**包含 `selector.matchLabels` 里的所有键值对。如果不匹配，Deployment 会说"我管 3 个 Pod，但我找不到它们"——因为标签对不上。
+> ⚠️ 新手提示： ` template.metadata.labels ` **必须**包含 ` selector.matchLabels ` 里的所有键值对。如果不匹配，Deployment 会说"我管 3 个 Pod，但我找不到它们"——因为标签对不上。
 
 #### containers —— Pod 里跑什么
 
@@ -399,21 +391,13 @@ flowchart TD
   LIVENESS -->|"连续失败"| DEAD
   READINESS -->|"健康"| READY
   READINESS -->|"失败"| NOT_READY
-
-classDef start fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class START,INIT start
-
-classDef ok fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-  class READY ok
-
-classDef bad fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-  class DEAD bad
-
-classDef warn fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#fde68a,font-weight:bold;
-  class NOT_READY warn
-
-classDef probe fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ede9fe;
-  class LIVENESS,READINESS probe
+    style START fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style INIT fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style READY fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style DEAD fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
+    style NOT_READY fill:#2d1a05,stroke:#f59e0b,stroke-width:2px,color:#ffffff,font-weight:bold
+    style LIVENESS fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff
+    style READINESS fill:#2a1147,stroke:#a855f7,stroke-width:1.5px,color:#ffffff
 ```
 
 | 探针 | 失败后果 | 典型用例 |
@@ -441,7 +425,7 @@ spec:
     protocol: TCP
 ```
 
-保存为 `04-service.yaml`。
+保存为 ` 04-service.yaml ` 。
 
 **每一行解释：**
 
@@ -517,7 +501,7 @@ my-app-5d8f7b6c9-abcde   1/1     Running   0          45s
 my-app-5d8f7b6c9-fghij   1/1     Running   0          45s
 ```
 
-如果 `STATUS` 不是 `Running`，进入排查模式：
+如果 ` STATUS ` 不是 ` Running ` ，进入排查模式：
 
 ```bash
 kubectl describe pod <pod-name> -n my-first-app    # 看 Events 区域
@@ -541,9 +525,9 @@ Service 类型是 ClusterIP，只能集群内访问。开发调试时用 port-fo
 kubectl port-forward -n my-first-app svc/my-app-svc 8080:80
 ```
 
-打开浏览器访问 `http://localhost:8080`，看到 nginx 欢迎页即部署成功。
+打开浏览器访问 ` http://localhost:8080 ` ，看到 nginx 欢迎页即部署成功。
 
-> 📌 前置知识：`port-forward` 只在调试阶段用，**不适合生产**。它的原理是在 kubectl 和 API Server 之间建立一条隧道，流量走 kubectl 进程中转——关了终端就断。
+> 📌 前置知识： ` port-forward ` 只在调试阶段用，**不适合生产**。它的原理是在 kubectl 和 API Server 之间建立一条隧道，流量走 kubectl 进程中转——关了终端就断。
 
 ### 5.5 体验一把滚动更新
 
@@ -611,15 +595,12 @@ flowchart TD
   C --> MORE
   LESS --> G
   MORE --> G
-
-classDef watch fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#bfdbfe,font-weight:bold;
-  class W watch
-
-classDef get fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#e5e7eb;
-  class G,C get
-
-classDef action fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
-  class EQ,LESS,MORE action
+    style W fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style G fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:1.5px,color:#ffffff
+    style EQ fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
+    style LESS fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
+    style MORE fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#ffffff
 ```
 
 这个循环**不是在代码层 for 循环**，而是通过 Watch API Server 事件驱动的。任何资源变更都会触发 Controller 重新检查期望状态和实际状态。
@@ -652,7 +633,7 @@ classDef action fill:#052e16,stroke:#16a34a,stroke-width:1.5px,color:#bbf7d0;
 | Deployment | `spec.replicas` + `selector` + `template` | 管理 Pod 副本、滚动更新、回滚 |
 | Service | `spec.selector` + `spec.ports` | 给 Pod 提供稳定 IP 和负载均衡 |
 | ConfigMap | `data` | 注入非敏感环境变量 |
-| Secret | `stringData`（或 `data`）| 注入密码、Token 等敏感信息 |
+| Secret | ` stringData ` （或 ` data ` ）| 注入密码、Token 等敏感信息 |
 | Namespace | `metadata.name` | 资源分组（调试/清理方便） |
 
 ### 7.2 下一步

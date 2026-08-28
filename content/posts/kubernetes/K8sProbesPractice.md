@@ -56,12 +56,11 @@ flowchart LR
     B -->|"成功"| C["readinessProbe<br/>决定流量是否接入"]
     C -->|"持续"| D["livenessProbe<br/>决定容器是否存活"]
     D -->|"失败3次"| A
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#fecaca,font-weight:bold;
-    class A root;
-    class B,C,D process;
-    class reject reject;
+    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style reject fill:#450a0a,stroke:#dc2626,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 > ⚠️ 新手提示：最容易混淆的是 readiness 和 liveness 的失败后果——**readiness 失败只摘流量（Pod 还在）**，**liveness 失败会杀容器**。生产事故里"DB 抖动引发雪崩"的根源，就是 liveness 探针错误地检查了数据库：DB 挂 30 秒 → liveness 失败 → 所有实例被反复杀。**liveness 只该查进程级健康**（如 JVM 活着），下游依赖的健康交给 readiness。
@@ -284,12 +283,13 @@ flowchart LR
     K -->|"失败即动作"| A["杀容器 / 摘流量<br/>控制回路"]
     P -->|"15~30s 抓取"| PR["Prometheus"]
     PR -->|"异常即告警"| AL["告警 → 人/agent 介入<br/>观察回路"]
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    class APP,K,PR root;
-    class A,AL process;
-    class H,P data;
+    style APP fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style K fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style PR fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style A fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style AL fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style H fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style P fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 两者还有衔接点：Spring Boot 的 ` /actuator/health ` 会自动聚合所有下游依赖的健康状态（DB、Redis、磁盘）——MySQL 断开时，readiness 探针自动摘流（秒级自愈），Prometheus 的指标同时异常并告警（留痕）。**探针负责"自动止损"，Prometheus 负责"留痕告警"**。下一篇将给应用接上 ` /actuator/prometheus ` ，把观察回路建起来。

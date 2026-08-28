@@ -260,12 +260,11 @@ flowchart TD
     B --> C["application-{profile}.yml"]
     C --> D["application.yml"]
     D --> E["@Value 默认值<br/>优先级最低"]
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
-    class A root;
-    class B,C,D process;
-    class E data;
+    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style B fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style C fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style D fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff
+    style E fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
 ### 宽松绑定（Relaxed Binding）
