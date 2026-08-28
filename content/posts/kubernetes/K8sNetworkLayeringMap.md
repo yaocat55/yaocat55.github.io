@@ -96,23 +96,27 @@ flowchart LR
 ## 2. K8s 的多层网络（全景框架）
 
 ```mermaid
-%% K8s 四层网络: 物理机 → 节点容器 → Pod → Service, 各层网段与组件
+%% K8s 四层网络栈: 物理机 → 节点容器 → Pod → Service (分层堆叠, 数据包自上而下穿透)
 flowchart TD
-    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#bfdbfe,font-weight:bold;
-    classDef process fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#e5e7eb;
-    classDef data fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#bbf7d0,font-weight:bold;
+    classDef real fill:#0f172a,stroke:#3b82f6,stroke-width:3px,color:#bfdbfe,font-weight:bold;
+    classDef kind fill:#1e1e24,stroke:#8b5cf6,stroke-width:3px,color:#e5e7eb;
+    classDef pod fill:#052e16,stroke:#16a34a,stroke-width:3px,color:#bbf7d0,font-weight:bold;
+    classDef virt fill:#3b0a0a,stroke:#ef4444,stroke-width:3px,color:#fecaca,font-weight:bold;
 
-    M["物理机网段<br/>192.168.8.26(debian 宿主机)<br/>真实网卡, L3"]
-    N["节点容器网段 172.18.0.0/16<br/>节点 IP: 172.18.0.2/3/4<br/>kind 节点 = Docker 容器<br/>(kubeadm 无此层)"]
-    P["Pod 网段 10.244.0.0/16<br/>每节点一个子网: 10.244.1.x / 10.244.2.x<br/>L3 由 CNI(kindnet) 分配与路由"]
-    S["Service 网段 10.96.0.0/16<br/>ClusterIP: 10.96.x.x(虚拟,无网卡)<br/>L4 由 kube-proxy 实现"]
+    M["物理机层 (L3 真实网卡)<br/>debian 宿主机 192.168.8.26<br/>真实 IP · SSH 入口"]
+    N["节点容器层 (kind 特有)<br/>172.18.0.2/3/4 = Docker 容器 IP<br/>kubeadm/生产无此层: 节点 IP 即物理机 IP"]
+    P["Pod 网络层 (L3 CNI)<br/>10.244.0.0/16 · 每节点一个子网<br/>kindnet 分配 IP + 跨节点路由 · veth 虚拟网卡"]
+    S["Service 网络层 (L4 kube-proxy)<br/>10.96.0.0/16 · ClusterIP<br/>纯虚拟: 无网卡只存在于转发规则 · DNS 10.96.0.10 也在"]
 
-    M --> N
-    N --> P
-    P --> S
+    M ==> N ==> P ==> S
 
-    class M,N,P,S root;
+    class M real;
+    class N kind;
+    class P pod;
+    class S virt;
 ```
+
+**读图方法**：从上往下四层，颜色从"真实"渐变到"纯虚拟"（蓝 → 紫 → 绿 → 红），粗箭头是数据包从真实世界一路穿透到 Service 虚拟层的路径。**每一层只管自己那层的事，层与层之间靠"封装/改写地址"衔接**——这就是 K8s 网络的全貌。
 
 **各层网络的定位**：
 
