@@ -239,7 +239,7 @@ kubectl apply -f ngf-gw.yaml
 | 控制器 | `nginx-gateway-69c9678649-kv7ms 1/1 Running` |
 | GatewayClass | `nginx ... ACCEPTED=True` |
 | Gateway | ` ngf-gw ... 172.18.255.2 PROGRAMMED=True ` （metallb 分配） |
-| 数据面日志 | ** ` Config apply successful ` **（v2.6.7 这里是 ` Config apply failed ` ）——**bug 消失** |
+| 数据面日志 | **Config apply successful**（v2.6.7 这里是 ` Config apply failed ` ）——**bug 消失** |
 | 路由 | `curl -H "Host: ngf.local" http://172.18.255.2` → **HTTP 200**；无匹配 Host → **404** |
 
 **意外收获——双实现共存**：Envoy Gateway 没有清理，两个实现同时在线：
