@@ -170,8 +170,8 @@ flowchart TD
 
 | K8s 概念（这篇学的） | Spring Cloud 里的对应 | 核心区别 |
 |------|------|------|
-| **Service（ClusterIP）+ Endpoints** | Nacos 注册中心 / 服务发现 | Nacos 要代码集成（`@EnableDiscoveryClient` + 心跳续约）；Service 是平台声明（`selector` 自动匹配 Pod、Endpoints 自动维护）——**服务发现从应用代码下沉到平台层** |
-| **CoreDNS 服务名解析** | Eureka/Nacos 地址簿 + Feign/Ribbon 拿实例 | 都是"名字 → 地址"，但 DNS 不用引依赖、不用写 `@FeignClient`——服务名直接当 URL 用 |
+| **Service（ClusterIP）+ Endpoints** | Nacos 注册中心 / 服务发现 | Nacos 要代码集成（ ` @EnableDiscoveryClient ` + 心跳续约）；Service 是平台声明（ ` selector ` 自动匹配 Pod、Endpoints 自动维护）——**服务发现从应用代码下沉到平台层** |
+| **CoreDNS 服务名解析** | Eureka/Nacos 地址簿 + Feign/Ribbon 拿实例 | 都是"名字 → 地址"，但 DNS 不用引依赖、不用写 ` @FeignClient ` ——服务名直接当 URL 用 |
 | **kube-proxy 负载均衡** | Ribbon / Spring Cloud LoadBalancer | Ribbon 是**客户端负载均衡**（写在调用方代码里）；kube-proxy 是**平台透明负载均衡**（iptables DNAT，调用方无感知）——**负载均衡也从代码下沉到平台** |
 | **Ingress / Gateway API** | Spring Cloud Gateway | 同是 L7 网关（域名/路径路由），但 Spring Cloud Gateway 是**要自己部署维护的应用**；Ingress 是**声明式资源**（控制器实现，平台管） |
 | **Pod IP 会变** | 服务实例 IP 会变（重启换 IP） | 传统微服务靠 Nacos 心跳续约兜住；K8s 由 Service 的 Endpoints 自动兜住——调用方始终无感 |
