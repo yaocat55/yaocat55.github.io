@@ -205,6 +205,18 @@ flowchart TD
 3. **业务 Pod 永不上 control-plane**（污点 ` NoSchedule ` ，前面学过）；**coredns 是例外**——系统组件带容忍度，能上控制面（实测两个副本都在 control-plane）；
 4. 上云后节点侧组件（kube-proxy/CNI/kubelet）**依然每节点存在**——它们就是"节点标配"，不管自建还是托管。
 
+> ⚠️ **上面的实测布局是 kind 的"省资源版"，不是生产常态**——kind 为了在 7.6G 内存的机器上跑起来，把能挤的组件都挤在单控制面节点（coredns 甚至容忍污点挤上去）。**kubeadm 原生（生产常态）的教科书布局**如下：
+
+| 组件 | kubeadm 生产布局 | kind（本文实测） | 差异原因 |
+|------|------|------|------|
+| apiserver / etcd / controller-manager / scheduler | 控制面节点静态 Pod；**HA 时 3 个控制面节点，etcd 每节点一个** | 1 个控制面节点（无 HA） | kind 单机无 HA |
+| coredns | Deployment 副本**分散在 worker**（容忍度只是"允许"上控制面，生产调度器不这么放） | 2 副本都挤在 control-plane | **kind 省资源** |
+| kube-proxy / CNI | **DaemonSet 每节点** | 每节点（一致） | 形态规则不变 |
+| 业务 Pod | worker 节点 | worker 节点（一致） | 规则不变 |
+| ingress-nginx / 网关控制器 | Deployment 在 worker | worker（一致） | 规则不变 |
+
+**结论**：**形态规则不变，变的只是资源宽松度**——控制面 4 件套永远在控制面节点、DaemonSet 永远每节点一个、业务永远在 worker，这是 kubeadm 和 kind 共通的"位置宪法"。生产里组件该分散就分散，kind 里能挤就挤。**排障时按形态找组件，别按"它上次在哪个节点"找**（coredns 在 CP 只是 kind 的资源决策，不是它的固定位置）。
+
 ### 3.6 Spring Cloud 开发者视角：这些概念你早就见过
 
 如果你是 Spring Cloud 开发者，上面每个组件都能找到"老熟人"——而且对比之后会发现一个贯穿全文的洞察：
