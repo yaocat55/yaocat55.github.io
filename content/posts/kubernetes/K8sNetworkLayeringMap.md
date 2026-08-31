@@ -164,6 +164,22 @@ flowchart TD
 
 **一句话总览**：CNI 管"Pod 之间怎么走"（L3），kube-proxy 管"流量怎么到 Service 后端"（L4），DNS 管"名字怎么变成 IP"（L7），Ingress 管"域名怎么找到 Service"（L7）——**各管一层，互不越界**。
 
+### 3.5 Spring Cloud 开发者视角：这些概念你早就见过
+
+如果你是 Spring Cloud 开发者，上面每个组件都能找到"老熟人"——而且对比之后会发现一个贯穿全文的洞察：
+
+| K8s 概念（这篇学的） | Spring Cloud 里的对应 | 核心区别 |
+|------|------|------|
+| **Service（ClusterIP）+ Endpoints** | Nacos 注册中心 / 服务发现 | Nacos 要代码集成（`@EnableDiscoveryClient` + 心跳续约）；Service 是平台声明（`selector` 自动匹配 Pod、Endpoints 自动维护）——**服务发现从应用代码下沉到平台层** |
+| **CoreDNS 服务名解析** | Eureka/Nacos 地址簿 + Feign/Ribbon 拿实例 | 都是"名字 → 地址"，但 DNS 不用引依赖、不用写 `@FeignClient`——服务名直接当 URL 用 |
+| **kube-proxy 负载均衡** | Ribbon / Spring Cloud LoadBalancer | Ribbon 是**客户端负载均衡**（写在调用方代码里）；kube-proxy 是**平台透明负载均衡**（iptables DNAT，调用方无感知）——**负载均衡也从代码下沉到平台** |
+| **Ingress / Gateway API** | Spring Cloud Gateway | 同是 L7 网关（域名/路径路由），但 Spring Cloud Gateway 是**要自己部署维护的应用**；Ingress 是**声明式资源**（控制器实现，平台管） |
+| **Pod IP 会变** | 服务实例 IP 会变（重启换 IP） | 传统微服务靠 Nacos 心跳续约兜住；K8s 由 Service 的 Endpoints 自动兜住——调用方始终无感 |
+
+**一句话主线**：*Spring Cloud 用代码解决的问题（注册、发现、负载均衡），K8s 全部下沉到平台层*——代码里不再需要 Nacos 客户端、不需要 Ribbon 依赖，剩下的只是"声明一个 Service，平台帮你搞定服务发现和负载均衡"。这就是"云原生"对微服务架构最直接的含义。
+
+> 📌 对 Spring Cloud 开发者：回到第 2 节的三层网络——传统微服务的"内网"就是同一个网段直连；K8s 把"内网"拆成了 **Pod 网（实例 IP）+ Service 虚拟网（服务名入口）** 两层，你的服务间调用从"走 Nacos 拿实例 IP"变成"走 DNS 拿 Service 名"——**概念一样，位置从应用层搬到了平台层**。
+
 ## 4. 最容易混的概念辨析
 
 ### 4.1 四个 IP，四种身份
