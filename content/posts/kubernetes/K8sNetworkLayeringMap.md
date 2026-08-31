@@ -164,7 +164,48 @@ flowchart TD
 
 **一句话总览**：CNI 管"Pod 之间怎么走"（L3），kube-proxy 管"流量怎么到 Service 后端"（L4），DNS 管"名字怎么变成 IP"（L7），Ingress 管"域名怎么找到 Service"（L7）——**各管一层，互不越界**。
 
-### 3.5 Spring Cloud 开发者视角：这些概念你早就见过
+### 3.5 组件在集群里的位置地图（实测）
+
+上面讲了"每个组件干什么"，这一节回答"每个组件在哪"——使用者脑袋里必须有的那张图。**本文 kind 集群实测分布**：
+
+```mermaid
+%% 组件位置地图: 三个节点上各跑着什么 (style 强制深底白字)
+flowchart TD
+    classDef cp fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef wk fill:#312e81,stroke:#a78bfa,stroke-width:2px,color:#ffffff,font-weight:bold;
+
+    CP["learn-control-plane (172.18.0.2)<br/>控制面静态 Pod: kube-apiserver / etcd<br/>kube-controller-manager / kube-scheduler<br/>+ coredns ×2 + kindnet + kube-proxy"]
+    W1["learn-worker (172.18.0.3)<br/>kindnet + kube-proxy (每节点标配)<br/>业务: nginx-demo×3 demo-app×2<br/>prometheus + grafana<br/>入口: ingress-nginx 控制器 + metallb"]
+    W2["learn-worker2 (172.18.0.4)<br/>kindnet + kube-proxy<br/>业务: nginx-demo×3 demo-app×1<br/>网关: Envoy/NGF 控制器 + 数据面"]
+
+    CP --- W1
+    CP --- W2
+
+    style CP fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W1 fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W2 fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ffffff,font-weight:bold
+```
+
+**部署形态决定"它在哪"**：
+
+| 组件 | 部署形态 | 位置（实测） | 数量 |
+|------|------|------|:---:|
+| kube-apiserver / etcd / controller-manager / scheduler | **静态 Pod**（绑定节点，kubeadm 方式） | 全部在 control-plane 节点 | 各 1 |
+| kube-proxy | **DaemonSet**（每节点必有一个） | 3 个节点各 1 个 | 3 |
+| kindnet（CNI） | **DaemonSet** | 3 个节点各 1 个 | 3 |
+| coredns | Deployment | 都调度到了 control-plane（**它有控制面污点的容忍度**） | 2 |
+| ingress-nginx 控制器 | Deployment | learn-worker | 1 |
+| Envoy Gateway / NGF 控制器 | Deployment | learn-worker2 | 各 1 |
+| 业务 Pod（nginx-demo 等） | Deployment | 分散在两个 worker | 按副本 |
+
+**四个位置认知（记住这张图）**：
+
+1. **控制面 4 件套永远在控制面节点**——kubeadm 方式下是静态 Pod（绑定节点、名字带节点名）；**上 ACK 托管版后这 4 个消失**（平台托管，你看不到也管不到）；
+2. **DaemonSet = 每节点标配**：kube-proxy 和 CNI 是"每个节点必须有一个"，新节点加入自动补齐——排障时"某节点网络不通"先看这两样在不在；
+3. **业务 Pod 永不上 control-plane**（污点 ` NoSchedule ` ，前面学过）；**coredns 是例外**——系统组件带容忍度，能上控制面（实测两个副本都在 control-plane）；
+4. 上云后节点侧组件（kube-proxy/CNI/kubelet）**依然每节点存在**——它们就是"节点标配"，不管自建还是托管。
+
+### 3.6 Spring Cloud 开发者视角：这些概念你早就见过
 
 如果你是 Spring Cloud 开发者，上面每个组件都能找到"老熟人"——而且对比之后会发现一个贯穿全文的洞察：
 
