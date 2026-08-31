@@ -207,6 +207,34 @@ flowchart TD
 
 > ⚠️ **上面的实测布局是 kind 的"省资源版"，不是生产常态**——kind 为了在 7.6G 内存的机器上跑起来，把能挤的组件都挤在单控制面节点（coredns 甚至容忍污点挤上去）。**kubeadm 原生（生产常态）的教科书布局**如下：
 
+```mermaid
+%% kubeadm 生产布局: HA 三控制面 + worker 节点标配 (style 强制深底白字)
+flowchart TD
+    classDef cp fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef wk fill:#312e81,stroke:#a78bfa,stroke-width:2px,color:#ffffff,font-weight:bold;
+
+    CP1["控制面节点1<br/>静态Pod: kube-apiserver / etcd<br/>controller-manager / scheduler"]
+    CP2["控制面节点2<br/>etcd / apiserver / 控制器"]
+    CP3["控制面节点3<br/>etcd / apiserver / 控制器"]
+    W1["worker 节点1<br/>DaemonSet: kube-proxy + CNI<br/>coredns 副本 + 业务 Pod"]
+    W2["worker 节点2<br/>DaemonSet: kube-proxy + CNI<br/>coredns 副本 + 业务 Pod"]
+
+    CP1 <--> CP2
+    CP2 <--> CP3
+    CP1 <--> W1
+    CP1 <--> W2
+    CP2 <--> W1
+    CP2 <--> W2
+
+    style CP1 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CP2 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style CP3 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W1 fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style W2 fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ffffff,font-weight:bold
+```
+
+**与 kind 的对照**：
+
 | 组件 | kubeadm 生产布局 | kind（本文实测） | 差异原因 |
 |------|------|------|------|
 | apiserver / etcd / controller-manager / scheduler | 控制面节点静态 Pod；**HA 时 3 个控制面节点，etcd 每节点一个** | 1 个控制面节点（无 HA） | kind 单机无 HA |
