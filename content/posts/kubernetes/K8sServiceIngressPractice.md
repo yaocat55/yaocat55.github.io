@@ -369,6 +369,19 @@ flowchart TD
 | L4 | Service + kube-proxy | 稳定虚拟 IP + 负载均衡到 Pod | Ribbon/LoadBalancer |
 | 发现 | coredns + Endpoints | 服务名解析 + 后端自动发现 | Nacos 注册中心 |
 
+**Spring Cloud 开发者视角：四种方式逐一对照**。上面表格是"层"的对照，这里把四种暴露方式逐个对位：
+
+| 这篇的方式 | Spring Cloud 体系里的对应 | 核心区别 |
+|------|------|------|
+| **ClusterIP + CoreDNS**（第一阶段） | Nacos 注册中心 + Feign/Ribbon | Nacos 要代码集成（ ` @EnableDiscoveryClient ` + 心跳续约）；ClusterIP 是平台声明（ ` selector ` 自动匹配）——**服务发现从代码下沉到平台层** |
+| **NodePort**（第二阶段） | 无直接对应（传统用 nginx 反代暴露端口） | NodePort 是平台批量开端口（30000-32767），nginx 反代要手配 upstream |
+| **LoadBalancer**（第三阶段） | 云 SLB / 自建 Nginx 集群 | 声明式自动创建（metallb 模拟）vs 手动申请/配置负载均衡器 |
+| **Ingress**（第四阶段） | Spring Cloud Gateway | 都是 L7 域名/路径路由 + TLS 终止；但 SCG 是**要自己部署维护的 Java 应用**，Ingress 是**声明式资源**（控制器实现，平台管） |
+
+**主线洞察**：Spring Cloud 体系里，服务发现（Nacos）、负载均衡（Ribbon）、网关（SCG）是**三个独立的代码组件**，要分别引入依赖、写配置；K8s 用 **Service + DNS + kube-proxy + Ingress** 四个平台资源整套替代——代码里什么都不用引入，只剩"声明"。
+
+> 📌 对 Spring Cloud 开发者：四种方式的递进（集群内 → 节点 → 统一入口 → 域名路由）对照微服务体系的"入口演进"——微服务时代服务间靠 Nacos 直连、对外统一走 SCG 网关；K8s 把这套入口能力**全部平台化**：ClusterIP≈Nacos 直连、LoadBalancer≈SLB、Ingress≈SCG。概念不变，位置从应用层搬到了平台层。
+
 ## 踩坑速查表（复现必看）
 
 > ⚠️ **2026 年 3 月起，标准 Ingress Controller（ingress-nginx）已归档停止维护**（GitHub 实测 ` archived: true ` ，最后 release v1.15.1）。存量 Ingress 照常工作，但**新项目的流量入口建议用新标准 Gateway API**——本文的 Ingress 原理仍然有效（它是 Gateway API 的设计基础），完整实战见：
