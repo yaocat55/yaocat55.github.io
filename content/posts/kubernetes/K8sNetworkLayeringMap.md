@@ -311,55 +311,168 @@ flowchart TD
 
 两者串联才是完整链路：**问 DNS 拿 IP（L7）→ 交给网络栈按 IP 转发（L4/L3）**。
 
-## 5. 一条请求的完整旅程（串层看）
+## 5. 四类通信全链路（生产环境视角：从软件到硬件）
 
-### 5.1 集群内：Pod A 调用 Pod B（微服务互调）
+> ⚠️ 前面几节把组件和概念摆清楚了，这一节回答最实在的问题：**一个数据包从 Pod A 到 Pod B，到底经过了哪些软件组件、哪些网卡硬件**。注意：这里讲的是**生产环境**（kubeadm 物理机/虚拟机 + flannel/Calico CNI），不是 kind——kind 是容器套容器，验证不了真实物理链路（为什么，见 5.6）。
+
+### 5.1 基础设施热身：四个"看不见的网件"
+
+| 网件 | 生产环境长什么样 | 谁创建的 | 干什么 |
+|------|------|------|------|
+| **veth pair**（虚拟以太网对） | 一根"虚拟网线"，**一头在 Pod 里（叫 eth0），一头挂在节点上（叫 vethXXX）** | CNI 插件（创建 Pod 时） | 把 Pod 的网络命名空间"接"进节点的网络栈 |
+| **网桥**（cni0 / flannel 用 cni0） | 节点内核里的**虚拟交换机** | CNI 插件 | 同节点 Pod 的二层互通（像交换机转发 MAC 帧） |
+| **路由表**（ip route） | 节点上的"往哪走"决策表 | kubeadm/CNI 写入 | Pod 子网（10.244.x.0/24）→ 本地网桥 or 对端节点 |
+| **iptables / ipvs** | kube-proxy 维护的 NAT 规则链 | kube-proxy | ClusterIP 的 DNAT 地址转换 + 负载均衡 |
+
+**记忆锚点**：veth 是"线"，网桥是"交换机"，路由表是"路口指示牌"，iptables 是"改地址的关卡"——四类通信的物理路径就是这几样东西的组合。
+
+### 5.2 通信一：同 Pod 的 container ↔ container（最常被误解）
+
+**Pod 内的所有容器共享一个网络命名空间**（由 pause 容器持有）——它们**没有各自的 veth，也没有网桥**，就像同一台机器上的两个进程：
 
 ```mermaid
-%% 集群内服务调用: 每一跳标注 OSI 层与组件 (style 强制深底白字, 双保险)
+%% 通信一: 同 Pod 容器互访 = 共享 netns, 走 lo 回环 (style 白字)
 flowchart LR
-    A["Pod A<br/>请求 http://nginx-svc"]
-    D["CoreDNS (L7)<br/>nginx-svc → 10.96.x.x"]
-    K["kube-proxy (L4)<br/>DNAT → 10.244.x.x:80"]
-    R["CNI 路由 (L3)<br/>跨节点跳转"]
-    B["Pod B (nginx)"]
+    C1["容器1 (app)<br/>进程监听 :8080"]
+    C2["容器2 (sidecar)<br/>进程访问 localhost:8080"]
 
-    A -->|"1 查 DNS"| D
-    D -->|"2 返回 ClusterIP"| A
-    A -->|"3 按 ClusterIP 发包"| K
-    K -->|"4 改写目标地址"| R
-    R -->|"5 到达 Pod 网段"| B
+    C2 -->|"localhost:8080<br/>走 lo 回环, 不碰网卡"| C1
 
-    style A fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
-    style D fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
-    style B fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
-    style K fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
-    style R fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style C1 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
+    style C2 fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
 ```
 
-**每一跳的层**：① DNS 解析（L7，CoreDNS）→ ③ 发往 ClusterIP（L3/L4）→ ④ 地址转换（L4，kube-proxy）→ ⑤ 路由送达（L3，CNI）。**一次调用，跨了应用层、传输层、网络层三个层，每个层都有对应的 K8s 组件**。
+**链路**：进程 → `localhost:8080` → **lo 回环接口**（内核直接回环，**不经过任何物理/虚拟网卡、不碰 veth、不碰 iptables**）→ 同 Pod 另一容器的进程。**这是四类通信里唯一不碰"网络硬件"的一类**——本质是"同 netns 的进程间通信"。
 
-### 5.2 集群外：浏览器访问
+### 5.3 通信二：同节点 pod ↔ pod（不经 Service）
 
 ```mermaid
-%% 集群外访问: 域名 → Ingress(L7) → Service(L4) → Pod (style 强制深底白字)
+%% 通信二: 同节点 Pod 互访 = veth → 网桥二层直通, 不出节点 (style 白字)
 flowchart LR
-    U["浏览器<br/>nginx.local"]
-    I["Ingress (L7)<br/>按域名/路径路由"]
-    S["Service (L4)<br/>ClusterIP 负载均衡"]
+    subgraph PODA["Pod A (netns)"]
+        EA["eth0 (veth 一头)<br/>10.244.2.44"]
+    end
+    subgraph PODB["Pod B (netns)"]
+        EB["eth0 (veth 一头)<br/>10.244.2.60"]
+    end
+    BR["节点上的网桥 cni0<br/>(虚拟交换机, 查 MAC 转发表)"]
+    VA["vethXXX (veth 另一头)"]
+    VB["vethYYY (veth 另一头)"]
+
+    EA --- VA
+    VA --- BR
+    BR --- VB
+    VB --- EB
+
+    style PODA fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PODB fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style BR fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EA fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style EB fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style VA fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style VB fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+```
+
+**链路（软件 → 硬件）**：Pod A 进程 → Pod A 的 eth0（veth 一头）→ **veth pair 这根虚拟网线**（数据包穿过 veth，出现在节点侧的 vethXXX）→ **网桥 cni0**（虚拟交换机，按 MAC 地址查转发表，把帧从对应端口转发出去）→ vethYYY → Pod B 的 eth0 → 进程。
+
+**要点**：
+- **全程二层**（同网段 10.244.x.0/24，靠 MAC 转发），**不出节点、不碰路由表、不碰 iptables**——所以不经 Service 的同节点互访是最短路径；
+- 软件组件：只有 **CNI**（创建 veth pair 和网桥）；硬件路径：veth 虚拟网线 + 内核网桥（虚拟交换机）——**全在宿主机内核里完成**。
+
+### 5.4 通信三：跨节点 pod ↔ pod（pod ↔ Service 一般发生在这里）
+
+用户主场景：**Service1 的 Pod 访问 Service2 的 Pod**，两者一般在不同节点。逻辑链路（前面 5.2 的简版旅程）之外，这里给**硬件视图**：
+
+```mermaid
+%% 通信三: 跨节点 = veth → 网桥 → 路由 → VXLAN 封装 → 物理网卡 → 交换机 (style 白字)
+flowchart LR
+    subgraph N1["节点1 (物理机/VM)"]
+        PA["Pod A<br/>eth0 10.244.2.44"]
+        B1["网桥 cni0"]
+        RT["路由表<br/>10.244.1.0/24 via 节点2"]
+        FL["flannel.1<br/>VXLAN 隧道封装"]
+        ETH1["eth0 物理网卡<br/>172.18.x.x"]
+    end
+    SW["物理交换机/路由器"]
+    subgraph N2["节点2 (物理机/VM)"]
+        ETH2["eth0 物理网卡"]
+        FL2["flannel.1 解封装"]
+        B2["网桥 cni0"]
+        PB["Pod B<br/>eth0 10.244.1.60"]
+    end
+
+    PA --> B1 --> RT --> FL --> ETH1
+    ETH1 --> SW
+    SW --> ETH2 --> FL2 --> B2 --> PB
+
+    style N1 fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style N2 fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SW fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PA fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style PB fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B1 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style B2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style RT fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style FL fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style FL2 fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style ETH1 fill:#7f1d1d,stroke:#f87171,stroke-width:2px,color:#ffffff,font-weight:bold
+    style ETH2 fill:#7f1d1d,stroke:#f87171,stroke-width:2px,color:#ffffff,font-weight:bold
+```
+
+**完整链路（经 Service，软件 + 硬件全标注）**：
+
+| 步 | 谁 | 干什么 | 类型 |
+|----|------|------|------|
+| ① | **CoreDNS**（L7） | 解析 `service2` → ClusterIP 10.96.x.x | 软件（应用层） |
+| ② | **kube-proxy**（iptables DNAT，L4） | 把 ClusterIP:80 改写为选中的后端 Pod IP:80 | 软件（内核 NAT 规则） |
+| ③ | **Pod A eth0 → veth → cni0** | 出 Pod、进节点 | 虚拟网线 + 网桥 |
+| ④ | **路由表**（L3） | 目标 10.244.1.0/24 → 下一跳节点 2 的 IP | 软件（内核路由） |
+| ⑤ | **flannel.1**（VXLAN，L3 隧道） | 把原始包**封装**进 UDP（外层 IP = 节点1→节点2） | 软件（overlay） |
+| ⑥ | **eth0 物理网卡** | 真实比特流出机器 | **硬件** |
+| ⑦ | **交换机/路由器** | 按外层 IP 转发到节点 2 | **硬件** |
+| ⑧ | 节点 2 逆序：eth0 → 解封装 → cni0 → veth → Pod B eth0 | 还原原始包送达 | 软硬件 |
+
+**两种 CNI 的实现差异**：**flannel（VXLAN）** 走 ⑤⑥⑦ 的"封装过隧道"（overlay，对底层网络无要求）；**Calico（BGP）** 不封装——它把 Pod 网段通过 BGP 路由宣告给网络，数据包**直接以 Pod IP 路由**（像真实内网 IP 一样走），性能更好但对网络设备有要求。**这就是"CNI 是 L3 组件"的完整含义**：它决定 Pod IP 怎么路由、要不要封装。
+
+### 5.5 通信四：互联网 ↔ 集群
+
+```mermaid
+%% 通信四: 互联网入口 = LB/Ingress → NodePort → Service → Pod (style 白字)
+flowchart LR
+    U["互联网<br/>浏览器/外部系统"]
+    LB["云 SLB (L4)<br/>或 Ingress 控制器 (L7)"]
+    NP["节点 NodePort<br/>iptables 入口"]
+    SV["Service ClusterIP<br/>kube-proxy DNAT"]
     P["Pod"]
 
-    U -->|"DNS → 入口IP"| I
-    I -->|"按 Host 找到 Service"| S
-    S -->|"kube-proxy DNAT"| P
+    U -->|"域名 DNS → 公网 IP"| LB
+    LB -->|"转发到节点端口"| NP
+    NP -->|"DNAT 到 ClusterIP"| SV
+    SV -->|"选中后端 Pod"| P
 
     style U fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
-    style I fill:#0f172a,stroke:#3b82f6,stroke-width:2.5px,color:#ffffff,font-weight:bold
-    style S fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style LB fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style NP fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
+    style SV fill:#1e1e24,stroke:#6b7280,stroke-width:2px,color:#ffffff,font-weight:bold
     style P fill:#052e16,stroke:#16a34a,stroke-width:2px,color:#ffffff,font-weight:bold
 ```
 
-**多了一层 L7**：浏览器 → Ingress（L7 按域名路由）→ Service（L4 负载均衡）→ Pod。这就是"从内到外全打通"的完整网络视图。
+**链路**：互联网 → 域名 DNS（真实 DNS，解析到云 SLB 的公网 IP）→ **云 SLB**（四层负载均衡器，物理设备或云软件——流量先进这里）→ 节点 **NodePort**（iptables 入口规则）→ **Service ClusterIP** → kube-proxy DNAT → Pod。**Ingress 场景**：SLB → Ingress 控制器 Pod（L7 按域名路由，它自己也是 Pod）→ Service → Pod。
+
+**与前三类的差别**：这是唯一**跨出集群**的通信——真实 DNS、公网 IP、负载均衡器、机房网络全参与；进集群后反而走最熟悉的链路（NodePort/Service/kube-proxy 都是前面学过的）。
+
+### 5.6 为什么 kind 验证不了这些（诚实说明）
+
+kind 是"容器套容器"：节点本身就是 Docker 容器，所以——
+
+| 生产环境的真东西 | kind 里的样子 | 结论 |
+|------|------|------|
+| eth0 物理网卡 | eth0 是 veth 的一头（虚拟的） | 验证不了真实网卡路径 |
+| 跨节点走物理交换机 + VXLAN/BGP | 节点容器在同一 Docker 二层，**kindnet 直接写路由，无 VXLAN 封装** | 验证不了 overlay 隧道 |
+| cni0 网桥在宿主机内核 | 网桥在容器网络栈里 | 位置都不同 |
+| 真实路由/交换设备 | 没有 | 验证不了 |
+
+**kind 的价值是验证"组件存在和行为"**（veth/bridge/iptables 规则都有，kube-proxy 的 DNAT 真实生效）；**生产/云上才能验证"真实物理路径"**（网卡、隧道、交换机）。所以这篇的物理链路以生产为准——kind 里学的概念（veth、网桥、iptables）一个不浪费，只是"真实路径"要上生产/ACK 才能亲眼看到。
 
 ## 6. 总表：一层、一组件、一职责
 
